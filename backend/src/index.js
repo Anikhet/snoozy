@@ -1,0 +1,29 @@
+const express = require('express')
+const cors = require('cors')
+const helmet = require('helmet')
+const { loadConfig } = require('./config')
+const storyRoutes = require('./routes/story')
+
+const config = loadConfig()
+const app = express()
+
+app.locals.config = config
+
+app.use(helmet())
+app.use(cors())
+app.use(express.json({ limit: '1mb' }))
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' })
+})
+
+app.use('/api', storyRoutes)
+
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled error:', err.message)
+  res.status(500).json({ success: false, error: 'Internal server error' })
+})
+
+app.listen(config.port, () => {
+  console.log(`Snoozy backend running on http://localhost:${config.port}`)
+})
