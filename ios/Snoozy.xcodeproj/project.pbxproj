@@ -22,7 +22,6 @@
 		CECE3D5AD25D7C49B18EBFC0 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B755733E693BDC154F6C293E /* APIService.swift */; };
 		D299053E24FF0F784486E586 /* StoryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985626B73691060040E18DC6 /* StoryPlayerView.swift */; };
 		D6D2E5052D1FCC1C3D707D6C /* StoryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC3B788E845099328EE7CC7 /* StoryFormView.swift */; };
-		DA3B129CED1D52EF07910818 /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5522E06DE0F025A1740A87 /* GeneratingView.swift */; };
 		DB59CDC46D210725D010BE4F /* StorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926CA919334308221ACB395E /* StorageService.swift */; };
 		F12FA21772D81607E56D473A /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6691BB77FB38C8314308A6D7 /* AppConfig.swift */; };
 		F1F50EF01AFB0869CCECC35A /* StoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4F6B97A5155E6A117917DA /* StoryViewModel.swift */; };
@@ -47,7 +46,6 @@
 		B755733E693BDC154F6C293E /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
 		D32BBB80FEE39FF5C2530172 /* Story.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Story.swift; sourceTree = "<group>"; };
 		DEC3B788E845099328EE7CC7 /* StoryFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFormView.swift; sourceTree = "<group>"; };
-		EA5522E06DE0F025A1740A87 /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratingView.swift; sourceTree = "<group>"; };
 		EF15D2075000145179BD5211 /* SnoozyButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnoozyButton.swift; sourceTree = "<group>"; };
 		EFD5208C10BC6B5EC8B0FF5E /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -83,7 +81,6 @@
 			isa = PBXGroup;
 			children = (
 				47CBAEBB35134B59C504B372 /* ContentRouter.swift */,
-				EA5522E06DE0F025A1740A87 /* GeneratingView.swift */,
 				6B0EEB156E2D751982AC4555 /* HomeView.swift */,
 				DEC3B788E845099328EE7CC7 /* StoryFormView.swift */,
 				985626B73691060040E18DC6 /* StoryPlayerView.swift */,
@@ -208,7 +205,6 @@
 				C1ADFEC2C8DA01D036F582E6 /* ChildDetails.swift in Sources */,
 				214FEB6EA052244ABE0DEFC8 /* ContentRouter.swift in Sources */,
 				2475F425C83FBDCC546D0AA5 /* DesignTokens.swift in Sources */,
-				DA3B129CED1D52EF07910818 /* GeneratingView.swift in Sources */,
 				9C23D6349343575A9701CFD0 /* HomeView.swift in Sources */,
 				86DABCAFFDED206B5DFA7EFD /* SnoozyApp.swift in Sources */,
 				A20AFE5E2ACBDD00CC9B481D /* SnoozyButton.swift in Sources */,

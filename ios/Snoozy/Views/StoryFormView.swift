@@ -4,7 +4,6 @@ import SwiftUI
 struct StoryFormView: View {
     let template: Template
     @Binding var childDetails: ChildDetails
-    let errorMessage: String?
     let onGenerate: () -> Void
     let onBack: () -> Void
 
@@ -22,7 +21,6 @@ struct StoryFormView: View {
                     nameField
                     agePicker
                     templateSpecificField
-                    errorBanner
                     generateButton
                 }
                 .padding(.bottom, DesignTokens.Spacing.xxl)
@@ -204,23 +202,7 @@ struct StoryFormView: View {
         }
     }
 
-    // MARK: - Error & Generate
-
-    @ViewBuilder
-    private var errorBanner: some View {
-        if let errorMessage {
-            HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                Text(errorMessage)
-                    .font(DesignTokens.Fonts.caption)
-            }
-            .foregroundStyle(DesignTokens.Colors.error)
-            .padding(DesignTokens.Spacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(DesignTokens.Colors.error.opacity(0.1))
-            .clipShape(.rect(cornerRadius: DesignTokens.Radii.small))
-        }
-    }
+    // MARK: - Generate
 
     private var generateButton: some View {
         SnoozyButton(title: "Story Time!", icon: "sparkles") {

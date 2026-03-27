@@ -16,7 +16,8 @@ struct ContentRouter: View {
                     savedStories: viewModel.savedStories,
                     onNewStory: { viewModel.navigateTo(.templatePicker) },
                     onPlayStory: { viewModel.playStory($0) },
-                    onDeleteStory: { story in Task { await viewModel.deleteStory(story) } }
+                    onDeleteStory: { story in Task { await viewModel.deleteStory(story) } },
+                    onRetryStory: { viewModel.retryStory($0) }
                 )
                 .transition(.opacity)
 
@@ -31,18 +32,10 @@ struct ContentRouter: View {
                 StoryFormView(
                     template: viewModel.selectedTemplate!,
                     childDetails: $viewModel.childDetails,
-                    errorMessage: viewModel.errorMessage,
-                    onGenerate: { Task { await viewModel.generateStory() } },
+                    onGenerate: { viewModel.generateStory() },
                     onBack: { viewModel.navigateTo(.templatePicker) }
                 )
                 .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
-
-            case .generating:
-                GeneratingView(
-                    childName: viewModel.childDetails.name,
-                    phase: viewModel.generatingPhase
-                )
-                .transition(.opacity)
 
             case .player:
                 if let story = viewModel.currentStory {

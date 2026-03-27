@@ -5,22 +5,15 @@ enum Screen: Equatable {
     case home
     case templatePicker
     case storyForm
-    case generating
     case player
-}
-
-/// The phase within story generation, shown on the loading screen.
-enum GeneratingPhase: Equatable {
-    case writingStory
-    case generatingAudio
 }
 
 /**
  Central state manager for Snoozy.
 
- Orchestrates the full flow: template selection -> form input -> story generation
- (OpenAI) -> audio generation (ElevenLabs) -> playback. Coordinates APIService,
- StorageService, and AudioService while managing navigation state.
+ Orchestrates the full flow: template selection -> form input -> background story
+ generation (OpenAI + TTS) -> playback. Generation is non-blocking — the user
+ returns to home immediately and sees a "Generating..." badge on the story row.
  */
 @MainActor
 @Observable
@@ -33,11 +26,6 @@ final class StoryViewModel {
 
     var selectedTemplate: Template?
     var childDetails = ChildDetails()
-
-    // MARK: - Generation
-
-    var generatingPhase: GeneratingPhase = .writingStory
-    var errorMessage: String?
 
     // MARK: - Current Story
 
@@ -52,6 +40,10 @@ final class StoryViewModel {
     let audioService = AudioService()
     private let apiService = APIService()
     private let storageService = StorageService()
+
+    // MARK: - Active generation tasks keyed by story ID
+
+    private var generationTasks: [UUID: Task<Void, Never>] = [:]
 
     // MARK: - Init
 
@@ -70,7 +62,6 @@ final class StoryViewModel {
         selectedTemplate = nil
         childDetails = ChildDetails()
         currentStory = nil
-        errorMessage = nil
     }
 
     // MARK: - Template Selection
@@ -81,54 +72,65 @@ final class StoryViewModel {
         currentScreen = .storyForm
     }
 
-    // MARK: - Story Generation
+    // MARK: - Story Generation (non-blocking)
 
-    /// Kicks off the full generation pipeline: story text -> audio -> save -> navigate to player.
-    func generateStory() async {
+    /**
+     Creates a placeholder story, navigates home immediately, and kicks off
+     generation in the background. The placeholder updates in-place once
+     the story text and audio are ready.
+     */
+    func generateStory() {
         guard let template = selectedTemplate else { return }
 
-        currentScreen = .generating
-        generatingPhase = .writingStory
-        errorMessage = nil
+        let storyId = UUID()
+        let details = childDetails
+        let placeholder = Story.placeholder(id: storyId, templateId: template.id, childName: details.name)
 
+        savedStories.insert(placeholder, at: 0)
+        goHome()
+
+        let task = Task { [weak self] in
+            guard let self else { return }
+            await self.runGeneration(storyId: storyId, templateId: template.id, childDetails: details)
+        }
+        generationTasks[storyId] = task
+    }
+
+    /// The actual generation pipeline, runs in the background.
+    private func runGeneration(storyId: UUID, templateId: String, childDetails: ChildDetails) async {
         do {
             let (title, storyText) = try await apiService.generateStory(
-                templateId: template.id,
+                templateId: templateId,
                 childDetails: childDetails
             )
 
-            generatingPhase = .generatingAudio
-
             let audioData = try await apiService.generateAudio(text: storyText)
-
             let audioFileName = try await storageService.saveAudioFile(data: audioData)
 
-            let story = Story(
-                id: UUID(),
+            let finishedStory = Story(
+                id: storyId,
                 title: title,
                 storyText: storyText,
-                templateId: template.id,
+                templateId: templateId,
                 childName: childDetails.name,
                 createdAt: Date(),
-                audioFileName: audioFileName
+                audioFileName: audioFileName,
+                status: .ready
             )
 
-            await storageService.saveStory(story)
-            currentStory = story
-            await loadSavedStories()
-
-            playStory(story)
-            currentScreen = .player
+            await storageService.saveStory(finishedStory)
+            updateStoryInList(finishedStory)
         } catch {
-            errorMessage = error.localizedDescription
-            currentScreen = .storyForm
+            markStoryFailed(storyId)
         }
+
+        generationTasks.removeValue(forKey: storyId)
     }
 
     // MARK: - Playback
 
     func playStory(_ story: Story) {
-        guard let url = story.audioFileURL else { return }
+        guard story.status == .ready, let url = story.audioFileURL else { return }
         currentStory = story
         audioService.play(url: url, title: story.title)
         currentScreen = .player
@@ -137,17 +139,53 @@ final class StoryViewModel {
     // MARK: - Story Management
 
     func deleteStory(_ story: Story) async {
+        generationTasks[story.id]?.cancel()
+        generationTasks.removeValue(forKey: story.id)
+
         if currentStory?.id == story.id {
             audioService.stop()
             currentStory = nil
         }
-        await storageService.deleteStory(story)
-        await loadSavedStories()
+
+        if story.status == .ready {
+            await storageService.deleteStory(story)
+        }
+
+        savedStories.removeAll { $0.id == story.id }
     }
 
-    // MARK: - Private
+    /// Retry a failed generation by removing the old entry and starting fresh.
+    func retryStory(_ story: Story) {
+        savedStories.removeAll { $0.id == story.id }
+
+        let template = Templates.all.first { $0.id == story.templateId }
+        selectedTemplate = template
+        childDetails = ChildDetails()
+        childDetails.name = story.childName
+        currentScreen = .storyForm
+    }
+
+    // MARK: - Private Helpers
+
+    private func updateStoryInList(_ story: Story) {
+        if let index = savedStories.firstIndex(where: { $0.id == story.id }) {
+            savedStories[index] = story
+        }
+    }
+
+    private func markStoryFailed(_ storyId: UUID) {
+        if let index = savedStories.firstIndex(where: { $0.id == storyId }) {
+            savedStories[index].status = .failed
+            savedStories[index].title = "Story failed — tap to retry"
+        }
+    }
 
     private func loadSavedStories() async {
-        savedStories = await storageService.loadStories()
+        let persisted = await storageService.loadStories()
+        // Merge: keep in-flight placeholders, add persisted stories that aren't duplicates
+        let inFlightIds = Set(generationTasks.keys)
+        let inFlight = savedStories.filter { inFlightIds.contains($0.id) }
+        let persistedFiltered = persisted.filter { story in !inFlightIds.contains(story.id) }
+        savedStories = inFlight + persistedFiltered
     }
 }

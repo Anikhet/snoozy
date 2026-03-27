@@ -6,6 +6,7 @@ struct HomeView: View {
     let onNewStory: () -> Void
     let onPlayStory: (Story) -> Void
     let onDeleteStory: (Story) -> Void
+    let onRetryStory: (Story) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -81,7 +82,12 @@ struct HomeView: View {
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: DesignTokens.Spacing.sm) {
                     ForEach(savedStories) { story in
-                        StoryRow(story: story, onPlay: onPlayStory, onDelete: onDeleteStory)
+                        StoryRow(
+                            story: story,
+                            onPlay: onPlayStory,
+                            onDelete: onDeleteStory,
+                            onRetry: onRetryStory
+                        )
                     }
                 }
             }
