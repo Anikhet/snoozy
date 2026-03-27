@@ -23,13 +23,13 @@ const templates = [
 The story should be about {name} drifting off to sleep and entering a magical dreamland where everything shimmers in shades of {favoriteColor}. They float on soft {favoriteColor} clouds, meet friendly dream creatures, and explore a gentle, peaceful world.
 
 Rules:
-- Write exactly 600-800 words
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
 - Use simple, soothing language appropriate for a {age}-year-old
 - The tone should be calm, gentle, and sleepy
 - Include sensory details (soft sounds, warm feelings, gentle lights)
 - The story must end with {name} feeling safe, warm, and drifting into peaceful sleep
 - Do not include anything scary, loud, or overstimulating
-- Start the story directly, no title needed`,
+- Start with a short, creative title on the first line, then a blank line, then the story`,
   },
   {
     id: 'animal-friends',
@@ -42,13 +42,13 @@ Rules:
 The story should be about {name} discovering a quiet, moonlit forest where animals whisper and play softly. They meet a friendly {favoriteAnimal} who becomes their companion. Together they walk through the gentle forest, helping sleepy animals find cozy places to rest.
 
 Rules:
-- Write exactly 600-800 words
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
 - Use simple, soothing language appropriate for a {age}-year-old
 - The tone should be calm, gentle, and sleepy
 - Include soft animal sounds and cozy descriptions
 - The story must end with {name} and their {favoriteAnimal} friend curling up together and falling asleep
 - Do not include anything scary, loud, or overstimulating
-- Start the story directly, no title needed`,
+- Start with a short, creative title on the first line, then a blank line, then the story`,
   },
   {
     id: 'under-the-stars',
@@ -61,13 +61,13 @@ Rules:
 The story should be about {name} lying on a soft blanket in a meadow, gazing up at the stars. The stars begin to twinkle in patterns that remind them of {favoriteThing}. A gentle star floats down and takes {name} on a slow, peaceful ride through the night sky, showing them constellations and quiet wonders.
 
 Rules:
-- Write exactly 600-800 words
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
 - Use simple, soothing language appropriate for a {age}-year-old
 - The tone should be calm, gentle, and sleepy
 - Include descriptions of soft starlight, gentle breezes, and quiet night sounds
 - The story must end with {name} floating gently back to their blanket and falling asleep under the stars
 - Do not include anything scary, loud, or overstimulating
-- Start the story directly, no title needed`,
+- Start with a short, creative title on the first line, then a blank line, then the story`,
   },
 ]
 

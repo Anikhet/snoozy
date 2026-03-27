@@ -62,7 +62,7 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.7,
-      max_tokens: 1200,
+      max_tokens: 800,
       messages: [
         { role: 'system', content: result.prompt },
         {
@@ -87,17 +87,20 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
       storyLength: storyText.length,
     })
 
-    const titleMatch = storyText.match(/^(.+)\n/)
-    const title = titleMatch
-      ? titleMatch[1].replace(/^#\s*/, '').trim()
-      : `${childDetails.name}'s ${result.template.name}`
+    const lines = storyText.split('\n').filter((l) => l.trim().length > 0)
+    const firstLine = lines[0]?.replace(/^#+\s*/, '').replace(/^\*+|\*+$/g, '').trim()
 
-    log('STORY', `Done! Title: "${title}" (${elapsed}ms total)`)
+    // If first line is short enough to be a title (under 80 chars), use it and strip from body
+    const hasTitle = firstLine && firstLine.length < 80
+    const title = hasTitle ? firstLine : `${childDetails.name}'s ${result.template.name}`
+    const storyBody = hasTitle ? lines.slice(1).join('\n').trim() : storyText.trim()
+
+    log('STORY', `Done! Title: "${title}", Body: ${storyBody.length} chars (${elapsed}ms total)`)
 
     return res.json({
       success: true,
       title,
-      storyText,
+      storyText: storyBody,
     })
   } catch (error) {
     const elapsed = Date.now() - startTime
@@ -115,71 +118,26 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
 /**
  * POST /api/generate-audio
  *
- * Takes story text, sends it to ElevenLabs TTS, and streams the
- * resulting MP3 audio directly back to the client without buffering
- * the full file in server memory.
+ * Takes story text and generates TTS audio via the configured provider
+ * (OpenAI or ElevenLabs). Streams the MP3 response directly to the client.
+ *
+ * Set TTS_PROVIDER=elevenlabs in .env to use ElevenLabs instead of OpenAI.
  */
 router.post('/generate-audio', validate(generateAudioSchema), async (req, res) => {
   const startTime = Date.now()
+  const config = req.app.locals.config
 
   try {
     const { text } = req.validated
-    const { elevenlabsApiKey, elevenlabsVoiceId } = req.app.locals.config
 
     log('AUDIO', '--- New audio request ---')
-    log('AUDIO', `Text length: ${text.length} chars, Voice ID: ${elevenlabsVoiceId}`)
-    log('AUDIO', 'Calling ElevenLabs (eleven_multilingual_v2)...')
+    log('AUDIO', `Text length: ${text.length} chars, Provider: ${config.ttsProvider}`)
 
-    const ttsResponse = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${elevenlabsVoiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          'xi-api-key': elevenlabsApiKey,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg',
-        },
-        body: JSON.stringify({
-          text,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.75,
-            similarity_boost: 0.75,
-            style: 0.4,
-          },
-        }),
-      }
-    )
-
-    const apiElapsed = Date.now() - startTime
-
-    if (!ttsResponse.ok) {
-      const errorBody = await ttsResponse.text()
-      log('AUDIO', `ElevenLabs ERROR ${ttsResponse.status} (${apiElapsed}ms):`, errorBody)
-      return res.status(502).json({
-        success: false,
-        error: 'Failed to generate audio. Please try again.',
-      })
+    if (config.ttsProvider === 'elevenlabs') {
+      await generateWithElevenLabs(text, config, res, startTime)
+    } else {
+      await generateWithOpenAI(text, config, res, startTime)
     }
-
-    log('AUDIO', `ElevenLabs responded OK in ${apiElapsed}ms, streaming audio...`)
-
-    res.setHeader('Content-Type', 'audio/mpeg')
-    res.setHeader('Transfer-Encoding', 'chunked')
-
-    let totalBytes = 0
-    const reader = ttsResponse.body.getReader()
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      totalBytes += value.length
-      res.write(value)
-    }
-    res.end()
-
-    const totalElapsed = Date.now() - startTime
-    log('AUDIO', `Done! Streamed ${(totalBytes / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
   } catch (error) {
     const elapsed = Date.now() - startTime
     log('AUDIO', `FAILED after ${elapsed}ms: ${error.message}`)
@@ -192,5 +150,92 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
     res.end()
   }
 })
+
+// ── OpenAI TTS ──────────────────────────────────────────────────
+
+async function generateWithOpenAI(text, config, res, startTime) {
+  const voice = config.openaiTtsVoice
+  log('AUDIO', `Calling OpenAI TTS (tts-1, voice: ${voice})...`)
+
+  const openai = new OpenAI({ apiKey: config.openaiApiKey })
+
+  const mp3Response = await openai.audio.speech.create({
+    model: 'tts-1',
+    voice,
+    input: text,
+    response_format: 'mp3',
+    speed: 0.95,
+  })
+
+  const apiElapsed = Date.now() - startTime
+  log('AUDIO', `OpenAI TTS responded in ${apiElapsed}ms, streaming audio...`)
+
+  res.setHeader('Content-Type', 'audio/mpeg')
+
+  const buffer = Buffer.from(await mp3Response.arrayBuffer())
+  res.end(buffer)
+
+  const totalElapsed = Date.now() - startTime
+  log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
+}
+
+// ── ElevenLabs TTS (for future use with paid plan) ─────────────
+
+async function generateWithElevenLabs(text, config, res, startTime) {
+  const { elevenlabsApiKey, elevenlabsVoiceId } = config
+  log('AUDIO', `Calling ElevenLabs (eleven_multilingual_v2, voice: ${elevenlabsVoiceId})...`)
+
+  const ttsResponse = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${elevenlabsVoiceId}`,
+    {
+      method: 'POST',
+      headers: {
+        'xi-api-key': elevenlabsApiKey,
+        'Content-Type': 'application/json',
+        Accept: 'audio/mpeg',
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.75,
+          similarity_boost: 0.75,
+          style: 0.4,
+        },
+      }),
+    }
+  )
+
+  const apiElapsed = Date.now() - startTime
+
+  if (!ttsResponse.ok) {
+    const errorBody = await ttsResponse.text()
+    log('AUDIO', `ElevenLabs ERROR ${ttsResponse.status} (${apiElapsed}ms):`, errorBody)
+    res.status(502).json({
+      success: false,
+      error: 'Failed to generate audio. Please try again.',
+    })
+    return
+  }
+
+  log('AUDIO', `ElevenLabs responded OK in ${apiElapsed}ms, streaming audio...`)
+
+  res.setHeader('Content-Type', 'audio/mpeg')
+  res.setHeader('Transfer-Encoding', 'chunked')
+
+  let totalBytes = 0
+  const reader = ttsResponse.body.getReader()
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    totalBytes += value.length
+    res.write(value)
+  }
+  res.end()
+
+  const totalElapsed = Date.now() - startTime
+  log('AUDIO', `Done! Streamed ${(totalBytes / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
+}
 
 module.exports = router
