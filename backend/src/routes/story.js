@@ -19,8 +19,11 @@ const generateStorySchema = z.object({
   }),
 })
 
+const VALID_VOICES = ['shimmer', 'nova', 'onyx', 'fable']
+
 const generateAudioSchema = z.object({
   text: z.string().min(1).max(5000),
+  voice: z.enum(VALID_VOICES).optional(),
 })
 
 /** Prefixed logger for clear step-by-step visibility. */
@@ -128,15 +131,15 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
   const config = req.app.locals.config
 
   try {
-    const { text } = req.validated
+    const { text, voice } = req.validated
 
     log('AUDIO', '--- New audio request ---')
-    log('AUDIO', `Text length: ${text.length} chars, Provider: ${config.ttsProvider}`)
+    log('AUDIO', `Text length: ${text.length} chars, Provider: ${config.ttsProvider}, Voice: ${voice || 'default'}`)
 
     if (config.ttsProvider === 'elevenlabs') {
       await generateWithElevenLabs(text, config, res, startTime)
     } else {
-      await generateWithOpenAI(text, config, res, startTime)
+      await generateWithOpenAI(text, config, res, startTime, voice)
     }
   } catch (error) {
     const elapsed = Date.now() - startTime
@@ -153,8 +156,8 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
 
 // ── OpenAI TTS ──────────────────────────────────────────────────
 
-async function generateWithOpenAI(text, config, res, startTime) {
-  const voice = config.openaiTtsVoice
+async function generateWithOpenAI(text, config, res, startTime, requestedVoice) {
+  const voice = requestedVoice || config.openaiTtsVoice
   log('AUDIO', `Calling OpenAI TTS (tts-1, voice: ${voice})...`)
 
   const openai = new OpenAI({ apiKey: config.openaiApiKey })

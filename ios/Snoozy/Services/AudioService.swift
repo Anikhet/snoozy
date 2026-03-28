@@ -1,7 +1,7 @@
 import AVFoundation
 import MediaPlayer
 
-/// Manages audio playback with background support and lock screen controls.
+/// Manages audio playback with background support, lock screen controls, and sleep timer.
 /// Uses AVAudioPlayer for local MP3 files and registers with MPNowPlayingInfoCenter
 /// so the story title + controls appear on the lock screen and Control Center.
 @MainActor
@@ -11,6 +11,20 @@ final class AudioService: NSObject {
     var currentTime: TimeInterval = 0
     var duration: TimeInterval = 0
     var currentStoryTitle: String?
+
+    // MARK: - Sleep Timer
+
+    /// Remaining seconds on the sleep timer, nil when inactive.
+    var sleepTimerRemaining: TimeInterval?
+
+    /// Whether the sleep timer is currently counting down.
+    var isSleepTimerActive: Bool { sleepTimerRemaining != nil }
+
+    /// Duration in seconds over which volume fades to zero before the timer stops playback.
+    private let fadeOutDuration: TimeInterval = 30
+
+    /// The volume level before a fade-out begins, used to restore volume on cancel.
+    private var volumeBeforeFade: Float = 1.0
 
     private var player: AVAudioPlayer?
     private var displayLink: CADisplayLink?
@@ -60,6 +74,7 @@ final class AudioService: NSObject {
     }
 
     func stop() {
+        sleepTimerRemaining = nil
         player?.stop()
         player = nil
         isPlaying = false
@@ -75,6 +90,57 @@ final class AudioService: NSObject {
         player?.currentTime = time
         currentTime = time
         updateNowPlayingInfo()
+    }
+
+    // MARK: - Sleep Timer
+
+    /// Available sleep timer durations displayed to the user.
+    static let timerOptions: [(label: String, seconds: TimeInterval?)] = [
+        ("5 min", 5 * 60),
+        ("10 min", 10 * 60),
+        ("15 min", 15 * 60),
+        ("20 min", 20 * 60),
+        ("30 min", 30 * 60),
+        ("End of story", nil),
+    ]
+
+    /// Starts a sleep timer that stops playback after the given duration.
+    /// Pass nil to use "end of story" mode (stop when the audio finishes naturally).
+    func startSleepTimer(seconds: TimeInterval?) {
+        cancelSleepTimer()
+        volumeBeforeFade = player?.volume ?? 1.0
+
+        if let seconds {
+            sleepTimerRemaining = seconds
+        } else {
+            // "End of story" — no countdown, handled by audioPlayerDidFinishPlaying
+            sleepTimerRemaining = nil
+        }
+    }
+
+    /// Cancels an active sleep timer and restores volume.
+    func cancelSleepTimer() {
+        sleepTimerRemaining = nil
+        player?.volume = volumeBeforeFade
+    }
+
+    /// Called by the display link to tick the sleep timer and apply fade-out.
+    private func tickSleepTimer(deltaTime: TimeInterval) {
+        guard var remaining = sleepTimerRemaining else { return }
+
+        remaining -= deltaTime
+        sleepTimerRemaining = max(0, remaining)
+
+        // Fade volume during the last `fadeOutDuration` seconds
+        if remaining <= fadeOutDuration {
+            let fraction = Float(max(0, remaining / fadeOutDuration))
+            player?.volume = volumeBeforeFade * fraction
+        }
+
+        if remaining <= 0 {
+            sleepTimerRemaining = nil
+            stop()
+        }
     }
 
     // MARK: - Progress Updates
@@ -93,7 +159,15 @@ final class AudioService: NSObject {
 
     @objc private func updateProgress() {
         guard let player else { return }
+
+        let previousTime = currentTime
         currentTime = player.currentTime
+
+        // Tick sleep timer based on real elapsed time
+        let delta = currentTime - previousTime
+        if delta > 0 {
+            tickSleepTimer(deltaTime: delta)
+        }
     }
 
     // MARK: - Lock Screen / Control Center

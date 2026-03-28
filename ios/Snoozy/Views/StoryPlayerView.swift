@@ -1,15 +1,18 @@
 import SwiftUI
 
-/// Audio player screen with playback controls, scrubber, and scrollable story text.
+/// Audio player screen with playback controls, scrubber, sleep timer, and scrollable story text.
 struct StoryPlayerView: View {
     let story: Story
     let audioService: AudioService
     let onDone: () -> Void
 
+    @State private var showTimerPicker = false
+
     var body: some View {
         VStack(spacing: 0) {
             header
             playerControls
+            sleepTimerBar
             storyText
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
@@ -111,6 +114,68 @@ struct StoryPlayerView: View {
             Image(systemName: icon)
                 .font(.system(size: 28))
                 .foregroundStyle(DesignTokens.Colors.textSecondary)
+        }
+    }
+
+    // MARK: - Sleep Timer
+
+    private var sleepTimerBar: some View {
+        VStack(spacing: DesignTokens.Spacing.sm) {
+            if audioService.isSleepTimerActive, let remaining = audioService.sleepTimerRemaining {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.caption)
+                    Text("Sleep in \(formatTime(remaining))")
+                        .font(DesignTokens.Fonts.caption)
+                    Spacer()
+                    Button("Cancel") {
+                        audioService.cancelSleepTimer()
+                    }
+                    .font(DesignTokens.Fonts.caption)
+                }
+                .foregroundStyle(DesignTokens.Colors.primary)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+                .background(DesignTokens.Colors.primary.opacity(0.1))
+                .clipShape(.rect(cornerRadius: DesignTokens.Radii.small))
+            } else {
+                Button {
+                    showTimerPicker.toggle()
+                } label: {
+                    HStack(spacing: DesignTokens.Spacing.xs) {
+                        Image(systemName: "moon.zzz")
+                            .font(.caption)
+                        Text("Sleep Timer")
+                            .font(DesignTokens.Fonts.caption)
+                    }
+                    .foregroundStyle(DesignTokens.Colors.textSecondary)
+                }
+            }
+
+            if showTimerPicker {
+                timerOptions
+            }
+        }
+        .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var timerOptions: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            ForEach(AudioService.timerOptions, id: \.label) { option in
+                Button {
+                    audioService.startSleepTimer(seconds: option.seconds)
+                    showTimerPicker = false
+                } label: {
+                    Text(option.label)
+                        .font(DesignTokens.Fonts.caption)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(DesignTokens.Colors.surface)
+                        .clipShape(.rect(cornerRadius: DesignTokens.Radii.small))
+                        .snoozyCardShadow()
+                }
+                .foregroundStyle(DesignTokens.Colors.textPrimary)
+            }
         }
     }
 

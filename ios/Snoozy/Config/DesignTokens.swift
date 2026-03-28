@@ -18,6 +18,11 @@ enum DesignTokens {
         static let cardLavender = Color(light: .hex(0xE8E5FF), dark: .hex(0x2E2B4A))
         static let cardPeach = Color(light: .hex(0xFFE8D6), dark: .hex(0x3A2E28))
         static let cardMint = Color(light: .hex(0xD4F0E7), dark: .hex(0x1E3A30))
+        static let cardOcean = Color(light: .hex(0xD6ECFF), dark: .hex(0x1E2E3A))
+        static let cardCosmos = Color(light: .hex(0xE5DFFF), dark: .hex(0x2A254A))
+        static let cardRose = Color(light: .hex(0xFFE0EC), dark: .hex(0x3A1E2E))
+        static let cardSnow = Color(light: .hex(0xE8F4F8), dark: .hex(0x1E2E34))
+        static let cardRain = Color(light: .hex(0xDAE8F0), dark: .hex(0x202838))
 
         static let error = Color(light: .hex(0xFF6B6B), dark: .hex(0xFF8A8A))
     }

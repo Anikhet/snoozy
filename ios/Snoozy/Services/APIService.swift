@@ -69,10 +69,12 @@ actor APIService {
     // MARK: - Generate Audio
 
     /// Sends story text to the backend and downloads the MP3 audio data.
-    func generateAudio(text: String) async throws -> Data {
+    /// Optionally specifies a TTS voice (defaults to server config if nil).
+    func generateAudio(text: String, voice: String? = nil) async throws -> Data {
         let url = URL(string: "\(baseURL)/api/generate-audio")!
 
-        let body = ["text": text]
+        var body: [String: Any] = ["text": text]
+        if let voice { body["voice"] = voice }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

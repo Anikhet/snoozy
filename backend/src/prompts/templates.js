@@ -69,6 +69,101 @@ Rules:
 - Do not include anything scary, loud, or overstimulating
 - Start with a short, creative title on the first line, then a blank line, then the story`,
   },
+  {
+    id: 'underwater-journey',
+    name: 'Underwater Journey',
+    description: 'Drift through a gentle ocean world',
+    icon: 'water.waves',
+    fields: [{ key: 'favoriteColor', label: 'Favorite Color', type: 'color' }],
+    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite color is {favoriteColor}.
+
+The story should be about {name} sinking softly into a warm, {favoriteColor}-tinted ocean where friendly fish with glowing fins swim in slow circles. They ride on the back of a gentle sea turtle through swaying coral gardens and past whispering sea plants, everything bathed in soft {favoriteColor} light.
+
+Rules:
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
+- Use simple, soothing language appropriate for a {age}-year-old
+- The tone should be calm, gentle, and sleepy
+- Include sensory details (warm water, soft bubbles, gentle currents, quiet sea sounds)
+- The story must end with {name} drifting back to shore and falling peacefully asleep on warm sand
+- Do not include anything scary, loud, or overstimulating
+- Start with a short, creative title on the first line, then a blank line, then the story`,
+  },
+  {
+    id: 'space-explorer',
+    name: 'Space Explorer',
+    description: 'A slow, peaceful trip through the cosmos',
+    icon: 'moonphase.waning.crescent',
+    fields: [{ key: 'favoriteThing', label: 'Favorite Thing', type: 'text' }],
+    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite thing is {favoriteThing}.
+
+The story should be about {name} floating in a cozy little spaceship shaped like {favoriteThing}, drifting past glowing planets and sleeping moons. Each planet hums a soft lullaby. They wave at friendly stars and pass through clouds of shimmering stardust that feels like warm blankets.
+
+Rules:
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
+- Use simple, soothing language appropriate for a {age}-year-old
+- The tone should be calm, gentle, and sleepy — space is quiet and peaceful, not exciting
+- Include sensory details (warm starlight, soft humming, weightless floating)
+- The story must end with {name} gently floating back home and drifting into sleep
+- Do not include anything scary, loud, or overstimulating
+- Start with a short, creative title on the first line, then a blank line, then the story`,
+  },
+  {
+    id: 'fairy-garden',
+    name: 'Fairy Garden',
+    description: 'Wander through a tiny magical garden',
+    icon: 'leaf.fill',
+    fields: [{ key: 'favoriteColor', label: 'Favorite Color', type: 'color' }],
+    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite color is {favoriteColor}.
+
+The story should be about {name} shrinking down to the size of a ladybug and discovering a secret fairy garden tucked under a rosebush. Tiny {favoriteColor} lanterns hang from blades of grass, and gentle fairies with {favoriteColor} wings invite {name} to a quiet tea party on a mushroom table.
+
+Rules:
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
+- Use simple, soothing language appropriate for a {age}-year-old
+- The tone should be calm, gentle, and sleepy
+- Include sensory details (tiny dewdrops, soft fairy music, warm firefly glow)
+- The story must end with {name} growing back to full size, tucked in bed, and falling asleep
+- Do not include anything scary, loud, or overstimulating
+- Start with a short, creative title on the first line, then a blank line, then the story`,
+  },
+  {
+    id: 'snowy-mountain',
+    name: 'Snowy Mountain',
+    description: 'A cozy adventure in gentle snowfall',
+    icon: 'snowflake',
+    fields: [{ key: 'favoriteAnimal', label: 'Favorite Animal', type: 'animal' }],
+    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite animal is a {favoriteAnimal}.
+
+The story should be about {name} walking up a quiet, snowy mountain path with a friendly {favoriteAnimal}. Soft snowflakes drift down like feathers. They find a cozy cabin at the top with a warm fire, hot cocoa, and a pile of fluffy blankets. The {favoriteAnimal} curls up beside them.
+
+Rules:
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
+- Use simple, soothing language appropriate for a {age}-year-old
+- The tone should be calm, gentle, and sleepy
+- Include sensory details (soft crunching snow, warm fire, gentle wind, cozy blankets)
+- The story must end with {name} and their {favoriteAnimal} falling asleep by the warm fire
+- Do not include anything scary, loud, or overstimulating
+- Start with a short, creative title on the first line, then a blank line, then the story`,
+  },
+  {
+    id: 'rainy-day-cozy',
+    name: 'Rainy Day Cozy',
+    description: 'Curl up and listen to the rain',
+    icon: 'cloud.rain.fill',
+    fields: [{ key: 'favoriteThing', label: 'Favorite Thing', type: 'text' }],
+    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite thing is {favoriteThing}.
+
+The story should be about {name} on a soft rainy evening, building a blanket fort in the living room. The gentle rain taps on the windows like a lullaby. Inside the fort, {name} has {favoriteThing} and a warm cup of milk. They listen to the rain and imagine the raindrops telling tiny, sleepy stories.
+
+Rules:
+- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
+- Use simple, soothing language appropriate for a {age}-year-old
+- The tone should be calm, gentle, and sleepy
+- Include sensory details (soft rain sounds, warm blankets, dim lamplight, gentle thunder far away)
+- The story must end with {name} yawning and falling asleep listening to the rain
+- Do not include anything scary, loud, or overstimulating
+- Start with a short, creative title on the first line, then a blank line, then the story`,
+  },
 ]
 
 /**

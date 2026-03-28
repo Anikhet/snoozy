@@ -29,13 +29,15 @@ struct ContentRouter: View {
                 .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
 
             case .storyForm:
-                StoryFormView(
-                    template: viewModel.selectedTemplate!,
-                    childDetails: $viewModel.childDetails,
-                    onGenerate: { viewModel.generateStory() },
-                    onBack: { viewModel.navigateTo(.templatePicker) }
-                )
-                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                if let template = viewModel.selectedTemplate {
+                    StoryFormView(
+                        template: template,
+                        childDetails: $viewModel.childDetails,
+                        onGenerate: { viewModel.generateStory() },
+                        onBack: { viewModel.navigateTo(.templatePicker) }
+                    )
+                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                }
 
             case .player:
                 if let story = viewModel.currentStory {

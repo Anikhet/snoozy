@@ -84,6 +84,7 @@ final class StoryViewModel {
 
         let storyId = UUID()
         let details = childDetails
+        let voiceId = details.voiceId
         let placeholder = Story.placeholder(id: storyId, templateId: template.id, childName: details.name)
 
         savedStories.insert(placeholder, at: 0)
@@ -91,20 +92,30 @@ final class StoryViewModel {
 
         let task = Task { [weak self] in
             guard let self else { return }
-            await self.runGeneration(storyId: storyId, templateId: template.id, childDetails: details)
+            await self.runGeneration(
+                storyId: storyId,
+                templateId: template.id,
+                childDetails: details,
+                voiceId: voiceId
+            )
         }
         generationTasks[storyId] = task
     }
 
     /// The actual generation pipeline, runs in the background.
-    private func runGeneration(storyId: UUID, templateId: String, childDetails: ChildDetails) async {
+    private func runGeneration(
+        storyId: UUID,
+        templateId: String,
+        childDetails: ChildDetails,
+        voiceId: String
+    ) async {
         do {
             let (title, storyText) = try await apiService.generateStory(
                 templateId: templateId,
                 childDetails: childDetails
             )
 
-            let audioData = try await apiService.generateAudio(text: storyText)
+            let audioData = try await apiService.generateAudio(text: storyText, voice: voiceId)
             let audioFileName = try await storageService.saveAudioFile(data: audioData)
 
             let finishedStory = Story(

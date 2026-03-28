@@ -56,5 +56,55 @@ enum Templates {
                 TemplateField(id: "favoriteThing", label: "Favorite Thing", type: .text)
             ]
         ),
+        Template(
+            id: "underwater-journey",
+            name: "Underwater Journey",
+            description: "Drift through a gentle ocean world",
+            icon: "water.waves",
+            cardColor: DesignTokens.Colors.cardOcean,
+            fields: [
+                TemplateField(id: "favoriteColor", label: "Favorite Color", type: .color)
+            ]
+        ),
+        Template(
+            id: "space-explorer",
+            name: "Space Explorer",
+            description: "A slow, peaceful trip through the cosmos",
+            icon: "moonphase.waning.crescent",
+            cardColor: DesignTokens.Colors.cardCosmos,
+            fields: [
+                TemplateField(id: "favoriteThing", label: "Favorite Thing", type: .text)
+            ]
+        ),
+        Template(
+            id: "fairy-garden",
+            name: "Fairy Garden",
+            description: "Wander through a tiny magical garden",
+            icon: "leaf.fill",
+            cardColor: DesignTokens.Colors.cardRose,
+            fields: [
+                TemplateField(id: "favoriteColor", label: "Favorite Color", type: .color)
+            ]
+        ),
+        Template(
+            id: "snowy-mountain",
+            name: "Snowy Mountain",
+            description: "A cozy adventure in gentle snowfall",
+            icon: "snowflake",
+            cardColor: DesignTokens.Colors.cardSnow,
+            fields: [
+                TemplateField(id: "favoriteAnimal", label: "Favorite Animal", type: .animal)
+            ]
+        ),
+        Template(
+            id: "rainy-day-cozy",
+            name: "Rainy Day Cozy",
+            description: "Curl up and listen to the rain",
+            icon: "cloud.rain.fill",
+            cardColor: DesignTokens.Colors.cardRain,
+            fields: [
+                TemplateField(id: "favoriteThing", label: "Favorite Thing", type: .text)
+            ]
+        ),
     ]
 }

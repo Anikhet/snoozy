@@ -23,6 +23,7 @@
 		D299053E24FF0F784486E586 /* StoryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985626B73691060040E18DC6 /* StoryPlayerView.swift */; };
 		D6D2E5052D1FCC1C3D707D6C /* StoryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC3B788E845099328EE7CC7 /* StoryFormView.swift */; };
 		DB59CDC46D210725D010BE4F /* StorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926CA919334308221ACB395E /* StorageService.swift */; };
+		E624BA350B26F0ED2DC7A88B /* NarrationVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240E0E969849A2916D8E03D5 /* NarrationVoice.swift */; };
 		F12FA21772D81607E56D473A /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6691BB77FB38C8314308A6D7 /* AppConfig.swift */; };
 		F1F50EF01AFB0869CCECC35A /* StoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4F6B97A5155E6A117917DA /* StoryViewModel.swift */; };
 /* End PBXBuildFile section */
@@ -33,6 +34,7 @@
 		109239F3A07C28F9D2E44850 /* Snoozy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Snoozy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		18569175A801AA88F321A641 /* TemplateCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateCard.swift; sourceTree = "<group>"; };
 		1DDAB9A2ECAB961BBB32FE15 /* ChildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildDetails.swift; sourceTree = "<group>"; };
+		240E0E969849A2916D8E03D5 /* NarrationVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NarrationVoice.swift; sourceTree = "<group>"; };
 		33C4650686348D51A7CF38DF /* SnoozyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnoozyApp.swift; sourceTree = "<group>"; };
 		36A95306B12304295FB327C2 /* Template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Template.swift; sourceTree = "<group>"; };
 		47CBAEBB35134B59C504B372 /* ContentRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRouter.swift; sourceTree = "<group>"; };
@@ -55,6 +57,7 @@
 			isa = PBXGroup;
 			children = (
 				1DDAB9A2ECAB961BBB32FE15 /* ChildDetails.swift */,
+				240E0E969849A2916D8E03D5 /* NarrationVoice.swift */,
 				D32BBB80FEE39FF5C2530172 /* Story.swift */,
 				36A95306B12304295FB327C2 /* Template.swift */,
 			);
@@ -206,6 +209,7 @@
 				214FEB6EA052244ABE0DEFC8 /* ContentRouter.swift in Sources */,
 				2475F425C83FBDCC546D0AA5 /* DesignTokens.swift in Sources */,
 				9C23D6349343575A9701CFD0 /* HomeView.swift in Sources */,
+				E624BA350B26F0ED2DC7A88B /* NarrationVoice.swift in Sources */,
 				86DABCAFFDED206B5DFA7EFD /* SnoozyApp.swift in Sources */,
 				A20AFE5E2ACBDD00CC9B481D /* SnoozyButton.swift in Sources */,
 				DB59CDC46D210725D010BE4F /* StorageService.swift in Sources */,

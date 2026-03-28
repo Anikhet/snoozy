@@ -21,6 +21,7 @@ struct StoryFormView: View {
                     nameField
                     agePicker
                     templateSpecificField
+                    voicePicker
                     generateButton
                 }
                 .padding(.bottom, DesignTokens.Spacing.xxl)
@@ -159,6 +160,41 @@ struct StoryFormView: View {
             .font(DesignTokens.Fonts.body)
             .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.surface)
+            .clipShape(.rect(cornerRadius: DesignTokens.Radii.small))
+            .snoozyCardShadow()
+        }
+    }
+
+    // MARK: - Voice Picker
+
+    private var voicePicker: some View {
+        fieldSection(label: "Narrator Voice") {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    ForEach(NarrationVoices.all) { voice in
+                        voiceButton(voice)
+                    }
+                }
+                .padding(.vertical, DesignTokens.Spacing.xs)
+            }
+        }
+    }
+
+    private func voiceButton(_ voice: NarrationVoice) -> some View {
+        let isSelected = childDetails.voiceId == voice.id
+        return Button {
+            childDetails.voiceId = voice.id
+        } label: {
+            VStack(spacing: DesignTokens.Spacing.xs) {
+                Text(voice.displayName)
+                    .font(DesignTokens.Fonts.headline)
+                Text(voice.description)
+                    .font(.system(.caption2, design: .rounded))
+            }
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .foregroundStyle(isSelected ? .white : DesignTokens.Colors.textPrimary)
+            .background(isSelected ? DesignTokens.Colors.primary : DesignTokens.Colors.surface)
             .clipShape(.rect(cornerRadius: DesignTokens.Radii.small))
             .snoozyCardShadow()
         }

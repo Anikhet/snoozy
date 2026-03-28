@@ -118,9 +118,13 @@ struct StoryRow: View {
         }
     }
 
-    private var formattedDate: String {
+    private static let dateFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
-        return formatter.localizedString(for: story.createdAt, relativeTo: Date())
+        return formatter
+    }()
+
+    private var formattedDate: String {
+        Self.dateFormatter.localizedString(for: story.createdAt, relativeTo: Date())
     }
 }
