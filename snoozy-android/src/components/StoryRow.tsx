@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { AppIcon } from '@/components/AppIcon'
 import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
 import { StoryStatus } from '@/types/story'
 import { TEMPLATES } from '@/config/templates'
@@ -38,7 +39,7 @@ export const StoryRow = memo(function StoryRow({
 }: StoryRowProps) {
   const { colors, isDark } = useThemeColors()
   const template = TEMPLATES.find((t) => t.id === templateId)
-  const iconName = (template?.icon ?? 'book') as keyof typeof Ionicons.glyphMap
+  const iconName = template?.icon ?? 'book'
   const isDisabled = status === StoryStatus.Generating
 
   const iconColor =
@@ -63,7 +64,7 @@ export const StoryRow = memo(function StoryRow({
         ]}
       >
         <View style={styles.iconFrame}>
-          <Ionicons name={iconName} size={20} color={iconColor} />
+          <AppIcon name={iconName} size={20} color={iconColor} />
         </View>
 
         <View style={styles.textContainer}>

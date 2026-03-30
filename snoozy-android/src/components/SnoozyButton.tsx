@@ -15,12 +15,11 @@ export function SnoozyButton({ title, icon, onPress, disabled }: SnoozyButtonPro
   const { colors, isDark } = useThemeColors()
 
   return (
-    <Pressable onPress={onPress} disabled={disabled}>
+    <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
       <View
         style={[
           styles.container,
           { backgroundColor: colors.primary },
-          getCardShadow(isDark),
         ]}
       >
         <Ionicons name={icon} size={17} color="#FFFFFF" style={styles.icon} />
@@ -41,6 +40,9 @@ const styles = StyleSheet.create({
     borderRadius: Radii.button,
     width: '100%',
     gap: Spacing.sm,
+  },
+  pressable: {
+    alignSelf: 'stretch',
   },
   icon: {
     fontWeight: '600',

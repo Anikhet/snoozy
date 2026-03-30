@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { AppIcon } from '@/components/AppIcon'
 import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TIMER_OPTIONS } from '@/services/audioService'
@@ -140,7 +141,7 @@ export function StoryPlayerScreen() {
         {/* Playback Buttons */}
         <View style={styles.buttonRow}>
           <Pressable onPress={handleSeekBack}>
-            <Ionicons name="play-back" size={28} color={colors.textSecondary} />
+            <AppIcon name="gobackward.15" size={28} color={colors.textSecondary} />
           </Pressable>
 
           <Pressable onPress={togglePlayPause}>
@@ -152,11 +153,7 @@ export function StoryPlayerScreen() {
           </Pressable>
 
           <Pressable onPress={handleSeekForward}>
-            <Ionicons
-              name="play-forward"
-              size={28}
-              color={colors.textSecondary}
-            />
+            <AppIcon name="goforward.15" size={28} color={colors.textSecondary} />
           </Pressable>
         </View>
 
@@ -172,7 +169,7 @@ export function StoryPlayerScreen() {
               { backgroundColor: colors.primary + '1A' },
             ]}
           >
-            <Ionicons name="moon" size={12} color={colors.primary} />
+            <AppIcon name="moon.zzz.fill" size={12} color={colors.primary} />
             <Text style={[Fonts.caption, { color: colors.primary }]}>
               Sleep in {formatTime(sleepTimerRemaining)}
             </Text>
@@ -186,7 +183,7 @@ export function StoryPlayerScreen() {
         ) : (
           <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
             <View style={styles.sleepTimerInactive}>
-              <Ionicons name="moon" size={12} color={colors.textSecondary} />
+              <AppIcon name="moon.zzz" size={12} color={colors.textSecondary} />
               <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
                 Sleep Timer
               </Text>

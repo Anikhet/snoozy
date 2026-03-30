@@ -18,6 +18,7 @@ import { AppConfig } from '@/config/appConfig'
 import { VOICES } from '@/config/voices'
 import { SnoozyButton } from '@/components/SnoozyButton'
 import { Chip } from '@/components/Chip'
+import { AppIcon } from '@/components/AppIcon'
 
 const COLOR_OPTIONS = ['Red', 'Blue', 'Purple', 'Pink', 'Green', 'Yellow', 'Orange']
 const ANIMAL_OPTIONS = ['Bunny', 'Bear', 'Fox', 'Owl', 'Deer', 'Cat', 'Dog', 'Elephant']
@@ -70,8 +71,8 @@ export function StoryFormScreen() {
       >
         {/* Template Badge */}
         <View style={styles.templateBadge}>
-          <Ionicons
-            name={template.icon as keyof typeof Ionicons.glyphMap}
+          <AppIcon
+            name={template.icon}
             size={22}
             color={colors.textPrimary}
           />

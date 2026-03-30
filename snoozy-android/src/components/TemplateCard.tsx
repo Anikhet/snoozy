@@ -2,6 +2,7 @@ import React, { memo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { AppIcon } from '@/components/AppIcon'
 import { Fonts, Spacing, Radii, Sizing, getCardShadow } from '@/config/tokens'
 
 interface TemplateCardProps {
@@ -34,8 +35,8 @@ export const TemplateCard = memo(function TemplateCard({
         ]}
       >
         <View style={styles.iconFrame}>
-          <Ionicons
-            name={icon as keyof typeof Ionicons.glyphMap}
+          <AppIcon
+            name={icon}
             size={32}
             color={colors.primary}
           />

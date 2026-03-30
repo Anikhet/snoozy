@@ -7,8 +7,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated'
-import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { AppIcon } from '@/components/AppIcon'
 import { Fonts, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Screen } from '@/types/navigation'
@@ -99,7 +99,7 @@ export function HomeScreen() {
         <View style={styles.spacerXxl} />
 
         <Animated.View style={pulseStyle}>
-          <Ionicons name="moon" size={44} color={colors.primary} />
+          <AppIcon name="moon.stars.fill" size={44} color={colors.primary} />
         </Animated.View>
 
         <Text style={[Fonts.largeTitle, { color: colors.textPrimary }]}>
@@ -141,8 +141,8 @@ export function HomeScreen() {
 function EmptyState({ colors }: { colors: ReturnType<typeof useThemeColors>['colors'] }) {
   return (
     <View style={styles.emptyState}>
-      <Ionicons
-        name="book"
+      <AppIcon
+        name="book.closed.fill"
         size={36}
         color={colors.textSecondary + '80'}
       />
