@@ -15,11 +15,10 @@ export async function generateStory(
   childDetails: ChildDetails,
   signal?: AbortSignal
 ): Promise<StoryResult> {
-  const timeoutSignal = AbortSignal.timeout(60_000)
-  const combinedSignal = signal
-    ? AbortSignal.any([signal, timeoutSignal])
-    : timeoutSignal
+  const controller = signal ? undefined : new AbortController()
+  const timeoutId = setTimeout(() => controller?.abort(), 60_000)
 
+  console.log('[API] Calling:', `${AppConfig.backendUrl}/api/generate-story`)
   const response = await fetch(`${AppConfig.backendUrl}/api/generate-story`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -33,8 +32,9 @@ export async function generateStory(
         favoriteThing: childDetails.favoriteThing,
       },
     }),
-    signal: combinedSignal,
+    signal: signal ?? controller!.signal,
   })
+  clearTimeout(timeoutId)
 
   if (!response.ok) {
     throw new Error(`Server error: ${response.status}`)
@@ -59,17 +59,16 @@ export async function generateAudio(
   voice?: string,
   signal?: AbortSignal
 ): Promise<string> {
-  const timeoutSignal = AbortSignal.timeout(120_000)
-  const combinedSignal = signal
-    ? AbortSignal.any([signal, timeoutSignal])
-    : timeoutSignal
+  const controller = signal ? undefined : new AbortController()
+  const timeoutId = setTimeout(() => controller?.abort(), 120_000)
 
   const response = await fetch(`${AppConfig.backendUrl}/api/generate-audio`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, voice }),
-    signal: combinedSignal,
+    signal: signal ?? controller!.signal,
   })
+  clearTimeout(timeoutId)
 
   if (!response.ok) {
     throw new Error(`Server error: ${response.status}`)

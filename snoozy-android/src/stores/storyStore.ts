@@ -233,6 +233,7 @@ async function runGeneration(
     updateStoryInStore(finishedStory)
   } catch (error) {
     if (signal.aborted) return
+    console.error('[StoryGen] Failed:', error)
     markStoryFailed(storyId)
   } finally {
     generationTasks.delete(storyId)

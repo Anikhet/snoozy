@@ -24,6 +24,6 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ success: false, error: 'Internal server error' })
 })
 
-app.listen(config.port, () => {
-  console.log(`Snoozy backend running on http://localhost:${config.port}`)
+app.listen(config.port, '0.0.0.0', () => {
+  console.log(`Snoozy backend running on http://0.0.0.0:${config.port}`)
 })

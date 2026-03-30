@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/emulator/emulator.exe\" -list-avds)"
+    ]
+  }
+}
