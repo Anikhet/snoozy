@@ -10,6 +10,11 @@ import Animated, {
   SlideOutLeft,
   SlideInDown,
 } from 'react-native-reanimated'
+import { useFonts } from 'expo-font'
+import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular'
+import { Nunito_500Medium } from '@expo-google-fonts/nunito/500Medium'
+import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold'
+import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold'
 import { Colors } from '@/config/tokens'
 import { Screen } from '@/types/navigation'
 import { useStoryStore } from '@/stores/storyStore'
@@ -22,6 +27,13 @@ import { StoryPlayerScreen } from '@/screens/StoryPlayerScreen'
 const TRANSITION_DURATION = 350
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+  })
+
   const scheme = useColorScheme()
   const isDark = scheme === 'dark'
   const colors = isDark ? Colors.dark : Colors.light
@@ -32,6 +44,8 @@ export default function App() {
     configureAudioMode()
     loadSavedStories()
   }, [loadSavedStories])
+
+  if (!fontsLoaded) return null
 
   return (
     <GestureHandlerRootView style={styles.flex}>

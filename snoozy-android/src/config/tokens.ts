@@ -79,14 +79,14 @@ export const Sizing = {
 } as const
 
 export const Fonts = StyleSheet.create({
-  largeTitle: { fontSize: 34, fontWeight: '700' },
-  title: { fontSize: 22, fontWeight: '600' },
-  title3: { fontSize: 20, fontWeight: '500' },
-  headline: { fontSize: 17, fontWeight: '500' },
-  body: { fontSize: 17, fontWeight: '400' },
-  caption: { fontSize: 12, fontWeight: '400' },
-  caption2: { fontSize: 11, fontWeight: '400' },
-  buttonLabel: { fontSize: 20, fontWeight: '600' },
+  largeTitle: { fontSize: 34, fontFamily: 'Nunito_700Bold' },
+  title: { fontSize: 22, fontFamily: 'Nunito_600SemiBold' },
+  title3: { fontSize: 20, fontFamily: 'Nunito_500Medium' },
+  headline: { fontSize: 17, fontFamily: 'Nunito_500Medium' },
+  body: { fontSize: 17, fontFamily: 'Nunito_400Regular' },
+  caption: { fontSize: 12, fontFamily: 'Nunito_400Regular' },
+  caption2: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+  buttonLabel: { fontSize: 20, fontFamily: 'Nunito_600SemiBold' },
 })
 
 /**
