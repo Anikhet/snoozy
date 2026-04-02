@@ -1,6 +1,7 @@
 const express = require('express')
 const { z } = require('zod')
 const OpenAI = require('openai')
+const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, templates } = require('../prompts/templates')
 
@@ -138,6 +139,8 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
 
     if (config.ttsProvider === 'elevenlabs') {
       await generateWithElevenLabs(text, config, res, startTime)
+    } else if (config.ttsProvider === 'azure') {
+      await generateWithAzure(text, config, res, startTime, voice)
     } else {
       await generateWithOpenAI(text, config, res, startTime, voice)
     }
@@ -239,6 +242,64 @@ async function generateWithElevenLabs(text, config, res, startTime) {
 
   const totalElapsed = Date.now() - startTime
   log('AUDIO', `Done! Streamed ${(totalBytes / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
+}
+
+// ── Azure OpenAI TTS ──────────────────────────────────────────
+
+async function generateWithAzure(text, config, res, startTime, requestedVoice) {
+  const voice = requestedVoice || config.openaiTtsVoice
+  const { azureOpenaiEndpoint, azureOpenaiApiKey, azureOpenaiApiVersion, azureOpenaiTtsDeployment } = config
+
+  // Standard Azure OpenAI TTS endpoint construction
+  const url = `${azureOpenaiEndpoint.replace(/\/+$/, '')}/openai/deployments/${azureOpenaiTtsDeployment}/audio/speech?api-version=${azureOpenaiApiVersion}`
+  
+  log('AUDIO', `Calling Azure OpenAI TTS (fetch): ${url}`)
+  log('AUDIO', `Using voice: ${voice}`)
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'api-key': azureOpenaiApiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: azureOpenaiTtsDeployment, // Mandatory for Azure
+        input: text,
+        voice: voice,
+        response_format: 'mp3',
+        speed: 0.95,
+      }),
+    })
+
+    const apiElapsed = Date.now() - startTime
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      log('AUDIO', `Azure OpenAI FAILED (${response.status}) after ${apiElapsed}ms:`, errorText)
+      throw new Error(`Azure OpenAI error ${response.status}: ${errorText}`)
+    }
+
+    log('AUDIO', `Azure OpenAI TTS responded in ${apiElapsed}ms, streaming audio...`)
+
+    res.setHeader('Content-Type', 'audio/mpeg')
+
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    res.end(buffer)
+
+    const totalElapsed = Date.now() - startTime
+    log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
+  } catch (error) {
+    const elapsed = Date.now() - startTime
+    log('AUDIO', `FAILED after ${elapsed}ms: ${error.message}`)
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: `Azure OpenAI TTS Failed: ${error.message}`,
+      })
+    }
+  }
 }
 
 module.exports = router
