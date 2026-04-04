@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { useAuth } from '@clerk/clerk-expo'
 import { useStoryStore } from '@/stores/storyStore'
 import { Screen } from '@/types/navigation'
 import { AppConfig } from '@/config/appConfig'
@@ -29,7 +30,8 @@ export function StoryFormScreen() {
   const childDetails = useStoryStore((s) => s.childDetails)
   const updateChildDetails = useStoryStore((s) => s.updateChildDetails)
   const navigateTo = useStoryStore((s) => s.navigateTo)
-  const generateStory = useStoryStore((s) => s.generateStory)
+  const generateStoryAction = useStoryStore((s) => s.generateStory)
+  const { getToken } = useAuth()
 
   const isFormValid = useCallback(() => {
     if (!template) return false
@@ -248,7 +250,12 @@ export function StoryFormScreen() {
           <SnoozyButton
             title="Story Time!"
             icon="sparkles"
-            onPress={generateStory}
+            onPress={async () => {
+              const token = await getToken()
+              if (token) {
+                generateStoryAction(token)
+              }
+            }}
             disabled={!valid}
           />
         </View>

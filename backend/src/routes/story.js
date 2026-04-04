@@ -252,7 +252,7 @@ async function generateWithAzure(text, config, res, startTime, requestedVoice) {
 
   // Standard Azure OpenAI TTS endpoint construction
   const url = `${azureOpenaiEndpoint.replace(/\/+$/, '')}/openai/deployments/${azureOpenaiTtsDeployment}/audio/speech?api-version=${azureOpenaiApiVersion}`
-  
+
   log('AUDIO', `Calling Azure OpenAI TTS (fetch): ${url}`)
   log('AUDIO', `Using voice: ${voice}`)
 
