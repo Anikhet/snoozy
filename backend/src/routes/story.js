@@ -60,11 +60,27 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
     }
     log('STORY', 'Prompt built successfully')
 
-    log('STORY', 'Calling OpenAI (gpt-4o-mini)...')
-    const openai = new OpenAI({ apiKey: req.app.locals.config.openaiApiKey })
+    const config = req.app.locals.config
+    let client
+    let model
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    if (config.ttsProvider === 'azure') {
+      log('STORY', `Calling Azure OpenAI GPT (${config.azureOpenaiChatDeployment})...`)
+      client = new AzureOpenAI({
+        endpoint: config.azureOpenaiEndpoint,
+        apiKey: config.azureOpenaiApiKey,
+        apiVersion: config.azureOpenaiChatVersion,
+        deployment: config.azureOpenaiChatDeployment,
+      })
+      model = config.azureOpenaiChatDeployment
+    } else {
+      log('STORY', 'Calling Standard OpenAI (gpt-4o-mini)...')
+      client = new OpenAI({ apiKey: config.openaiApiKey })
+      model = 'gpt-4o-mini'
+    }
+
+    const completion = await client.chat.completions.create({
+      model,
       temperature: 0.7,
       max_tokens: 800,
       messages: [

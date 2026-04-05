@@ -30,6 +30,8 @@ function loadConfig() {
     azureOpenaiApiKey: process.env.AZURE_OPENAI_API_KEY,
     azureOpenaiApiVersion: process.env.AZURE_OPENAI_API_VERSION || '2025-12-15',
     azureOpenaiTtsDeployment: process.env.AZURE_OPENAI_TTS_DEPLOYMENT || 'gpt-4o-mini-tts',
+    azureOpenaiChatDeployment: process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-4o-mini',
+    azureOpenaiChatVersion: process.env.AZURE_OPENAI_CHAT_VERSION || '2025-01-01-preview',
     clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY,
     clerkSecretKey: process.env.CLERK_SECRET_KEY,
     port: parseInt(process.env.PORT || '3001', 10),
