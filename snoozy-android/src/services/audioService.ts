@@ -85,6 +85,10 @@ export function stop(): void {
   cancelSleepTimer()
 
   if (currentPlayer) {
+    console.log('[AudioService] Stopping playback')
+    if (currentPlayer.playing) {
+      currentPlayer.pause()
+    }
     currentPlayer.remove()
     currentPlayer = null
   }

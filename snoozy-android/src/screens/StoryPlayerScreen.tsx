@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  BackHandler,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
@@ -35,6 +36,31 @@ export function StoryPlayerScreen() {
 
   const [showTimerPicker, setShowTimerPicker] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
+ 
+  // Handle audio cleanup on unmount
+  useEffect(() => {
+    console.log('[Player] Mounting StoryPlayerScreen')
+    return () => {
+      console.log('[Player] Unmounting - cleaning up audio')
+      stopPlayback()
+    }
+  }, [stopPlayback])
+ 
+  // Handle physical back button on Android
+  useEffect(() => {
+    const handleBackPress = () => {
+      console.log('[Player] Back button pressed - stopping audio')
+      stopPlayback()
+      return true
+    }
+ 
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress
+    )
+ 
+    return () => subscription.remove()
+  }, [stopPlayback])
 
   const handleBarLayout = useCallback(
     (e: { nativeEvent: { layout: { width: number } } }) => {
