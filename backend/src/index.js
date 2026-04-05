@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const { loadConfig } = require('./config')
-const { clerkMiddleware, requireAuth } = require('@clerk/clerk-sdk-node')
+const { clerkMiddleware, requireAuth } = require('@clerk/express')
 const storyRoutes = require('./routes/story')
 
 const config = loadConfig()
