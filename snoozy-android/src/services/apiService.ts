@@ -13,6 +13,7 @@ interface StoryResult {
 export async function generateStory(
   templateId: string,
   childDetails: ChildDetails,
+  token: string,
   signal?: AbortSignal
 ): Promise<StoryResult> {
   const controller = signal ? undefined : new AbortController()
@@ -21,7 +22,10 @@ export async function generateStory(
   console.log('[API] Calling:', `${AppConfig.backendUrl}/api/generate-story`)
   const response = await fetch(`${AppConfig.backendUrl}/api/generate-story`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       templateId,
       childDetails: {
@@ -56,6 +60,7 @@ export async function generateStory(
  */
 export async function generateAudio(
   text: string,
+  token: string,
   voice?: string,
   signal?: AbortSignal
 ): Promise<string> {
@@ -64,7 +69,10 @@ export async function generateAudio(
 
   const response = await fetch(`${AppConfig.backendUrl}/api/generate-audio`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ text, voice }),
     signal: signal ?? controller!.signal,
   })

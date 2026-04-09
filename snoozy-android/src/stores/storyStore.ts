@@ -35,7 +35,7 @@ interface StoryStore {
   goHome: () => void
   selectTemplate: (template: Template) => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  generateStory: () => void
+  generateStory: (token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
   retryStory: (story: Story) => void
@@ -94,7 +94,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
      * Creates a placeholder story, navigates home immediately,
      * and kicks off generation in the background.
      */
-    generateStory: () => {
+    generateStory: (token) => {
       const { selectedTemplate, childDetails } = get()
       if (!selectedTemplate) return
 
@@ -120,7 +120,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const templateId = selectedTemplate.id
       const voiceId = details.voiceId
 
-      runGeneration(storyId, templateId, details, voiceId, abortController.signal)
+      runGeneration(storyId, templateId, details, voiceId, token, abortController.signal)
     },
 
     playStory: (story) => {
@@ -206,16 +206,18 @@ async function runGeneration(
   templateId: string,
   childDetails: ChildDetails,
   voiceId: string,
+  token: string,
   signal: AbortSignal
 ): Promise<void> {
   try {
     const { title, storyText } = await apiService.generateStory(
       templateId,
       childDetails,
+      token,
       signal
     )
 
-    const audioBase64 = await apiService.generateAudio(storyText, voiceId, signal)
+    const audioBase64 = await apiService.generateAudio(storyText, token, voiceId, signal)
     const audioFileName = await storageService.saveAudioFile(audioBase64)
 
     const finishedStory: Story = {
