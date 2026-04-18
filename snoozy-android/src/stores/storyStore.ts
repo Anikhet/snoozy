@@ -24,6 +24,9 @@ interface StoryStore {
   currentScreen: Screen
   selectedTemplate: Template | null
   childDetails: ChildDetails
+  /** Name/age declared during onboarding. Seeds every story form so the
+   *  parent doesn't retype the same details every night. */
+  onboardingDefaults: { name: string; age: number } | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -35,6 +38,7 @@ interface StoryStore {
   goHome: () => void
   selectTemplate: (template: Template) => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
+  setOnboardingDefaults: (defaults: { name: string; age: number }) => void
   generateStory: (token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
@@ -61,6 +65,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     currentScreen: Screen.Home,
     selectedTemplate: null,
     childDetails: { ...DEFAULT_CHILD_DETAILS },
+    onboardingDefaults: null,
     currentStory: null,
     savedStories: [],
     isPlaying: false,
@@ -71,23 +76,32 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     navigateTo: (screen) => set({ currentScreen: screen }),
 
     goHome: () =>
-      set({
+      set((s) => ({
         currentScreen: Screen.Home,
         selectedTemplate: null,
-        childDetails: { ...DEFAULT_CHILD_DETAILS },
+        childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
-      }),
+      })),
 
     selectTemplate: (template) =>
-      set({
+      set((s) => ({
         selectedTemplate: template,
-        childDetails: { ...DEFAULT_CHILD_DETAILS },
+        childDetails: freshChildDetails(s.onboardingDefaults),
         currentScreen: Screen.StoryForm,
-      }),
+      })),
 
     updateChildDetails: (partial) =>
       set((s) => ({
         childDetails: { ...s.childDetails, ...partial },
+      })),
+
+    setOnboardingDefaults: (defaults) =>
+      set((s) => ({
+        onboardingDefaults: defaults,
+        // Seed the current form too if it's empty
+        childDetails: s.childDetails.name
+          ? s.childDetails
+          : { ...s.childDetails, name: defaults.name, age: defaults.age },
       })),
 
     /**
@@ -109,7 +123,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         savedStories: [placeholder, ...s.savedStories],
         currentScreen: Screen.Home,
         selectedTemplate: null,
-        childDetails: { ...DEFAULT_CHILD_DETAILS },
+        childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
       }))
 
@@ -157,7 +171,10 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       set((state) => ({
         savedStories: state.savedStories.filter((item) => item.id !== story.id),
         selectedTemplate: template,
-        childDetails: { ...DEFAULT_CHILD_DETAILS, name: story.childName },
+        childDetails: {
+          ...freshChildDetails(state.onboardingDefaults),
+          name: story.childName,
+        },
         currentScreen: Screen.StoryForm,
       }))
     },
@@ -187,15 +204,26 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     stopPlayback: () => {
       audioService.stop()
-      set({
+      set((s) => ({
         currentScreen: Screen.Home,
         currentStory: null,
         selectedTemplate: null,
-        childDetails: { ...DEFAULT_CHILD_DETAILS },
-      })
+        childDetails: freshChildDetails(s.onboardingDefaults),
+      }))
     },
   }
 })
+
+/**
+ * Returns a fresh ChildDetails instance seeded with the onboarding-declared
+ * name/age (if any). Keeps the parent from having to retype every night.
+ */
+function freshChildDetails(
+  defaults: { name: string; age: number } | null,
+): ChildDetails {
+  if (!defaults) return { ...DEFAULT_CHILD_DETAILS }
+  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age }
+}
 
 /**
  * Background generation pipeline: generates story text, then audio,

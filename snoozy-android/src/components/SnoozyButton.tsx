@@ -1,37 +1,80 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Spacing, Radii, Sizing, getCardShadow } from '@/config/tokens'
+import { Fonts, Radii, Sizing, Spacing, getLiftShadow } from '@/config/tokens'
+
+export type SnoozyButtonStyle = 'primary' | 'indigo' | 'subtle'
 
 interface SnoozyButtonProps {
   title: string
-  icon: keyof typeof Ionicons.glyphMap
+  icon?: keyof typeof Ionicons.glyphMap
   onPress: () => void
   disabled?: boolean
+  style?: SnoozyButtonStyle
 }
 
-export function SnoozyButton({ title, icon, onPress, disabled }: SnoozyButtonProps) {
+/**
+ * Snoozy's primary CTA. Ink pill by default, indigo gradient for the
+ * "begin the story" moment, subtle surface for secondary actions.
+ */
+export function SnoozyButton({
+  title,
+  icon,
+  onPress,
+  disabled,
+  style = 'primary',
+}: SnoozyButtonProps) {
   const { colors, isDark } = useThemeColors()
 
+  const foreground = style === 'subtle' ? colors.ink : colors.background
+  const content = (
+    <>
+      {icon ? (
+        <Ionicons name={icon} size={18} color={foreground} />
+      ) : null}
+      <Text style={[Fonts.buttonLabel, { color: foreground }]}>{title}</Text>
+    </>
+  )
+
+  if (style === 'indigo') {
+    return (
+      <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
+        <LinearGradient
+          colors={[colors.primary, '#7272D8']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.container, getLiftShadow(isDark)]}
+        >
+          {content}
+        </LinearGradient>
+      </Pressable>
+    )
+  }
+
+  const bg =
+    style === 'subtle'
+      ? colors.surface
+      : colors.ink
   return (
     <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
       <View
         style={[
           styles.container,
-          { backgroundColor: colors.primary },
+          { backgroundColor: bg },
+          style === 'primary' ? getLiftShadow(isDark) : null,
+          style === 'subtle' ? { borderWidth: 1, borderColor: colors.hair } : null,
         ]}
       >
-        <Ionicons name={icon} size={17} color="#FFFFFF" style={styles.icon} />
-        <Text style={[Fonts.buttonLabel, styles.text]}>
-          {title}
-        </Text>
+        {content}
       </View>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
+  pressable: { alignSelf: 'stretch' },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -40,14 +83,5 @@ const styles = StyleSheet.create({
     borderRadius: Radii.button,
     width: '100%',
     gap: Spacing.sm,
-  },
-  pressable: {
-    alignSelf: 'stretch',
-  },
-  icon: {
-    fontWeight: '600',
-  },
-  text: {
-    color: '#FFFFFF',
   },
 })
