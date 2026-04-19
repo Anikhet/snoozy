@@ -7,10 +7,10 @@ import {
   View,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { formatDistanceToNow } from 'date-fns'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { AppIcon } from '@/components/AppIcon'
-import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { StoryStatus } from '@/types/story'
 import { TEMPLATES } from '@/config/templates'
 
@@ -39,11 +39,13 @@ export const StoryRow = memo(function StoryRow({
 }: StoryRowProps) {
   const { colors, isDark } = useThemeColors()
   const template = TEMPLATES.find((t) => t.id === templateId)
-  const iconName = template?.icon ?? 'book'
   const isDisabled = status === StoryStatus.Generating
 
-  const iconColor =
-    status === StoryStatus.Failed ? colors.error : colors.secondary
+  const gradient = template
+    ? isDark
+      ? template.gradient.dark
+      : template.gradient.light
+    : (isDark ? ['#2E2B4A', '#3B3458'] : ['#E8E5FF', '#B8ABE8'])
 
   function handlePress() {
     if (status === StoryStatus.Ready) onPlay(id)
@@ -51,25 +53,32 @@ export const StoryRow = memo(function StoryRow({
   }
 
   return (
-    <Pressable
-      onPress={handlePress}
-      onLongPress={() => onDelete(id)}
-      disabled={isDisabled}
-    >
+    <Pressable onPress={handlePress} onLongPress={() => onDelete(id)} disabled={isDisabled}>
       <View
         style={[
           styles.container,
-          { backgroundColor: colors.surface },
-          getCardShadow(isDark),
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.hair,
+            shadowColor: colors.ink,
+          },
         ]}
       >
-        <View style={styles.iconFrame}>
-          <AppIcon name={iconName} size={20} color={iconColor} />
+        <View style={styles.thumb}>
+          <LinearGradient
+            colors={gradient as readonly [string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={[styles.glyph, { color: colors.ink }]}>
+            {template?.glyph ?? '\u2726'}
+          </Text>
         </View>
 
         <View style={styles.textContainer}>
           <Text
-            style={[Fonts.headline, { color: colors.textPrimary }]}
+            style={[Fonts.serifHeadline, { fontSize: 16, color: colors.ink }]}
             numberOfLines={1}
           >
             {title}
@@ -103,29 +112,26 @@ function SubtitleView({
     return (
       <View style={styles.subtitleRow}>
         <ActivityIndicator size="small" color={colors.primary} />
-        <Text style={[Fonts.caption, { color: colors.primary }]}>
-          Generating...
-        </Text>
+        <Text style={[Fonts.caption, { color: colors.primary }]}>Weaving the story…</Text>
       </View>
     )
   }
 
   if (status === StoryStatus.Failed) {
     return (
-      <Text style={[Fonts.caption, { color: colors.error }]}>
-        Tap to retry
+      <Text style={[Fonts.caption, { color: colors.error }]} numberOfLines={1}>
+        Didn't quite come together — tap to retry
       </Text>
     )
   }
 
-  const relativeDate = formatDistanceToNow(new Date(createdAt), {
-    addSuffix: true,
-  })
-
+  const relativeDate = formatDistanceToNow(new Date(createdAt), { addSuffix: true })
   return (
-    <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-      For {childName} {'\u2022'} {relativeDate}
-    </Text>
+    <View style={styles.subtitleRow}>
+      <Text style={[Fonts.caption, { color: colors.inkSoft }]}>For {childName}</Text>
+      <View style={[styles.dot, { backgroundColor: colors.inkMute }]} />
+      <Text style={[Fonts.caption, { color: colors.inkSoft }]}>{relativeDate}</Text>
+    </View>
   )
 }
 
@@ -137,27 +143,20 @@ function TrailingAction({
   colors: ReturnType<typeof useThemeColors>['colors']
 }) {
   if (status === StoryStatus.Generating) {
-    return <ActivityIndicator size="small" color={colors.primary} />
+    return <ActivityIndicator size="small" color={colors.primary} style={styles.action} />
   }
 
   if (status === StoryStatus.Ready) {
     return (
-      <View
-        style={[
-          styles.actionCircle,
-          { backgroundColor: colors.primary + '1F' },
-        ]}
-      >
-        <Ionicons name="play" size={16} color={colors.primary} />
+      <View style={[styles.action, { backgroundColor: colors.primarySoft }]}>
+        <Ionicons name="play" size={14} color={colors.primary} />
       </View>
     )
   }
 
   return (
-    <View
-      style={[styles.actionCircle, { backgroundColor: colors.error + '1F' }]}
-    >
-      <Ionicons name="refresh" size={16} color={colors.error} />
+    <View style={[styles.action, { backgroundColor: colors.error + '1F' }]}>
+      <Ionicons name="refresh" size={14} color={colors.error} />
     </View>
   )
 }
@@ -166,26 +165,42 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: Radii.small,
+    padding: 12,
+    borderRadius: Radii.card,
     gap: Spacing.md,
+    borderWidth: 1,
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
-  iconFrame: {
-    width: 40,
-    height: 40,
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  glyph: {
+    fontFamily: 'Fraunces_400Regular',
+    fontSize: 22,
+  },
   textContainer: {
     flex: 1,
-    gap: Spacing.xs,
+    gap: 3,
   },
   subtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 6,
   },
-  actionCircle: {
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+  },
+  action: {
     width: 40,
     height: 40,
     borderRadius: 20,

@@ -1,19 +1,25 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
+  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  BackHandler,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { AppIcon } from '@/components/AppIcon'
-import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { Fonts, Night, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TIMER_OPTIONS } from '@/services/audioService'
+import {
+  CoverScene,
+  DreamingMoon,
+  SnoozyStar,
+  WaveformScrubber,
+} from '@/components/Visuals'
 
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
@@ -21,6 +27,8 @@ function formatTime(totalSeconds: number): string {
   return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
+/** Ambient light mode → cover scene hero, lavender wave.
+ *  Dreaming dark mode → night moon hero, glass sleep-timer drawer. */
 export function StoryPlayerScreen() {
   const { colors, isDark } = useThemeColors()
   const currentStory = useStoryStore((s) => s.currentStory)
@@ -36,234 +44,258 @@ export function StoryPlayerScreen() {
 
   const [showTimerPicker, setShowTimerPicker] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
- 
-  // Handle audio cleanup on unmount
+
+  useEffect(() => () => stopPlayback(), [stopPlayback])
+
   useEffect(() => {
-    console.log('[Player] Mounting StoryPlayerScreen')
-    return () => {
-      console.log('[Player] Unmounting - cleaning up audio')
-      stopPlayback()
-    }
-  }, [stopPlayback])
- 
-  // Handle physical back button on Android
-  useEffect(() => {
-    const handleBackPress = () => {
-      console.log('[Player] Back button pressed - stopping audio')
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       stopPlayback()
       return true
-    }
- 
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      handleBackPress
-    )
- 
-    return () => subscription.remove()
+    })
+    return () => sub.remove()
   }, [stopPlayback])
 
-  const handleBarLayout = useCallback(
-    (e: { nativeEvent: { layout: { width: number } } }) => {
-      setBarWidth(e.nativeEvent.layout.width)
-    },
-    []
+  const progress = duration > 0 ? currentTime / duration : 0
+
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .onChange((e) => {
+          if (barWidth <= 0 || duration <= 0) return
+          const f = Math.max(0, Math.min(1, e.x / barWidth))
+          seek(f * duration)
+        })
+        .runOnJS(true),
+    [barWidth, duration, seek],
   )
 
-  const progressFraction = duration > 0 ? currentTime / duration : 0
+  const tapGesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .onEnd((e) => {
+          if (barWidth <= 0 || duration <= 0) return
+          const f = Math.max(0, Math.min(1, e.x / barWidth))
+          seek(f * duration)
+        })
+        .runOnJS(true),
+    [barWidth, duration, seek],
+  )
 
-  // Gesture for seeking on the progress bar
-  const panGesture = Gesture.Pan()
-    .onStart((e) => {
-      if (barWidth <= 0 || duration <= 0) return
-      const fraction = Math.max(0, Math.min(1, e.x / barWidth))
-      seek(fraction * duration)
-    })
-    .onChange((e) => {
-      if (barWidth <= 0 || duration <= 0) return
-      const fraction = Math.max(0, Math.min(1, e.x / barWidth))
-      seek(fraction * duration)
-    })
-    .runOnJS(true)
-
-  const tapGesture = Gesture.Tap()
-    .onEnd((e) => {
-      if (barWidth <= 0 || duration <= 0) return
-      const fraction = Math.max(0, Math.min(1, e.x / barWidth))
-      seek(fraction * duration)
-    })
-    .runOnJS(true)
-
-  const composedGesture = Gesture.Race(panGesture, tapGesture)
+  const composedGesture = useMemo(
+    () => Gesture.Race(panGesture, tapGesture),
+    [panGesture, tapGesture],
+  )
 
   if (!currentStory) return null
 
-  const handleSeekBack = () => seek(Math.max(0, currentTime - 15))
-  const handleSeekForward = () => seek(Math.min(duration, currentTime + 15))
-
+  const ink = isDark ? Night.ink : colors.ink
+  const inkSoft = isDark ? Night.inkSoft : colors.inkSoft
   const isSleepTimerActive = sleepTimerRemaining !== null
 
   return (
-    <View style={styles.root}>
-      {/* Header */}
-      <View style={styles.headerSection}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={stopPlayback}>
-            <Ionicons name="close" size={20} color={colors.textSecondary} />
-          </Pressable>
-          <View style={styles.flex} />
-        </View>
+    <View style={{ flex: 1, backgroundColor: isDark ? Night.bg : colors.background }}>
+      {isDark ? <NightBackdrop /> : null}
 
-        <Text
-          style={[
-            Fonts.title,
-            { color: colors.textPrimary, textAlign: 'center' },
-          ]}
-        >
-          {currentStory.title}
-        </Text>
-
-        <Text
-          style={[
-            Fonts.caption,
-            { color: colors.textSecondary, textAlign: 'center' },
-          ]}
-        >
-          A story for {currentStory.childName}
-        </Text>
-      </View>
-
-      {/* Player Controls */}
-      <View style={styles.controls}>
-        <View style={styles.spacerLg} />
-
-        {/* Progress Bar */}
-        <GestureDetector gesture={composedGesture}>
-          <View
-            style={[styles.progressOuter, { backgroundColor: colors.surface }]}
-            onLayout={handleBarLayout}
-          >
-            <View
-              style={[
-                styles.progressInner,
-                {
-                  backgroundColor: colors.primary,
-                  width: `${progressFraction * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </GestureDetector>
-
-        {/* Time Labels */}
-        <View style={styles.timeRow}>
-          <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-            {formatTime(currentTime)}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <HeaderBtn isDark={isDark} color={ink} onPress={stopPlayback}>
+            <Ionicons name="close" size={14} color={ink} />
+          </HeaderBtn>
+          <Text style={[Fonts.eyebrow, { color: inkSoft }]}>
+            {isDark ? 'DREAMING' : 'NOW PLAYING'}
           </Text>
-          <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-            {formatTime(duration)}
-          </Text>
+          <HeaderBtn isDark={isDark} color={ink} onPress={() => {}}>
+            <Ionicons name="heart-outline" size={14} color={ink} />
+          </HeaderBtn>
         </View>
 
-        {/* Playback Buttons */}
-        <View style={styles.buttonRow}>
-          <Pressable onPress={handleSeekBack}>
-            <AppIcon name="gobackward.15" size={28} color={colors.textSecondary} />
-          </Pressable>
-
-          <Pressable onPress={togglePlayPause}>
-            <Ionicons
-              name={isPlaying ? 'pause-circle' : 'play-circle'}
-              size={64}
-              color={colors.primary}
-            />
-          </Pressable>
-
-          <Pressable onPress={handleSeekForward}>
-            <AppIcon name="goforward.15" size={28} color={colors.textSecondary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.spacerMd} />
-      </View>
-
-      {/* Sleep Timer */}
-      <View style={styles.sleepTimerSection}>
-        {isSleepTimerActive ? (
-          <View
-            style={[
-              styles.sleepTimerActive,
-              { backgroundColor: colors.primary + '1A' },
-            ]}
-          >
-            <AppIcon name="moon.zzz.fill" size={12} color={colors.primary} />
-            <Text style={[Fonts.caption, { color: colors.primary }]}>
-              Sleep in {formatTime(sleepTimerRemaining)}
-            </Text>
-            <View style={styles.flex} />
-            <Pressable onPress={cancelSleepTimer}>
-              <Text style={[Fonts.caption, { color: colors.primary }]}>
-                Cancel
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
-            <View style={styles.sleepTimerInactive}>
-              <AppIcon name="moon.zzz" size={12} color={colors.textSecondary} />
-              <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-                Sleep Timer
-              </Text>
+        {/* Hero */}
+        <View style={styles.hero}>
+          {isDark ? (
+            <View style={{ alignItems: 'center', paddingTop: 20 }}>
+              <DreamingMoon size={196} />
             </View>
-          </Pressable>
-        )}
+          ) : (
+            <CoverScene height={280} />
+          )}
+        </View>
 
-        {showTimerPicker ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.timerOptionsRow}
+        {/* Title */}
+        <View style={styles.title}>
+          <Text style={[Fonts.eyebrow, { color: inkSoft, textAlign: 'center' }]}>
+            {(isDark ? 'A CHAPTER FOR ' : 'A STORY FOR ') +
+              currentStory.childName.toUpperCase()}
+          </Text>
+          <Text
+            style={[
+              styles.titleText,
+              { color: ink, fontFamily: 'Fraunces_500Medium_Italic' },
+            ]}
+            numberOfLines={2}
           >
-            {TIMER_OPTIONS.map((option) => (
-              <Pressable
-                key={option.label}
-                onPress={() => {
-                  startSleepTimer(option.seconds)
-                  setShowTimerPicker(false)
-                }}
+            {currentStory.title}
+          </Text>
+        </View>
+
+        {/* Scrubber */}
+        <View style={styles.scrubberBlock}>
+          <GestureDetector gesture={composedGesture}>
+            <View
+              onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+              style={{ width: '100%' }}
+            >
+              <WaveformScrubber
+                progress={progress}
+                bars={isDark ? 56 : 48}
+                activeColor={isDark ? Night.ink : colors.primary}
+                inactiveColor={
+                  isDark ? 'rgba(242,237,227,0.22)' : 'rgba(43,33,48,0.14)'
+                }
+                height={38}
+              />
+            </View>
+          </GestureDetector>
+          <View style={styles.timeRow}>
+            <Text style={[Fonts.mono, { color: inkSoft }]}>{formatTime(currentTime)}</Text>
+            <Text style={[Fonts.mono, { color: inkSoft }]}>
+              {isDark ? `-${formatTime(Math.max(0, duration - currentTime))}` : formatTime(duration)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Controls */}
+        <View style={styles.controls}>
+          <SeekBtn label="−15" onPress={() => seek(Math.max(0, currentTime - 15))} isDark={isDark} color={ink} />
+          <Pressable onPress={togglePlayPause}>
+            {isDark ? (
+              <LinearGradient
+                colors={['#F9F2E4', colors.accent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.playBtn, { shadowColor: colors.accent, shadowOpacity: 0.45, shadowRadius: 22, shadowOffset: { width: 0, height: 12 }, elevation: 14 }]}
               >
-                <View
-                  style={[
-                    styles.timerOption,
-                    { backgroundColor: colors.surface },
-                    getCardShadow(isDark),
-                  ]}
+                <PlayGlyph color={Night.bg} playing={isPlaying} />
+              </LinearGradient>
+            ) : (
+              <LinearGradient
+                colors={[colors.ink, '#3D3142']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.playBtn, { shadowColor: colors.ink, shadowOpacity: 0.32, shadowRadius: 18, shadowOffset: { width: 0, height: 12 }, elevation: 12 }]}
+              >
+                <PlayGlyph color={colors.background} playing={isPlaying} />
+              </LinearGradient>
+            )}
+          </Pressable>
+          <SeekBtn label="+15" onPress={() => seek(Math.min(duration, currentTime + 15))} isDark={isDark} color={ink} />
+        </View>
+
+        {/* Sleep timer */}
+        <View style={styles.sleepTimer}>
+          {isDark ? (
+            <View style={styles.nightDrawer}>
+              <LinearGradient
+                colors={[colors.primary, colors.accent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.drawerBadge}
+              >
+                <Text style={{ color: '#fff', fontSize: 14 }}>{'\u263E'}</Text>
+              </LinearGradient>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={[Fonts.eyebrow, { color: Night.inkSoft, fontSize: 10 }]}>
+                  SLEEP TIMER
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: 'Fraunces_500Medium_Italic',
+                    fontSize: 16,
+                    color: Night.ink,
+                    marginTop: 2,
+                  }}
                 >
-                  <Text
-                    style={[Fonts.caption, { color: colors.textPrimary }]}
-                  >
-                    {option.label}
+                  {isSleepTimerActive
+                    ? `Fade out in ${formatTime(sleepTimerRemaining ?? 0)}`
+                    : 'Tap edit to set a timer'}
+                </Text>
+              </View>
+              <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
+                <View style={[styles.editChip, { backgroundColor: 'rgba(242,237,227,0.1)' }]}>
+                  <Text style={{ color: Night.ink, fontFamily: 'Nunito_700Bold', fontSize: 11 }}>
+                    Edit
                   </Text>
                 </View>
               </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
-      </View>
+            </View>
+          ) : isSleepTimerActive ? (
+            <View style={[styles.sleepChip, { backgroundColor: colors.primarySoft }]}>
+              <View style={[styles.sleepChipDot, { backgroundColor: colors.primary }]}>
+                <Text style={{ color: '#fff', fontSize: 11 }}>{'\u263E'}</Text>
+              </View>
+              <Text style={{ color: colors.primaryInk, fontFamily: 'Nunito_700Bold', fontSize: 12 }}>
+                Sleep timer · {formatTime(sleepTimerRemaining ?? 0)}
+              </Text>
+              <Pressable onPress={cancelSleepTimer} style={{ marginLeft: 4 }}>
+                <Ionicons name="close" size={12} color={colors.primaryInk} />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
+              <View style={[styles.sleepChip, { backgroundColor: colors.primarySoft }]}>
+                <View style={[styles.sleepChipDot, { backgroundColor: colors.primary }]}>
+                  <Text style={{ color: '#fff', fontSize: 11 }}>{'\u263E'}</Text>
+                </View>
+                <Text style={{ color: colors.primaryInk, fontFamily: 'Nunito_700Bold', fontSize: 12 }}>
+                  Sleep timer
+                </Text>
+              </View>
+            </Pressable>
+          )}
 
-      {/* Story Text */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={styles.storyTextScroll}
-      >
+          {showTimerPicker ? (
+            <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {TIMER_OPTIONS.map((option) => (
+                <Pressable
+                  key={option.label}
+                  onPress={() => {
+                    startSleepTimer(option.seconds)
+                    setShowTimerPicker(false)
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.timerOption,
+                      {
+                        backgroundColor: isDark ? Night.glass : colors.surface,
+                        borderColor: isDark ? Night.hair : colors.hair,
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: ink, fontFamily: 'Nunito_600SemiBold', fontSize: 12 }}>
+                      {option.label}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        {/* Story text */}
         <Text
-          style={[
-            Fonts.body,
-            {
-              color: colors.textPrimary,
-              lineHeight: 23,
-              paddingVertical: Spacing.md,
-            },
-          ]}
+          style={{
+            color: ink,
+            fontFamily: 'Fraunces_400Regular',
+            fontSize: 17,
+            lineHeight: 26,
+            paddingHorizontal: Spacing.lg,
+            paddingTop: 28,
+            paddingBottom: 40,
+          }}
         >
           {currentStory.storyText}
         </Text>
@@ -272,76 +304,241 @@ export function StoryPlayerScreen() {
   )
 }
 
+function NightBackdrop() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <LinearGradient
+        colors={[Night.bg, Night.bgDeep]}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* ambient stars */}
+      {Array.from({ length: 32 }).map((_, i) => {
+        const x = ((i * 53 + 17) % 340)
+        const y = ((i * 37 + 11) % 800)
+        const s = 1 + (i % 4) * 0.6
+        return (
+          <View key={i} style={{ position: 'absolute', left: x, top: y }}>
+            <SnoozyStar size={s * 2} color="#fff" opacity={0.3 + (i % 5) * 0.12} />
+          </View>
+        )
+      })}
+      {/* distant glows */}
+      <View
+        style={{
+          position: 'absolute',
+          left: -80,
+          top: -80,
+          width: 260,
+          height: 260,
+          borderRadius: 130,
+          backgroundColor: 'rgba(91,91,214,0.35)',
+          opacity: 0.6,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          right: -100,
+          top: 100,
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          backgroundColor: 'rgba(233,169,122,0.22)',
+          opacity: 0.6,
+        }}
+      />
+    </View>
+  )
+}
+
+function HeaderBtn({
+  children,
+  isDark,
+  color,
+  onPress,
+}: {
+  children: React.ReactNode
+  isDark: boolean
+  color: string
+  onPress: () => void
+}) {
+  return (
+    <Pressable onPress={onPress}>
+      <View
+        style={[
+          styles.headerBtn,
+          isDark
+            ? { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: Night.hair }
+            : { backgroundColor: '#FFFFFF', borderColor: 'rgba(43,33,48,0.08)' },
+        ]}
+      >
+        {children}
+      </View>
+    </Pressable>
+  )
+}
+
+function SeekBtn({
+  label,
+  onPress,
+  isDark,
+  color,
+}: {
+  label: string
+  onPress: () => void
+  isDark: boolean
+  color: string
+}) {
+  return (
+    <Pressable onPress={onPress}>
+      <View
+        style={[
+          styles.seekBtn,
+          isDark
+            ? {
+                backgroundColor: 'rgba(255,255,255,0.06)',
+                borderColor: Night.hair,
+                borderWidth: 1,
+              }
+            : null,
+        ]}
+      >
+        <Text style={{ color, fontFamily: 'monospace', fontSize: 13, fontWeight: '700' }}>
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  )
+}
+
+function PlayGlyph({ color, playing }: { color: string; playing: boolean }) {
+  if (playing) {
+    return (
+      <View style={{ flexDirection: 'row', gap: 4 }}>
+        <View style={{ width: 5, height: 22, backgroundColor: color, borderRadius: 1.5 }} />
+        <View style={{ width: 5, height: 22, backgroundColor: color, borderRadius: 1.5 }} />
+      </View>
+    )
+  }
+  // triangle pointing right
+  return (
+    <View
+      style={{
+        width: 0,
+        height: 0,
+        borderTopWidth: 11,
+        borderBottomWidth: 11,
+        borderLeftWidth: 18,
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+        borderLeftColor: color,
+        marginLeft: 4,
+      }}
+    />
+  )
+}
+
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
+  scrollContent: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: 8,
+    gap: 22,
   },
-  headerSection: {
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
-  },
-  headerRow: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  controls: {
-    gap: Spacing.md,
+  headerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  progressOuter: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
+  hero: {},
+  title: {
+    alignItems: 'center',
+    gap: 6,
   },
-  progressInner: {
-    height: 6,
-    borderRadius: 3,
+  titleText: {
+    fontSize: 26,
+    textAlign: 'center',
+    lineHeight: 30,
+    letterSpacing: -0.4,
+  },
+  scrubberBlock: {
+    gap: 8,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  buttonRow: {
+  controls: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xl,
+    gap: 24,
   },
-  sleepTimerSection: {
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
+  seekBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sleepTimerActive: {
+  playBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sleepTimer: {
+    alignItems: 'center',
+  },
+  sleepChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.small,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
   },
-  sleepTimerInactive: {
+  sleepChipDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nightDrawer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    padding: 16,
+    borderRadius: 22,
+    backgroundColor: 'rgba(242,237,227,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(242,237,227,0.14)',
+    width: '100%',
   },
-  timerOptionsRow: {
-    gap: Spacing.sm,
+  drawerBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
   },
   timerOption: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.small,
-  },
-  storyTextScroll: {
-    flex: 1,
-  },
-  spacerLg: {
-    height: Spacing.lg,
-  },
-  spacerMd: {
-    height: Spacing.md,
-  },
-  flex: {
-    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
   },
 })
