@@ -1,7 +1,6 @@
 import SwiftUI
 
 /// Root view that switches between screens based on the ViewModel's state machine.
-/// Uses enum-based routing instead of NavigationStack to prevent accidental back-swipes.
 struct ContentRouter: View {
     @State private var viewModel = StoryViewModel()
 
@@ -11,6 +10,13 @@ struct ContentRouter: View {
                 .ignoresSafeArea()
 
             switch viewModel.currentScreen {
+            case .onboarding:
+                OnboardingView(
+                    childDetails: $viewModel.childDetails,
+                    onFinish: { viewModel.completeOnboarding() }
+                )
+                .transition(.opacity)
+
             case .home:
                 HomeView(
                     savedStories: viewModel.savedStories,

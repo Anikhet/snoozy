@@ -5,8 +5,14 @@ struct Template: Identifiable {
     let id: String
     let name: String
     let description: String
+    /// SF Symbol — retained for legacy/accessibility callouts.
     let icon: String
-    let cardColor: Color
+    /// Editorial serif glyph shown in the template picker tile.
+    let glyph: String
+    /// Two-stop gradient used for the picker tile and story-row thumb.
+    let gradient: [Color]
+    /// Flat fallback color for places that can't render a gradient.
+    var cardColor: Color { gradient.first ?? DesignTokens.Colors.cardLavender }
     let fields: [TemplateField]
 }
 
@@ -28,82 +34,90 @@ enum Templates {
     static let all: [Template] = [
         Template(
             id: "dreamland",
-            name: "Dreamland Adventure",
-            description: "A magical journey through dreams",
+            name: "Dreamland",
+            description: "A journey through soft, drifting dreams.",
             icon: "moon.stars.fill",
-            cardColor: DesignTokens.Colors.cardLavender,
+            glyph: "\u{263E}", // ☾
+            gradient: [DesignTokens.Colors.cardLavender, DesignTokens.Colors.cardCosmosDeep],
             fields: [
-                TemplateField(id: "favoriteColor", label: "Favorite Color", type: .color)
+                TemplateField(id: "favoriteColor", label: "Favourite colour", type: .color)
             ]
         ),
         Template(
             id: "animal-friends",
             name: "Animal Friends",
-            description: "Befriend animals in a whispering forest",
+            description: "Whispering forests and warm fur.",
             icon: "hare.fill",
-            cardColor: DesignTokens.Colors.cardPeach,
+            glyph: "\u{2740}", // ❀
+            gradient: [DesignTokens.Colors.cardPeach, DesignTokens.Colors.cardPeachDeep],
             fields: [
-                TemplateField(id: "favoriteAnimal", label: "Favorite Animal", type: .animal)
+                TemplateField(id: "favoriteAnimal", label: "Favourite animal", type: .animal)
             ]
         ),
         Template(
             id: "under-the-stars",
             name: "Under the Stars",
-            description: "Explore the peaceful night sky",
+            description: "A peaceful night in the cosmos.",
             icon: "sparkles",
-            cardColor: DesignTokens.Colors.cardMint,
+            glyph: "\u{2726}", // ✦
+            gradient: [DesignTokens.Colors.cardCosmos, DesignTokens.Colors.cardCosmosDeep],
             fields: [
-                TemplateField(id: "favoriteThing", label: "Favorite Thing", type: .text)
+                TemplateField(id: "favoriteThing", label: "Favourite thing", type: .text)
             ]
         ),
         Template(
             id: "underwater-journey",
-            name: "Underwater Journey",
-            description: "Drift through a gentle ocean world",
+            name: "Underwater",
+            description: "Drifting through a gentle sea.",
             icon: "water.waves",
-            cardColor: DesignTokens.Colors.cardOcean,
+            glyph: "\u{223C}", // ∼
+            gradient: [DesignTokens.Colors.cardOcean, DesignTokens.Colors.cardOceanDeep],
             fields: [
-                TemplateField(id: "favoriteColor", label: "Favorite Color", type: .color)
+                TemplateField(id: "favoriteColor", label: "Favourite colour", type: .color)
             ]
         ),
         Template(
             id: "space-explorer",
             name: "Space Explorer",
-            description: "A slow, peaceful trip through the cosmos",
+            description: "A slow trip through the cosmos.",
             icon: "moonphase.waning.crescent",
-            cardColor: DesignTokens.Colors.cardCosmos,
+            glyph: "\u{272A}", // ✪
+            gradient: [DesignTokens.Colors.cardCosmos, DesignTokens.Colors.cardLavenderDeep],
             fields: [
-                TemplateField(id: "favoriteThing", label: "Favorite Thing", type: .text)
+                TemplateField(id: "favoriteThing", label: "Favourite thing", type: .text)
             ]
         ),
         Template(
             id: "fairy-garden",
             name: "Fairy Garden",
-            description: "Wander through a tiny magical garden",
+            description: "A tiny world, very close by.",
             icon: "leaf.fill",
-            cardColor: DesignTokens.Colors.cardRose,
+            glyph: "\u{273F}", // ✿
+            gradient: [DesignTokens.Colors.cardRose, DesignTokens.Colors.cardRoseDeep],
             fields: [
-                TemplateField(id: "favoriteColor", label: "Favorite Color", type: .color)
+                TemplateField(id: "favoriteColor", label: "Favourite colour", type: .color)
             ]
         ),
         Template(
             id: "snowy-mountain",
             name: "Snowy Mountain",
-            description: "A cozy adventure in gentle snowfall",
+            description: "Warm hands, slow snow falling.",
             icon: "snowflake",
-            cardColor: DesignTokens.Colors.cardSnow,
+            glyph: "\u{2744}", // ❄
+            gradient: [DesignTokens.Colors.cardSnow, DesignTokens.Colors.cardSnowDeep],
             fields: [
-                TemplateField(id: "favoriteAnimal", label: "Favorite Animal", type: .animal)
+                TemplateField(id: "favoriteAnimal", label: "Favourite animal", type: .animal)
             ]
         ),
         Template(
             id: "rainy-day-cozy",
-            name: "Rainy Day Cozy",
-            description: "Curl up and listen to the rain",
+            name: "Rainy Day",
+            description: "Curl up and listen to the rain.",
             icon: "cloud.rain.fill",
-            cardColor: DesignTokens.Colors.cardRain,
+            glyph: "\u{2042}", // ⁂
+            gradient: [DesignTokens.Colors.cardRain, DesignTokens.Colors.cardRainDeep],
             fields: [
-                TemplateField(id: "favoriteThing", label: "Favorite Thing", type: .text)
+                TemplateField(id: "favoriteThing", label: "Favourite thing", type: .text)
             ]
         ),
     ]

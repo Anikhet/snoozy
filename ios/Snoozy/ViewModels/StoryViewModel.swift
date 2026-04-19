@@ -2,6 +2,7 @@ import Foundation
 
 /// The app's navigation state machine. Each case represents one screen.
 enum Screen: Equatable {
+    case onboarding
     case home
     case templatePicker
     case storyForm
@@ -20,12 +21,18 @@ enum Screen: Equatable {
 final class StoryViewModel {
     // MARK: - Navigation
 
-    var currentScreen: Screen = .home
+    var currentScreen: Screen
 
     // MARK: - Template & Form
 
     var selectedTemplate: Template?
     var childDetails = ChildDetails()
+
+    // MARK: - Onboarding
+
+    private let onboardingKey = "snoozy_onboarding_complete"
+    private let onboardingNameKey = "snoozy_onboarding_name"
+    private let onboardingAgeKey = "snoozy_onboarding_age"
 
     // MARK: - Current Story
 
@@ -48,7 +55,32 @@ final class StoryViewModel {
     // MARK: - Init
 
     init() {
+        let completed = UserDefaults.standard.bool(forKey: "snoozy_onboarding_complete")
+        self.currentScreen = completed ? .home : .onboarding
+
+        // Restore any declared child details from onboarding so they pre-fill the form.
+        if completed,
+           let savedName = UserDefaults.standard.string(forKey: "snoozy_onboarding_name"),
+           !savedName.isEmpty {
+            self.childDetails.name = savedName
+            let age = UserDefaults.standard.integer(forKey: "snoozy_onboarding_age")
+            if age > 0 { self.childDetails.age = age }
+        }
+
         Task { await loadSavedStories() }
+    }
+
+    // MARK: - Onboarding
+
+    func completeOnboarding() {
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: onboardingKey)
+        let trimmed = childDetails.name.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty {
+            defaults.set(trimmed, forKey: onboardingNameKey)
+            defaults.set(childDetails.age, forKey: onboardingAgeKey)
+        }
+        currentScreen = .home
     }
 
     // MARK: - Navigation
@@ -60,7 +92,7 @@ final class StoryViewModel {
     func goHome() {
         currentScreen = .home
         selectedTemplate = nil
-        childDetails = ChildDetails()
+        childDetails = defaultChildDetails()
         currentStory = nil
     }
 
@@ -68,8 +100,19 @@ final class StoryViewModel {
 
     func selectTemplate(_ template: Template) {
         selectedTemplate = template
-        childDetails = ChildDetails()
+        childDetails = defaultChildDetails()
         currentScreen = .storyForm
+    }
+
+    /// Pre-fills the form with the name/age declared during onboarding.
+    private func defaultChildDetails() -> ChildDetails {
+        var details = ChildDetails()
+        if let name = UserDefaults.standard.string(forKey: onboardingNameKey), !name.isEmpty {
+            details.name = name
+            let age = UserDefaults.standard.integer(forKey: onboardingAgeKey)
+            if age > 0 { details.age = age }
+        }
+        return details
     }
 
     // MARK: - Story Generation (non-blocking)
