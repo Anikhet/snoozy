@@ -8,12 +8,16 @@ dotenv.config({ override: true })
 function loadConfig() {
   const ttsProvider = (process.env.TTS_PROVIDER || 'openai').toLowerCase()
 
-  const required = ['OPENAI_API_KEY']
+  const required = []
   if (ttsProvider === 'elevenlabs') {
-    required.push('ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID')
+    required.push('OPENAI_API_KEY', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID')
   } else if (ttsProvider === 'azure') {
     required.push('AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT')
+  } else {
+    required.push('OPENAI_API_KEY')
   }
+
+  required.push('CLERK_SECRET_KEY', 'CLERK_PUBLISHABLE_KEY')
 
   const missing = required.filter((key) => !process.env[key])
   if (missing.length > 0) {
