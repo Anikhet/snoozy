@@ -67,55 +67,50 @@ export default function App() {
           <View style={[styles.flex, { backgroundColor: colors.background }]}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <SafeAreaView style={styles.flex}>
-              <SignedIn>
-                {currentScreen === Screen.Home ? (
-                  <Animated.View
-                    key="home"
-                    style={styles.flex}
-                    entering={FadeIn.duration(TRANSITION_DURATION)}
-                    exiting={FadeOut.duration(TRANSITION_DURATION)}
-                  >
-                    <HomeScreen />
-                  </Animated.View>
-                ) : null}
+              {/* TODO: re-wrap in <SignedIn>/<SignedOut> to re-enable auth gate */}
+              {currentScreen === Screen.Home ? (
+                <Animated.View
+                  key="home"
+                  style={styles.flex}
+                  entering={FadeIn.duration(TRANSITION_DURATION)}
+                  exiting={FadeOut.duration(TRANSITION_DURATION)}
+                >
+                  <HomeScreen />
+                </Animated.View>
+              ) : null}
 
-                {currentScreen === Screen.TemplatePicker ? (
-                  <Animated.View
-                    key="templatePicker"
-                    style={styles.flex}
-                    entering={SlideInRight.duration(TRANSITION_DURATION)}
-                    exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
-                  >
-                    <TemplatePickerScreen />
-                  </Animated.View>
-                ) : null}
+              {currentScreen === Screen.TemplatePicker ? (
+                <Animated.View
+                  key="templatePicker"
+                  style={styles.flex}
+                  entering={SlideInRight.duration(TRANSITION_DURATION)}
+                  exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
+                >
+                  <TemplatePickerScreen />
+                </Animated.View>
+              ) : null}
 
-                {currentScreen === Screen.StoryForm ? (
-                  <Animated.View
-                    key="storyForm"
-                    style={styles.flex}
-                    entering={SlideInRight.duration(TRANSITION_DURATION)}
-                    exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
-                  >
-                    <StoryFormScreen />
-                  </Animated.View>
-                ) : null}
+              {currentScreen === Screen.StoryForm ? (
+                <Animated.View
+                  key="storyForm"
+                  style={styles.flex}
+                  entering={SlideInRight.duration(TRANSITION_DURATION)}
+                  exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
+                >
+                  <StoryFormScreen />
+                </Animated.View>
+              ) : null}
 
-                {currentScreen === Screen.Player ? (
-                  <Animated.View
-                    key="player"
-                    style={styles.flex}
-                    entering={SlideInDown.duration(TRANSITION_DURATION)}
-                    exiting={FadeOut.duration(TRANSITION_DURATION)}
-                  >
-                    <StoryPlayerScreen />
-                  </Animated.View>
-                ) : null}
-              </SignedIn>
-
-              <SignedOut>
-                <AuthScreen />
-              </SignedOut>
+              {currentScreen === Screen.Player ? (
+                <Animated.View
+                  key="player"
+                  style={styles.flex}
+                  entering={SlideInDown.duration(TRANSITION_DURATION)}
+                  exiting={FadeOut.duration(TRANSITION_DURATION)}
+                >
+                  <StoryPlayerScreen />
+                </Animated.View>
+              ) : null}
             </SafeAreaView>
           </View>
         </SafeAreaProvider>

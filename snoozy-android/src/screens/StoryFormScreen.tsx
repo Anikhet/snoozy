@@ -65,36 +65,37 @@ export function StoryFormScreen() {
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => navigateTo(Screen.TemplatePicker)}
-          style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.hair }]}
-        >
-          <Ionicons name="chevron-back" size={14} color={colors.ink} />
-        </Pressable>
-      </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>
-          STEP 2 OF 3
-        </Text>
+        {/* Header — back button + STEP 2 OF 3 inline */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => navigateTo(Screen.TemplatePicker)}
+            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.hair }]}
+          >
+            <Ionicons name="chevron-back" size={14} color={colors.ink} />
+          </Pressable>
+          <Text style={[Fonts.eyebrow, { color: colors.inkMute, marginLeft: 14 }]}>
+            STEP 2 OF 3
+          </Text>
+        </View>
 
         {/* Template chip */}
-        <LinearGradient
-          colors={[gradientStart, gradientEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.templateChip}
-        >
-          <Text style={styles.templateGlyph}>{template.glyph}</Text>
-          <Text style={[Fonts.caption2Bold, { color: colors.ink }]}>
-            {template.name}
-          </Text>
-        </LinearGradient>
+        <View style={styles.templateChipWrap}>
+          <LinearGradient
+            colors={[gradientStart, gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.templateChip}
+          >
+            <Text style={styles.templateGlyph}>{template.glyph}</Text>
+            <Text style={[Fonts.caption2Bold, { color: colors.ink }]}>
+              {template.name}
+            </Text>
+          </LinearGradient>
+        </View>
 
         {/* Title */}
         <View style={styles.titleBlock}>
@@ -106,166 +107,171 @@ export function StoryFormScreen() {
           </Text>
         </View>
 
-        {/* Name field */}
-        <View style={styles.fieldGroup}>
-          <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>NAME</Text>
-          <TextInput
-            value={childDetails.name}
-            onChangeText={(text) => updateChildDetails({ name: text })}
-            placeholder="Their name"
-            maxLength={50}
-            placeholderTextColor={colors.inkMute}
-            style={[
-              styles.nameInput,
-              { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair },
-            ]}
-          />
-        </View>
+        <View style={styles.formStack}>
+          {/* Name field */}
+          <View style={styles.fieldGroup}>
+            <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>THEIR NAME</Text>
+            <TextInput
+              value={childDetails.name}
+              onChangeText={(text) => updateChildDetails({ name: text })}
+              placeholder="Enter name"
+              maxLength={50}
+              placeholderTextColor={colors.inkMute}
+              style={[
+                styles.nameInput,
+                { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair },
+              ]}
+            />
+          </View>
 
-        {/* Age picker */}
-        <View style={styles.fieldGroup}>
-          <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>AGE</Text>
-          <View style={styles.ageRow}>
-            {AppConfig.ageRange.map((age) => {
-              const isSelected = childDetails.age === age
-              return (
-                <Pressable
-                  key={age}
-                  onPress={() => updateChildDetails({ age })}
-                  style={styles.ageFlex}
-                >
-                  <View
-                    style={[
-                      styles.ageButton,
-                      {
-                        backgroundColor: isSelected ? colors.ink : colors.surface,
-                        borderColor: isSelected ? colors.ink : colors.hair,
-                        borderWidth: isSelected ? 0 : 1,
-                      },
-                      isSelected ? {
-                        shadowColor: colors.ink,
-                        shadowOpacity: 0.22,
-                        shadowRadius: 6,
-                        shadowOffset: { width: 0, height: 6 },
-                        elevation: 4,
-                      } : null,
-                    ]}
+          {/* Age picker — horizontal scroll, fixed-width pills (matches iOS) */}
+          <View style={styles.fieldGroup}>
+            <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>THEIR AGE</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.ageScrollContent}
+            >
+              {AppConfig.ageRange.map((age) => {
+                const isSelected = childDetails.age === age
+                return (
+                  <Pressable
+                    key={age}
+                    onPress={() => updateChildDetails({ age })}
                   >
-                    <Text
+                    <View
                       style={[
-                        styles.ageText,
-                        { color: isSelected ? colors.background : colors.ink },
+                        styles.ageButton,
+                        {
+                          backgroundColor: isSelected ? colors.ink : colors.surface,
+                          borderColor: isSelected ? colors.ink : colors.hair,
+                          borderWidth: isSelected ? 0 : 1,
+                        },
+                        isSelected
+                          ? {
+                              shadowColor: colors.ink,
+                              shadowOpacity: 0.22,
+                              shadowRadius: 6,
+                              shadowOffset: { width: 0, height: 6 },
+                              elevation: 4,
+                            }
+                          : null,
                       ]}
                     >
-                      {age}
-                    </Text>
-                  </View>
-                </Pressable>
-              )
-            })}
+                      <Text
+                        style={[
+                          styles.ageText,
+                          { color: isSelected ? colors.background : colors.ink },
+                        ]}
+                      >
+                        {age}
+                      </Text>
+                    </View>
+                  </Pressable>
+                )
+              })}
+            </ScrollView>
           </View>
-        </View>
 
-        {/* Dynamic fields */}
-        {template.fields.map((field) => (
-          <View key={field.id} style={styles.fieldGroup}>
-            <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>
-              {field.label.toUpperCase()}
-            </Text>
-            {field.type === 'color' ? (
-              <View>
-                <View style={styles.colorRow}>
-                  {COLOR_OPTIONS.map((c) => (
-                    <ColorDot
-                      key={c.name}
-                      color={c.hex}
-                      isSelected={childDetails.favoriteColor === c.name}
-                      onPress={() => updateChildDetails({ favoriteColor: c.name })}
+          {/* Dynamic fields */}
+          {template.fields.map((field) => (
+            <View key={field.id} style={styles.fieldGroup}>
+              <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>
+                {field.label.toUpperCase()}
+              </Text>
+              {field.type === 'color' ? (
+                <View>
+                  <View style={styles.colorRow}>
+                    {COLOR_OPTIONS.map((c) => (
+                      <ColorDot
+                        key={c.name}
+                        color={c.hex}
+                        isSelected={childDetails.favoriteColor === c.name}
+                        onPress={() => updateChildDetails({ favoriteColor: c.name })}
+                      />
+                    ))}
+                  </View>
+                  {childDetails.favoriteColor ? (
+                    <Text style={[styles.colorConfirm, { color: colors.inkSoft }]}>
+                      {childDetails.favoriteColor} it is.
+                    </Text>
+                  ) : null}
+                </View>
+              ) : field.type === 'animal' ? (
+                <View style={styles.flowLayout}>
+                  {ANIMAL_OPTIONS.map((animal) => (
+                    <Chip
+                      key={animal}
+                      label={animal}
+                      isSelected={childDetails.favoriteAnimal === animal}
+                      onPress={() => updateChildDetails({ favoriteAnimal: animal })}
                     />
                   ))}
                 </View>
-                {childDetails.favoriteColor ? (
-                  <Text style={[styles.colorConfirm, { color: colors.inkSoft }]}>
-                    {childDetails.favoriteColor} it is.
-                  </Text>
-                ) : null}
-              </View>
-            ) : field.type === 'animal' ? (
-              <View style={styles.flowLayout}>
-                {ANIMAL_OPTIONS.map((animal) => (
-                  <Chip
-                    key={animal}
-                    label={animal}
-                    isSelected={childDetails.favoriteAnimal === animal}
-                    onPress={() => updateChildDetails({ favoriteAnimal: animal })}
-                  />
-                ))}
-              </View>
-            ) : (
-              <TextInput
-                value={childDetails.favoriteThing ?? ''}
-                onChangeText={(text) => updateChildDetails({ favoriteThing: text })}
-                placeholder="e.g. dinosaurs, rainbows, rockets"
-                maxLength={50}
-                placeholderTextColor={colors.inkMute}
-                style={[
-                  styles.textInput,
-                  { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair },
-                ]}
-              />
-            )}
-          </View>
-        ))}
+              ) : (
+                <TextInput
+                  value={childDetails.favoriteThing ?? ''}
+                  onChangeText={(text) => updateChildDetails({ favoriteThing: text })}
+                  placeholder="e.g. dinosaurs, rainbows, rockets"
+                  maxLength={50}
+                  placeholderTextColor={colors.inkMute}
+                  style={[
+                    styles.textInput,
+                    { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair },
+                  ]}
+                />
+              )}
+            </View>
+          ))}
 
-        {/* Voice grid */}
-        <View style={styles.fieldGroup}>
-          <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>
-            NARRATOR VOICE
-          </Text>
-          <View style={styles.voiceGrid}>
-            {VOICES.map((voice) => {
-              const isSelected = childDetails.voiceId === voice.id
-              return (
-                <Pressable
-                  key={voice.id}
-                  onPress={() => updateChildDetails({ voiceId: voice.id })}
-                  style={styles.voiceFlex}
-                >
-                  <View
-                    style={[
-                      styles.voiceCell,
-                      {
-                        backgroundColor: isSelected ? colors.ink : colors.surface,
-                        borderColor: isSelected ? colors.ink : colors.hair,
-                        borderWidth: isSelected ? 0 : 1,
-                      },
-                    ]}
+          {/* Voice grid */}
+          <View style={styles.fieldGroup}>
+            <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>NARRATOR</Text>
+            <View style={styles.voiceGrid}>
+              {VOICES.map((voice) => {
+                const isSelected = childDetails.voiceId === voice.id
+                return (
+                  <Pressable
+                    key={voice.id}
+                    onPress={() => updateChildDetails({ voiceId: voice.id })}
+                    style={styles.voiceFlex}
                   >
-                    <Text
+                    <View
                       style={[
-                        styles.voiceName,
-                        { color: isSelected ? colors.background : colors.ink },
+                        styles.voiceCell,
+                        {
+                          backgroundColor: isSelected ? colors.ink : colors.surface,
+                          borderColor: isSelected ? colors.ink : colors.hair,
+                          borderWidth: isSelected ? 0 : 1,
+                        },
                       ]}
                     >
-                      {voice.displayName}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.voiceDesc,
-                        { color: isSelected ? colors.background : colors.ink, opacity: isSelected ? 0.75 : 0.75 },
-                      ]}
-                    >
-                      {voice.description}
-                    </Text>
-                  </View>
-                </Pressable>
-              )
-            })}
+                      <Text
+                        style={[
+                          styles.voiceName,
+                          { color: isSelected ? colors.background : colors.ink },
+                        ]}
+                      >
+                        {voice.displayName}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.voiceDesc,
+                          { color: isSelected ? colors.background : colors.ink, opacity: 0.75 },
+                        ]}
+                      >
+                        {voice.description}
+                      </Text>
+                    </View>
+                  </Pressable>
+                )
+              })}
+            </View>
           </View>
         </View>
 
         {/* Spacer for floating CTA */}
-        <View style={{ height: 100 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* Floating bottom CTA */}
@@ -275,18 +281,16 @@ export function StoryFormScreen() {
           style={styles.fadeGradient}
         />
         <View style={[styles.ctaInner, { backgroundColor: colors.background }]}>
-          <View style={{ opacity: valid ? 1 : 0.55 }}>
-            <SnoozyButton
-              title="Begin the story"
-              icon="sparkles"
-              buttonStyle="indigo"
-              onPress={async () => {
-                const token = await getToken()
-                if (token) generateStoryAction(token)
-              }}
-              disabled={!valid}
-            />
-          </View>
+          <SnoozyButton
+            title="Begin the story"
+            icon="sparkles"
+            buttonStyle="indigo"
+            onPress={async () => {
+              const token = await getToken()
+              if (token) generateStoryAction(token)
+            }}
+            disabled={!valid}
+          />
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -296,11 +300,16 @@ export function StoryFormScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+  scrollContent: {
+    paddingBottom: Spacing.xxl,
   },
   header: {
-    marginBottom: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 8,
   },
   backButton: {
     width: 38,
@@ -310,9 +319,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollContent: {
-    gap: Spacing.md,
-    paddingBottom: Spacing.xxl,
+  templateChipWrap: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 22,
+    flexDirection: 'row',
   },
   templateChip: {
     flexDirection: 'row',
@@ -330,10 +340,17 @@ const styles = StyleSheet.create({
     fontFamily: 'PlayfairDisplay_400Regular',
   },
   titleBlock: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 12,
     gap: 0,
   },
+  formStack: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 22,
+    gap: 20,
+  },
   fieldGroup: {
-    gap: Spacing.sm,
+    gap: 6,
   },
   nameInput: {
     height: 52,
@@ -352,16 +369,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Nunito_400Regular',
   },
-  ageRow: {
-    flexDirection: 'row',
+  ageScrollContent: {
     gap: 8,
-  },
-  ageFlex: {
-    flex: 1,
+    paddingVertical: 4,
   },
   ageButton: {
+    width: 40,
     height: 48,
-    borderRadius: Radii.field,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -372,7 +387,7 @@ const styles = StyleSheet.create({
   colorRow: {
     flexDirection: 'row',
     gap: 12,
-    flexWrap: 'wrap',
+    alignItems: 'center',
   },
   colorConfirm: {
     fontSize: 13,

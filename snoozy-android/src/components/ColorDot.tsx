@@ -8,7 +8,11 @@ interface ColorDotProps {
   onPress: () => void
 }
 
-/** 38×38 color picker dot with 54×54 selection ring. */
+/**
+ * 38×38 color picker. Tap target stays 38×38 (matches iOS frame) so 6 dots
+ * fit on a single row; the 54×54 selection ring renders as a visual overlay
+ * outside the layout footprint when selected.
+ */
 export const ColorDot = memo(function ColorDot({
   color,
   isSelected,
@@ -17,40 +21,39 @@ export const ColorDot = memo(function ColorDot({
   const { colors } = useThemeColors()
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} style={styles.touchTarget}>
+      {isSelected ? (
+        <View style={[styles.selectionRing, { borderColor: `${colors.ink}33` }]} />
+      ) : null}
       <View
         style={[
-          styles.ring,
-          isSelected
-            ? { borderColor: `${colors.ink}33`, borderWidth: 1 }
-            : null,
+          styles.dot,
+          {
+            backgroundColor: color,
+            borderWidth: isSelected ? 3 : 0,
+            borderColor: isSelected ? colors.ink : 'transparent',
+          },
         ]}
       >
-        <View
-          style={[
-            styles.dot,
-            {
-              backgroundColor: color,
-              borderWidth: isSelected ? 3 : 0,
-              borderColor: isSelected ? colors.ink : 'transparent',
-            },
-          ]}
-        >
-          {/* Specular highlight */}
-          <View style={styles.specular} />
-        </View>
+        <View style={styles.specular} />
       </View>
     </Pressable>
   )
 })
 
 const styles = StyleSheet.create({
-  ring: {
+  touchTarget: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectionRing: {
+    position: 'absolute',
     width: 54,
     height: 54,
     borderRadius: 27,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
   },
   dot: {
     width: 38,

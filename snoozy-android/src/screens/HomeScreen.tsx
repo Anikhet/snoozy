@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Spacing, Radii, getLiftShadow } from '@/config/tokens'
+import { Fonts, Spacing, Radii, ThemeColors, getLiftShadow } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Screen } from '@/types/navigation'
 import { Story, StoryStatus } from '@/types/story'
@@ -138,18 +138,19 @@ export function HomeScreen() {
       </Pressable>
 
       {/* Library */}
-      {savedStories.length > 0 ? (
-        <View style={styles.listSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={[Fonts.title3Italic, { color: colors.ink }]}>
-              Your library
-            </Text>
-            <View style={[styles.countBadge, { backgroundColor: colors.primarySoft }]}>
-              <Text style={[styles.countText, { color: colors.primaryInk }]}>
-                {savedStories.length}
-              </Text>
-            </View>
-          </View>
+      <View style={styles.listSection}>
+        <View style={styles.libraryHeader}>
+          <Text style={[Fonts.title3Italic, { color: colors.ink }]}>
+            Your library
+          </Text>
+          <Text style={[styles.libraryCount, { color: colors.inkSoft }]}>
+            {savedStories.length === 0
+              ? 'No stories yet'
+              : `${savedStories.length} ${savedStories.length === 1 ? 'story' : 'stories'}`}
+          </Text>
+        </View>
+
+        {savedStories.length > 0 ? (
           <FlatList
             data={savedStories}
             renderItem={renderItem}
@@ -158,14 +159,119 @@ export function HomeScreen() {
             contentContainerStyle={styles.listContent}
             ItemSeparatorComponent={ListSeparator}
           />
-        </View>
-      ) : (
-        <View style={styles.emptyState}>
-          <Text style={[Fonts.serifBodyRegularItalic, { color: colors.inkMute, textAlign: 'center' }]}>
-            Stories you create will appear here.
-          </Text>
-        </View>
-      )}
+        ) : (
+          <LibraryEmptyState isDark={isDark} colors={colors} />
+        )}
+      </View>
+    </View>
+  )
+}
+
+interface EmptyStateProps {
+  isDark: boolean
+  colors: ThemeColors
+}
+
+/**
+ * Editorial empty-state for the library — soft gradient illustration card
+ * with abstract circles + speckle stars, mirrors iOS IllustrationPlaceholder.
+ */
+function LibraryEmptyState({ isDark, colors }: EmptyStateProps) {
+  const { width: screenWidth } = useWindowDimensions()
+  const cardWidth = screenWidth - Spacing.lg * 2
+  const cardHeight = 120
+
+  const palette = isDark
+    ? ['#2E2B4A', '#2A254A', colors.primarySoft]
+    : ['#E8E5FF', '#DCD5F1', colors.primarySoft]
+
+  // 12 deterministic speckle stars, seed=1, matching iOS arithmetic.
+  const stars = Array.from({ length: 12 }, (_, i) => {
+    const x = (i * 73 + 31) % Math.max(1, Math.round(cardWidth))
+    const y = (i * 47 + 19) % Math.max(1, cardHeight)
+    const r = 0.6 + (i % 3) * 0.4
+    return { x, y, size: r * 2 }
+  })
+
+  return (
+    <View style={emptyStyles.wrapper}>
+      <View style={[emptyStyles.illustration, { width: cardWidth }]}>
+        <LinearGradient
+          colors={[palette[1], palette[0]]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={emptyStyles.gradient}
+        />
+
+        {/* Three overlapping circles */}
+        <View
+          style={[
+            emptyStyles.circle,
+            {
+              width: cardHeight * 0.84,
+              height: cardHeight * 0.84,
+              borderRadius: (cardHeight * 0.84) / 2,
+              backgroundColor: palette[0],
+              opacity: 0.75,
+              left: cardWidth * 0.5 - cardHeight * 0.42 - cardWidth * 0.2,
+              top: cardHeight * 0.5 - cardHeight * 0.42,
+            },
+          ]}
+        />
+        <View
+          style={[
+            emptyStyles.circle,
+            {
+              width: cardHeight * 0.64,
+              height: cardHeight * 0.64,
+              borderRadius: (cardHeight * 0.64) / 2,
+              backgroundColor: palette[1],
+              opacity: 0.75,
+              left: cardWidth * 0.5 - cardHeight * 0.32 + cardWidth * 0.2,
+              top: cardHeight * 0.5 - cardHeight * 0.32 - cardHeight * 0.1,
+            },
+          ]}
+        />
+        <View
+          style={[
+            emptyStyles.circle,
+            {
+              width: cardHeight * 0.44,
+              height: cardHeight * 0.44,
+              borderRadius: (cardHeight * 0.44) / 2,
+              backgroundColor: palette[2],
+              opacity: 0.75,
+              left: cardWidth * 0.5 - cardHeight * 0.22 + cardWidth * 0.05,
+              top: cardHeight * 0.5 - cardHeight * 0.22 + cardHeight * 0.2,
+            },
+          ]}
+        />
+
+        {/* Speckle stars */}
+        {stars.map((s, i) => (
+          <View
+            key={i}
+            style={[
+              emptyStyles.star,
+              {
+                width: s.size,
+                height: s.size,
+                borderRadius: s.size / 2,
+                left: s.x,
+                top: s.y,
+              },
+            ]}
+          />
+        ))}
+
+        <Text style={[emptyStyles.label, { color: `${colors.ink}73` }]}>
+          LIBRARY ILLUSTRATION
+        </Text>
+      </View>
+
+      <Text style={[emptyStyles.copy, { color: colors.inkSoft }]}>
+        Your stories will gather here {'—'} like a little bedside shelf.
+      </Text>
     </View>
   )
 }
@@ -245,27 +351,54 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.sm,
   },
-  sectionHeader: {
+  libraryHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+    alignItems: 'baseline',
   },
-  countBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  countText: {
+  libraryCount: {
+    marginLeft: 'auto',
     fontSize: 12,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'Nunito_600SemiBold',
   },
   listContent: {
     paddingBottom: Spacing.xl,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
+})
+
+const emptyStyles = StyleSheet.create({
+  wrapper: {
+    paddingVertical: 16,
+    gap: 10,
+  },
+  illustration: {
+    height: 120,
+    borderRadius: 20,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  circle: {
+    position: 'absolute',
+  },
+  star: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255,255,255,0.75)',
+  },
+  label: {
+    position: 'absolute',
+    right: 10,
+    bottom: 8,
+    fontSize: 11,
+    fontFamily: 'Nunito_500Medium',
+    letterSpacing: 0.4,
+  },
+  copy: {
+    fontSize: 14,
+    fontFamily: 'Nunito_400Regular',
+    textAlign: 'center',
+    paddingTop: 4,
+    paddingHorizontal: 8,
   },
 })

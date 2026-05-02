@@ -39,6 +39,7 @@ export function SnoozyButton({
   )
 
   const isIndigo = buttonStyle === 'indigo'
+  const liftShadow = disabled ? null : getLiftShadow(isDark)
 
   return (
     <Pressable
@@ -51,7 +52,7 @@ export function SnoozyButton({
           colors={['#5B5BD6', '#7272D8']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.container, getLiftShadow(isDark)]}
+          style={[styles.container, liftShadow]}
         >
           {content}
         </LinearGradient>
@@ -63,7 +64,7 @@ export function SnoozyButton({
               backgroundColor:
                 buttonStyle === 'subtle' ? colors.surface : colors.ink,
             },
-            getLiftShadow(isDark),
+            liftShadow,
           ]}
         >
           {content}
