@@ -1,48 +1,63 @@
 import React, { useState } from 'react'
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  useColorScheme,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
-  TouchableOpacity,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useSignIn, useSignUp } from '@clerk/clerk-expo'
-import { Colors, Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
-import { AppIcon } from '@/components/AppIcon'
+import { useThemeColors } from '@/hooks/useThemeColors'
+import { Fonts, Spacing } from '@/config/tokens'
+import { useStoryStore } from '@/stores/storyStore'
 import { SnoozyButton } from '@/components/SnoozyButton'
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'
+import { ProgressDots } from '@/components/ProgressDots'
+import { MoonMark } from '@/components/MoonMark'
+import { OnboardingSplash } from '@/components/OnboardingSplash'
+import { OnboardingWhoFor } from '@/components/OnboardingWhoFor'
 
 type AuthMode = 'signIn' | 'signUp' | 'verifyEmail'
 
 export function AuthScreen() {
+  const { colors } = useThemeColors()
+  const [step, setStep] = useState(0)
+
+  if (step === 0) return <OnboardingSplash colors={colors} onNext={() => setStep(1)} onSignIn={() => setStep(2)} />
+  if (step === 1) return <OnboardingWhoFor colors={colors} onNext={() => setStep(2)} onBack={() => setStep(0)} />
+  return <SignInStep colors={colors} onBack={() => setStep(1)} />
+}
+
+/* ─── Step 2: Sign In ─── */
+function SignInStep({
+  colors,
+  onBack,
+}: {
+  colors: ReturnType<typeof useThemeColors>['colors']
+  onBack: () => void
+}) {
   const { signIn, setActive: setSignInActive, isLoaded: isSignInLoaded } = useSignIn()
   const { signUp, setActive: setSignUpActive, isLoaded: isSignUpLoaded } = useSignUp()
+  const childDetails = useStoryStore((s) => s.childDetails)
+  const childName = childDetails.name || 'their'
 
-  const [mode, setMode] = useState<AuthMode>('signIn')
+  const [mode, setMode] = useState<AuthMode>('signUp')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const scheme = useColorScheme()
-  const isDark = scheme === 'dark'
-  const colors = isDark ? Colors.dark : Colors.light
-
   const onSignInPress = async () => {
     if (!isSignInLoaded) return
     setIsLoading(true)
     setError(null)
     try {
-      const completeSignIn = await signIn.create({
-        identifier: email,
-        password,
-      })
-      await setSignInActive({ session: completeSignIn.createdSessionId })
+      const result = await signIn.create({ identifier: email, password })
+      await setSignInActive({ session: result.createdSessionId })
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Sign in failed')
     } finally {
@@ -55,10 +70,7 @@ export function AuthScreen() {
     setIsLoading(true)
     setError(null)
     try {
-      await signUp.create({
-        emailAddress: email,
-        password,
-      })
+      await signUp.create({ emailAddress: email, password })
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       setMode('verifyEmail')
     } catch (err: any) {
@@ -73,10 +85,8 @@ export function AuthScreen() {
     setIsLoading(true)
     setError(null)
     try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
-      })
-      await setSignUpActive({ session: completeSignUp.createdSessionId })
+      const result = await signUp.attemptEmailAddressVerification({ code })
+      await setSignUpActive({ session: result.createdSessionId })
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Verification failed')
     } finally {
@@ -84,152 +94,135 @@ export function AuthScreen() {
     }
   }
 
-  const toggleMode = () => {
-    setMode(mode === 'signIn' ? 'signUp' : 'signIn')
-    setError(null)
-  }
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.fullScreen, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Animated.View 
-          entering={FadeInUp.duration(600).springify()}
-          style={styles.header}
+      <ScrollView contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={onBack}
+          style={[styles.backCircle, { backgroundColor: colors.surface, borderColor: colors.hair }]}
         >
-          <AppIcon name="moon.stars.fill" size={60} color={colors.primary} />
-          <Text style={[Fonts.largeTitle, { color: colors.textPrimary, marginTop: Spacing.md }]}>
-            Snoozy
-          </Text>
-          <Text style={[Fonts.body, { color: colors.textSecondary, textAlign: 'center' }]}>
-            Personalized bedtime stories.
-          </Text>
-        </Animated.View>
+          <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600' }}>{'\u2039'}</Text>
+        </Pressable>
 
-        <Animated.View 
-          entering={FadeInDown.delay(200).duration(600)}
-          style={styles.form}
-        >
-          <Text style={[Fonts.headline, { color: colors.textPrimary, marginBottom: Spacing.lg }]}>
-            {mode === 'verifyEmail' ? 'Verify your Email' : mode === 'signIn' ? 'Sign In' : 'Create Account'}
-          </Text>
+        {/* Hero mark */}
+        <View style={styles.heroMarkWrap}>
+          <LinearGradient
+            colors={[colors.primary, '#8789E8', colors.accent]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroMark}
+          >
+            <MoonMark size={32} color="#FFFFFF" />
+          </LinearGradient>
+        </View>
 
-          {mode !== 'verifyEmail' ? (
-            <>
-              <TextInput
-                autoCapitalize="none"
-                value={email}
-                placeholder="Email"
-                placeholderTextColor={colors.textSecondary + '80'}
-                onChangeText={setEmail}
-                style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }, getCardShadow(isDark)]}
-              />
-              <TextInput
-                secureTextEntry
-                value={password}
-                placeholder="Password"
-                placeholderTextColor={colors.textSecondary + '80'}
-                onChangeText={setPassword}
-                style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface, marginTop: Spacing.md }, getCardShadow(isDark)]}
-              />
-            </>
-          ) : (
+        <Text style={[Fonts.serifTitle, { color: colors.ink, textAlign: 'center' }]}>
+          Save {childName}&apos;s stories
+        </Text>
+        <Text style={[Fonts.serifTitleItalic, { color: colors.primary, textAlign: 'center' }]}>
+          for another night.
+        </Text>
+
+        {mode !== 'verifyEmail' ? (
+          <View style={styles.formFields}>
+            <TextInput
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              placeholder="Email"
+              placeholderTextColor={colors.inkMute}
+              onChangeText={setEmail}
+              style={[styles.input, { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair }]}
+            />
+            <TextInput
+              secureTextEntry
+              value={password}
+              placeholder="Password"
+              placeholderTextColor={colors.inkMute}
+              onChangeText={setPassword}
+              style={[styles.input, { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair }]}
+            />
+          </View>
+        ) : (
+          <View style={styles.formFields}>
+            <Text style={[Fonts.caption, { color: colors.inkSoft, textAlign: 'center' }]}>
+              Enter the code we sent to your inbox.
+            </Text>
             <TextInput
               value={code}
               placeholder="Verification Code"
-              placeholderTextColor={colors.textSecondary + '80'}
+              placeholderTextColor={colors.inkMute}
               onChangeText={setCode}
-              style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }, getCardShadow(isDark)]}
+              style={[styles.input, { color: colors.ink, backgroundColor: colors.surface, borderColor: colors.hair }]}
             />
-          )}
-
-          {error && <Text style={[styles.errorText, { color: '#FF3B30' }]}>{error}</Text>}
-
-          <View style={styles.buttonContainer}>
-            {mode === 'signIn' && (
-              <SnoozyButton 
-                title="Sign In" 
-                icon="log-in-outline" 
-                onPress={onSignInPress} 
-                disabled={isLoading} 
-              />
-            )}
-            {mode === 'signUp' && (
-              <SnoozyButton 
-                title="Sign Up" 
-                icon="person-add-outline" 
-                onPress={onSignUpPress} 
-                disabled={isLoading} 
-              />
-            )}
-            {mode === 'verifyEmail' && (
-              <SnoozyButton 
-                title="Verify" 
-                icon="checkmark-circle-outline" 
-                onPress={onVerifyPress} 
-                disabled={isLoading} 
-              />
-            )}
           </View>
+        )}
 
-          {mode !== 'verifyEmail' && (
-            <TouchableOpacity onPress={toggleMode} style={styles.toggleMode}>
-              <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-                {mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}
-                <Text style={{ color: colors.primary, fontWeight: '700' }}>
-                  {mode === 'signIn' ? 'Sign up' : 'Sign in'}
-                </Text>
-              </Text>
-            </TouchableOpacity>
-          )}
+        {error ? <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text> : null}
 
-          {mode === 'verifyEmail' && (
-            <TouchableOpacity onPress={() => setMode('signUp')} style={styles.toggleMode}>
-              <Text style={[Fonts.caption, { color: colors.primary, fontWeight: '700' }]}>
-                Back to Sign Up
+        {mode === 'signIn' ? (
+          <SnoozyButton title="Sign In" onPress={onSignInPress} disabled={isLoading} />
+        ) : mode === 'signUp' ? (
+          <SnoozyButton title="Continue" onPress={onSignUpPress} disabled={isLoading} />
+        ) : (
+          <SnoozyButton title="Verify" onPress={onVerifyPress} disabled={isLoading} />
+        )}
+
+        {mode !== 'verifyEmail' ? (
+          <Pressable onPress={() => { setMode(mode === 'signIn' ? 'signUp' : 'signIn'); setError(null) }}>
+            <Text style={[styles.toggleText, { color: colors.inkMute }]}>
+              {mode === 'signIn' ? "Don't have an account? " : 'Already have an account? '}
+              <Text style={{ color: colors.primary, fontWeight: '700' }}>
+                {mode === 'signIn' ? 'Sign up' : 'Sign in'}
               </Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={() => setMode('signUp')}>
+            <Text style={[styles.toggleText, { color: colors.primary, fontWeight: '700' }]}>
+              Back to Sign Up
+            </Text>
+          </Pressable>
+        )}
+
+        <ProgressDots currentStep={2} />
+
+        <Text style={[styles.legalText, { color: colors.inkMute }]}>
+          By continuing, you agree to Snoozy&apos;s Terms of Service and Privacy Policy.
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
+  fullScreen: { flex: 1 },
+  content: {
     padding: Spacing.xl,
-  },
-  header: {
+    gap: Spacing.md,
     alignItems: 'center',
-    marginBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl,
   },
-  form: {
-    width: '100%',
+  backCircle: {
+    width: 36, height: 36, borderRadius: 18, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start',
   },
+  heroMarkWrap: { marginTop: Spacing.xl, marginBottom: Spacing.md },
+  heroMark: {
+    width: 64, height: 64, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  formFields: { width: '100%', gap: Spacing.md, marginTop: Spacing.lg },
   input: {
-    padding: Spacing.md,
-    borderRadius: Radii.small,
-    fontSize: 16,
-    borderWidth: 0,
+    height: 54, borderRadius: 16, borderWidth: 1,
+    paddingHorizontal: 18, fontSize: 16, fontFamily: 'Nunito_400Regular', width: '100%',
   },
-  buttonContainer: {
-    marginTop: Spacing.xl,
-  },
-  toggleMode: {
-    marginTop: Spacing.xl,
-    alignItems: 'center',
-  },
-  errorText: {
-    marginTop: Spacing.sm,
-    fontSize: 12,
-    textAlign: 'center',
+  errorText: { fontSize: 12, textAlign: 'center', fontFamily: 'Nunito_400Regular' },
+  toggleText: { fontSize: 12, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
+  legalText: {
+    fontSize: 11, fontFamily: 'Nunito_400Regular', textAlign: 'center', marginTop: Spacing.lg,
   },
 })

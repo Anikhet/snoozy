@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Fonts, Spacing } from '@/config/tokens'
@@ -9,7 +9,7 @@ import { Template } from '@/types/template'
 import { TemplateCard } from '@/components/TemplateCard'
 
 export function TemplatePickerScreen() {
-  const { colors } = useThemeColors()
+  const { colors, isDark } = useThemeColors()
   const selectTemplate = useStoryStore((s) => s.selectTemplate)
   const goHome = useStoryStore((s) => s.goHome)
 
@@ -18,35 +18,68 @@ export function TemplatePickerScreen() {
     [selectTemplate]
   )
 
+  const renderItem = useCallback(
+    ({ item }: { item: Template }) => {
+      const gradientStart = isDark ? item.gradientStartDark : item.gradientStartLight
+      const gradientEnd = isDark ? item.gradientEndDark : item.gradientEndLight
+      return (
+        <TemplateCard
+          name={item.name}
+          description={item.description}
+          glyph={item.glyph}
+          gradientStart={gradientStart}
+          gradientEnd={gradientEnd}
+          templateId={item.id}
+          onTap={() => handleSelect(item)}
+        />
+      )
+    },
+    [handleSelect, isDark]
+  )
+
+  const keyExtractor = useCallback((item: Template) => item.id, [])
+
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
-        <Pressable onPress={goHome}>
-          <Ionicons name="chevron-back" size={20} color={colors.primary} />
-        </Pressable>
-        <View style={{ flex: 1 }} />
+      {/* Header */}
+      <Pressable
+        onPress={goHome}
+        style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.hair }]}
+      >
+        <Ionicons name="chevron-back" size={14} color={colors.ink} />
+      </Pressable>
+
+      {/* Title block */}
+      <View style={styles.titleBlock}>
+        <Text style={[Fonts.eyebrow, { color: colors.inkMute }]}>
+          STEP 1 OF 3
+        </Text>
+        <Text style={[Fonts.serifDisplay, { color: colors.ink, fontSize: 34, letterSpacing: -0.6 }]}>
+          Pick a place
+        </Text>
+        <Text style={[Fonts.serifDisplayItalic, { color: colors.primary, fontSize: 34, letterSpacing: -0.6 }]}>
+          to wander into.
+        </Text>
+        <Text style={[Fonts.caption, { color: colors.inkSoft, maxWidth: 280, marginTop: 4 }]}>
+          Each theme changes the prompts while keeping the story quiet and sleep-ready.
+        </Text>
       </View>
 
-      <Text style={[Fonts.title, { color: colors.textPrimary }]}>
-        Pick a story theme
-      </Text>
-
-      <ScrollView
+      {/* 2-column grid */}
+      <FlatList
+        data={TEMPLATES}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        numColumns={2}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {TEMPLATES.map((template) => (
-          <TemplateCard
-            key={template.id}
-            name={template.name}
-            description={template.description}
-            icon={template.icon}
-            cardColorLight={template.cardColorLight}
-            cardColorDark={template.cardColorDark}
-            onTap={() => handleSelect(template)}
-          />
-        ))}
-      </ScrollView>
+        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.gridContent}
+        ListFooterComponent={
+          <Text style={[styles.footerText, { color: colors.inkMute }]}>
+            Tap one to begin
+          </Text>
+        }
+      />
     </View>
   )
 }
@@ -56,14 +89,31 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
-    gap: Spacing.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  scrollContent: {
     gap: Spacing.md,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleBlock: {
+    gap: 2,
+    marginBottom: Spacing.sm,
+  },
+  columnWrapper: {
+    gap: 12,
+  },
+  gridContent: {
+    gap: 12,
     paddingBottom: Spacing.xl,
+  },
+  footerText: {
+    fontSize: 12,
+    fontFamily: 'PlayfairDisplay_400Regular_Italic',
+    textAlign: 'center',
+    paddingTop: 16,
   },
 })

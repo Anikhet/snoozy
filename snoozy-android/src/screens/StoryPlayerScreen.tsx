@@ -6,14 +6,19 @@ import {
   Text,
   View,
   BackHandler,
+  useWindowDimensions,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import { GestureDetector, Gesture } from 'react-native-gesture-handler'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { AppIcon } from '@/components/AppIcon'
-import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { Fonts, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
-import { TIMER_OPTIONS } from '@/services/audioService'
+import { WaveformScrubber } from '@/components/WaveformScrubber'
+import { PlayPauseButton, SeekButton } from '@/components/PlayerControls'
+import { SleepTimerSection } from '@/components/SleepTimer'
+import { CoverScene } from '@/components/CoverScene'
+import { DreamingMoon } from '@/components/DreamingMoon'
+import { SnoozyStar } from '@/components/SnoozyStar'
 
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
@@ -23,6 +28,9 @@ function formatTime(totalSeconds: number): string {
 
 export function StoryPlayerScreen() {
   const { colors, isDark } = useThemeColors()
+  const { width: screenWidth } = useWindowDimensions()
+  const isNight = isDark
+
   const currentStory = useStoryStore((s) => s.currentStory)
   const isPlaying = useStoryStore((s) => s.isPlaying)
   const currentTime = useStoryStore((s) => s.currentTime)
@@ -35,236 +43,113 @@ export function StoryPlayerScreen() {
   const stopPlayback = useStoryStore((s) => s.stopPlayback)
 
   const [showTimerPicker, setShowTimerPicker] = useState(false)
-  const [barWidth, setBarWidth] = useState(0)
- 
-  // Handle audio cleanup on unmount
+
   useEffect(() => {
-    console.log('[Player] Mounting StoryPlayerScreen')
-    return () => {
-      console.log('[Player] Unmounting - cleaning up audio')
-      stopPlayback()
-    }
-  }, [stopPlayback])
- 
-  // Handle physical back button on Android
-  useEffect(() => {
-    const handleBackPress = () => {
-      console.log('[Player] Back button pressed - stopping audio')
-      stopPlayback()
-      return true
-    }
- 
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      handleBackPress
-    )
- 
-    return () => subscription.remove()
+    return () => { stopPlayback() }
   }, [stopPlayback])
 
-  const handleBarLayout = useCallback(
-    (e: { nativeEvent: { layout: { width: number } } }) => {
-      setBarWidth(e.nativeEvent.layout.width)
-    },
-    []
-  )
+  useEffect(() => {
+    const handleBackPress = () => { stopPlayback(); return true }
+    const sub = BackHandler.addEventListener('hardwareBackPress', handleBackPress)
+    return () => sub.remove()
+  }, [stopPlayback])
 
   const progressFraction = duration > 0 ? currentTime / duration : 0
+  const waveformWidth = screenWidth - 48
 
-  // Gesture for seeking on the progress bar
-  const panGesture = Gesture.Pan()
-    .onStart((e) => {
-      if (barWidth <= 0 || duration <= 0) return
-      const fraction = Math.max(0, Math.min(1, e.x / barWidth))
-      seek(fraction * duration)
-    })
-    .onChange((e) => {
-      if (barWidth <= 0 || duration <= 0) return
-      const fraction = Math.max(0, Math.min(1, e.x / barWidth))
-      seek(fraction * duration)
-    })
-    .runOnJS(true)
-
-  const tapGesture = Gesture.Tap()
-    .onEnd((e) => {
-      if (barWidth <= 0 || duration <= 0) return
-      const fraction = Math.max(0, Math.min(1, e.x / barWidth))
-      seek(fraction * duration)
-    })
-    .runOnJS(true)
-
-  const composedGesture = Gesture.Race(panGesture, tapGesture)
-
-  if (!currentStory) return null
+  const handleWaveformSeek = useCallback(
+    (fraction: number) => { if (duration > 0) seek(fraction * duration) },
+    [duration, seek]
+  )
 
   const handleSeekBack = () => seek(Math.max(0, currentTime - 15))
   const handleSeekForward = () => seek(Math.min(duration, currentTime + 15))
 
+  if (!currentStory) return null
+
   const isSleepTimerActive = sleepTimerRemaining !== null
+  const bgColor = isNight ? colors.night : colors.background
+  const inkColor = isNight ? colors.nightInk : colors.ink
+  const softColor = isNight ? colors.nightInkSoft : colors.inkSoft
+  const headerBg = isNight ? 'rgba(255,255,255,0.08)' : colors.surface
+  const headerBorder = isNight ? colors.nightHair : colors.hair
 
   return (
-    <View style={styles.root}>
-      {/* Header */}
-      <View style={styles.headerSection}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={stopPlayback}>
-            <Ionicons name="close" size={20} color={colors.textSecondary} />
-          </Pressable>
-          <View style={styles.flex} />
-        </View>
+    <View style={[styles.root, { backgroundColor: bgColor }]}>
+      {isNight ? <NightBackground colors={colors} screenWidth={screenWidth} /> : null}
 
-        <Text
-          style={[
-            Fonts.title,
-            { color: colors.textPrimary, textAlign: 'center' },
-          ]}
+      {/* Header */}
+      <View style={styles.headerRow}>
+        <Pressable
+          onPress={stopPlayback}
+          style={[styles.headerButton, { backgroundColor: headerBg, borderColor: headerBorder }]}
         >
+          <Ionicons name="close" size={16} color={inkColor} />
+        </Pressable>
+        <View style={styles.flex}>
+          <Text style={[Fonts.eyebrow, { color: softColor, textAlign: 'center' }]}>
+            {isNight ? 'DREAMING' : 'NOW PLAYING'}
+          </Text>
+        </View>
+        <Pressable
+          style={[styles.headerButton, { backgroundColor: headerBg, borderColor: headerBorder }]}
+        >
+          <Ionicons name="heart-outline" size={16} color={inkColor} />
+        </Pressable>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Hero */}
+        {isNight ? (
+          <View style={styles.nightHero}><DreamingMoon size={196} /></View>
+        ) : (
+          <CoverScene />
+        )}
+
+        {/* Title */}
+        <Text style={[Fonts.serifHeadline, { color: inkColor, textAlign: 'center', fontSize: 26 }]}>
           {currentStory.title}
         </Text>
 
-        <Text
-          style={[
-            Fonts.caption,
-            { color: colors.textSecondary, textAlign: 'center' },
-          ]}
-        >
-          A story for {currentStory.childName}
-        </Text>
-      </View>
+        {/* Waveform */}
+        <View style={styles.waveformContainer}>
+          <WaveformScrubber
+            progress={progressFraction}
+            onSeek={handleWaveformSeek}
+            isNight={isNight}
+            containerWidth={waveformWidth}
+          />
+        </View>
 
-      {/* Player Controls */}
-      <View style={styles.controls}>
-        <View style={styles.spacerLg} />
-
-        {/* Progress Bar */}
-        <GestureDetector gesture={composedGesture}>
-          <View
-            style={[styles.progressOuter, { backgroundColor: colors.surface }]}
-            onLayout={handleBarLayout}
-          >
-            <View
-              style={[
-                styles.progressInner,
-                {
-                  backgroundColor: colors.primary,
-                  width: `${progressFraction * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </GestureDetector>
-
-        {/* Time Labels */}
+        {/* Time */}
         <View style={styles.timeRow}>
-          <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-            {formatTime(currentTime)}
-          </Text>
-          <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-            {formatTime(duration)}
+          <Text style={[Fonts.mono, { color: softColor }]}>{formatTime(currentTime)}</Text>
+          <Text style={[Fonts.mono, { color: softColor }]}>
+            {isNight ? `-${formatTime(Math.max(0, duration - currentTime))}` : formatTime(duration)}
           </Text>
         </View>
 
-        {/* Playback Buttons */}
-        <View style={styles.buttonRow}>
-          <Pressable onPress={handleSeekBack}>
-            <AppIcon name="gobackward.15" size={28} color={colors.textSecondary} />
-          </Pressable>
-
-          <Pressable onPress={togglePlayPause}>
-            <Ionicons
-              name={isPlaying ? 'pause-circle' : 'play-circle'}
-              size={64}
-              color={colors.primary}
-            />
-          </Pressable>
-
-          <Pressable onPress={handleSeekForward}>
-            <AppIcon name="goforward.15" size={28} color={colors.textSecondary} />
-          </Pressable>
+        {/* Controls */}
+        <View style={styles.controlsRow}>
+          <SeekButton label={'\u221215'} onPress={handleSeekBack} isNight={isNight} colors={colors} />
+          <PlayPauseButton isPlaying={isPlaying} isNight={isNight} onPress={togglePlayPause} colors={colors} />
+          <SeekButton label="+15" onPress={handleSeekForward} isNight={isNight} colors={colors} />
         </View>
 
-        <View style={styles.spacerMd} />
-      </View>
+        {/* Sleep timer */}
+        <SleepTimerSection
+          isNight={isNight}
+          isSleepTimerActive={isSleepTimerActive}
+          sleepTimerRemaining={sleepTimerRemaining}
+          showTimerPicker={showTimerPicker}
+          onTogglePicker={() => setShowTimerPicker((v) => !v)}
+          onStartTimer={(seconds) => { startSleepTimer(seconds); setShowTimerPicker(false) }}
+          onCancelTimer={cancelSleepTimer}
+          colors={colors}
+        />
 
-      {/* Sleep Timer */}
-      <View style={styles.sleepTimerSection}>
-        {isSleepTimerActive ? (
-          <View
-            style={[
-              styles.sleepTimerActive,
-              { backgroundColor: colors.primary + '1A' },
-            ]}
-          >
-            <AppIcon name="moon.zzz.fill" size={12} color={colors.primary} />
-            <Text style={[Fonts.caption, { color: colors.primary }]}>
-              Sleep in {formatTime(sleepTimerRemaining)}
-            </Text>
-            <View style={styles.flex} />
-            <Pressable onPress={cancelSleepTimer}>
-              <Text style={[Fonts.caption, { color: colors.primary }]}>
-                Cancel
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
-            <View style={styles.sleepTimerInactive}>
-              <AppIcon name="moon.zzz" size={12} color={colors.textSecondary} />
-              <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-                Sleep Timer
-              </Text>
-            </View>
-          </Pressable>
-        )}
-
-        {showTimerPicker ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.timerOptionsRow}
-          >
-            {TIMER_OPTIONS.map((option) => (
-              <Pressable
-                key={option.label}
-                onPress={() => {
-                  startSleepTimer(option.seconds)
-                  setShowTimerPicker(false)
-                }}
-              >
-                <View
-                  style={[
-                    styles.timerOption,
-                    { backgroundColor: colors.surface },
-                    getCardShadow(isDark),
-                  ]}
-                >
-                  <Text
-                    style={[Fonts.caption, { color: colors.textPrimary }]}
-                  >
-                    {option.label}
-                  </Text>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
-      </View>
-
-      {/* Story Text */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={styles.storyTextScroll}
-      >
-        <Text
-          style={[
-            Fonts.body,
-            {
-              color: colors.textPrimary,
-              lineHeight: 23,
-              paddingVertical: Spacing.md,
-            },
-          ]}
-        >
+        {/* Story text */}
+        <Text style={[Fonts.serifBodyRegular, { color: inkColor, lineHeight: 26 }]}>
           {currentStory.storyText}
         </Text>
       </ScrollView>
@@ -272,76 +157,69 @@ export function StoryPlayerScreen() {
   )
 }
 
+/** Night mode ambient background with gradient, glow circles, and stars. */
+function NightBackground({
+  colors,
+  screenWidth,
+}: {
+  colors: ReturnType<typeof useThemeColors>['colors']
+  screenWidth: number
+}) {
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <LinearGradient colors={[colors.night, colors.nightDeep]} style={StyleSheet.absoluteFill} />
+      <View style={[styles.glowCircle, styles.glow1, { backgroundColor: `${colors.primary}59` }]} />
+      <View style={[styles.glowCircle, styles.glow2, { backgroundColor: `${colors.accent}38` }]} />
+      {Array.from({ length: 32 }, (_, i) => (
+        <View
+          key={i}
+          style={[styles.nightStar, { left: (i * 53 + 17) % screenWidth, top: (i * 37 + 11) % 600 }]}
+        >
+          <SnoozyStar
+            size={(1 + (i % 4) * 0.6) * 2}
+            color={colors.nightInk}
+            opacity={0.3 + (i % 5) * 0.12}
+          />
+        </View>
+      ))}
+    </View>
+  )
+}
+
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    paddingHorizontal: Spacing.lg,
-  },
-  headerSection: {
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
-  },
+  root: { flex: 1, paddingHorizontal: Spacing.lg },
+  flex: { flex: 1 },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  controls: {
+    paddingTop: Spacing.md,
     gap: Spacing.md,
   },
-  progressOuter: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
+  headerButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  progressInner: {
-    height: 6,
-    borderRadius: 3,
+  scrollContent: {
+    gap: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+    alignItems: 'center',
   },
-  timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  buttonRow: {
+  nightHero: { alignItems: 'center', paddingVertical: Spacing.md },
+  waveformContainer: { width: '100%' },
+  timeRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
+  controlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xl,
   },
-  sleepTimerSection: {
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  sleepTimerActive: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.small,
-  },
-  sleepTimerInactive: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  timerOptionsRow: {
-    gap: Spacing.sm,
-  },
-  timerOption: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.small,
-  },
-  storyTextScroll: {
-    flex: 1,
-  },
-  spacerLg: {
-    height: Spacing.lg,
-  },
-  spacerMd: {
-    height: Spacing.md,
-  },
-  flex: {
-    flex: 1,
-  },
+  glowCircle: { position: 'absolute', borderRadius: 999 },
+  glow1: { width: 260, height: 260, left: -140, top: -300 },
+  glow2: { width: 300, height: 300, right: -150, top: -180 },
+  nightStar: { position: 'absolute' },
 })
