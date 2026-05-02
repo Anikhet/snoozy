@@ -30,6 +30,8 @@ import { HomeScreen } from '@/screens/HomeScreen'
 import { TemplatePickerScreen } from '@/screens/TemplatePickerScreen'
 import { StoryFormScreen } from '@/screens/StoryFormScreen'
 import { StoryPlayerScreen } from '@/screens/StoryPlayerScreen'
+import WorldPickerScreen from './src/screens/WorldPickerScreen'
+import StoryConfigScreen from './src/screens/StoryConfigScreen'
 import { AuthScreen } from '@/screens/AuthScreen'
 import {
   OnboardingScreen,
@@ -157,6 +159,28 @@ export default function App() {
                         exiting={FadeOut.duration(TRANSITION_DURATION)}
                       >
                         <StoryPlayerScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {currentScreen === Screen.WorldPicker ? (
+                      <Animated.View
+                        key="worldPicker"
+                        style={styles.flex}
+                        entering={SlideInRight.duration(TRANSITION_DURATION)}
+                        exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
+                      >
+                        <WorldPickerScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {currentScreen === Screen.StoryConfig ? (
+                      <Animated.View
+                        key="storyConfig"
+                        style={styles.flex}
+                        entering={SlideInRight.duration(TRANSITION_DURATION)}
+                        exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
+                      >
+                        <StoryConfigScreen />
                       </Animated.View>
                     ) : null}
                   </SignedIn>

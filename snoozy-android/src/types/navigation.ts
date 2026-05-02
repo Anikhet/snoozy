@@ -3,4 +3,6 @@ export enum Screen {
   TemplatePicker = 'templatePicker',
   StoryForm = 'storyForm',
   Player = 'player',
+  WorldPicker = 'worldPicker',
+  StoryConfig = 'storyConfig',
 }

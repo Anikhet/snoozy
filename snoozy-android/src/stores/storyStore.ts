@@ -23,6 +23,8 @@ const generationTasks = new Map<string, AbortController>()
 interface StoryStore {
   currentScreen: Screen
   selectedTemplate: Template | null
+  selectedWorldId: string | null
+  selectedVibeId: string | null
   childDetails: ChildDetails
   /** Name/age declared during onboarding. Seeds every story form so the
    *  parent doesn't retype the same details every night. */
@@ -35,6 +37,8 @@ interface StoryStore {
   sleepTimerRemaining: number | null
 
   navigateTo: (screen: Screen) => void
+  navigateToWorldPicker: () => void
+  navigateToStoryConfig: (worldId: string, vibeId: string) => void
   goHome: () => void
   selectTemplate: (template: Template) => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
@@ -64,6 +68,8 @@ export const useStoryStore = create<StoryStore>((set, get) => {
   return {
     currentScreen: Screen.Home,
     selectedTemplate: null,
+    selectedWorldId: null,
+    selectedVibeId: null,
     childDetails: { ...DEFAULT_CHILD_DETAILS },
     onboardingDefaults: null,
     currentStory: null,
@@ -74,6 +80,11 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     sleepTimerRemaining: null,
 
     navigateTo: (screen) => set({ currentScreen: screen }),
+
+    navigateToWorldPicker: () => set({ currentScreen: Screen.WorldPicker }),
+
+    navigateToStoryConfig: (worldId, vibeId) =>
+      set({ selectedWorldId: worldId, selectedVibeId: vibeId, currentScreen: Screen.StoryConfig }),
 
     goHome: () =>
       set((s) => ({

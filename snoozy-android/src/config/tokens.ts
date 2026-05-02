@@ -40,6 +40,11 @@ export const Colors = {
     cardRain: '#D4DEE8',
     cardRainDeep: '#A8BBCE',
 
+    starGold: '#F5C842',
+    worldCardBg: '#F0EBFF',
+    vibeSelected: '#7B5EA7',
+    vibeSelectedText: '#FFFFFF',
+
     // Legacy aliases so existing code still resolves while migrating
     textPrimary: '#2B2130',
     textSecondary: '#6E5F69',
@@ -80,6 +85,11 @@ export const Colors = {
     cardRain: '#202838',
     cardRainDeep: '#30394A',
 
+    starGold: '#F5C842',
+    worldCardBg: '#2A2545',
+    vibeSelected: '#7B5EA7',
+    vibeSelectedText: '#FFFFFF',
+
     textPrimary: '#F2EDE3',
     textSecondary: 'rgba(242,237,227,0.62)',
     secondary: '#E9A97A',
@@ -100,7 +110,7 @@ export const Night = {
   glass: 'rgba(242,237,227,0.06)',
 } as const
 
-export type ThemeColors = (typeof Colors)['light'] & (typeof Colors)['dark']
+export type ThemeColors = (typeof Colors)['light'] | (typeof Colors)['dark']
 
 export const Spacing = {
   xs: 4,
