@@ -3,20 +3,19 @@ const { z } = require('zod')
 const OpenAI = require('openai')
 const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
-const { buildPrompt, templates } = require('../prompts/templates')
+const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS } = require('../prompts/templates')
 
 const router = express.Router()
 
-const validTemplateIds = templates.map((t) => t.id)
+const validWorldIds = WORLDS.map((w) => w.id)
+const validVibeIds = VIBES.map((v) => v.id)
 
 const generateStorySchema = z.object({
-  templateId: z.enum(validTemplateIds),
+  worldId: z.enum(validWorldIds).optional().default('forest'),
+  vibeId: z.enum(validVibeIds).optional().default('cozy'),
   childDetails: z.object({
     name: z.string().min(1).max(50),
     age: z.number().int().min(1).max(10),
-    favoriteColor: z.string().max(30).optional(),
-    favoriteAnimal: z.string().max(30).optional(),
-    favoriteThing: z.string().max(50).optional(),
   }),
 })
 
@@ -41,7 +40,7 @@ function log(step, message, data) {
 /**
  * POST /api/generate-story
  *
- * Takes a templateId and childDetails, builds a prompt from the template,
+ * Takes a worldId, vibeId, and childDetails, builds a prompt,
  * calls OpenAI to generate a personalized bedtime story, and returns
  * { success, title, storyText }.
  */
@@ -49,14 +48,14 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
   const startTime = Date.now()
 
   try {
-    const { templateId, childDetails } = req.validated
+    const { worldId, vibeId, childDetails } = req.validated
     log('STORY', '--- New story request ---')
-    log('STORY', `Template: ${templateId}, Child: ${childDetails.name}, Age: ${childDetails.age}`)
+    log('STORY', `World: ${worldId}, Vibe: ${vibeId}, Child: ${childDetails.name}, Age: ${childDetails.age}`)
 
-    const result = buildPrompt(templateId, childDetails)
+    const result = buildPrompt(worldId, vibeId, { name: childDetails.name, age: childDetails.age })
     if (!result) {
-      log('STORY', 'ERROR: Invalid template ID', templateId)
-      return res.status(400).json({ success: false, error: 'Invalid template' })
+      log('STORY', 'ERROR: Invalid world/vibe ID', { worldId, vibeId })
+      return res.status(400).json({ success: false, error: 'Invalid world or vibe' })
     }
     log('STORY', 'Prompt built successfully')
 
@@ -74,21 +73,22 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
       })
       model = config.azureOpenaiChatDeployment
     } else {
-      log('STORY', 'Calling Standard OpenAI (gpt-4o-mini)...')
+      log('STORY', `Calling Standard OpenAI (${RECOMMENDED_API_SETTINGS.model})...`)
       client = new OpenAI({ apiKey: config.openaiApiKey })
-      model = 'gpt-4o-mini'
+      model = RECOMMENDED_API_SETTINGS.model
     }
+
+    const { systemPrompt, userMessage } = result
 
     const completion = await client.chat.completions.create({
       model,
-      temperature: 0.7,
-      max_tokens: 800,
+      temperature: RECOMMENDED_API_SETTINGS.temperature,
+      max_tokens: RECOMMENDED_API_SETTINGS.max_tokens,
+      presence_penalty: RECOMMENDED_API_SETTINGS.presence_penalty,
+      frequency_penalty: RECOMMENDED_API_SETTINGS.frequency_penalty,
       messages: [
-        { role: 'system', content: result.prompt },
-        {
-          role: 'user',
-          content: `Please write a bedtime story for ${childDetails.name}. Remember to keep it gentle and calming.`,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
       ],
     })
 
@@ -112,7 +112,7 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
 
     // If first line is short enough to be a title (under 80 chars), use it and strip from body
     const hasTitle = firstLine && firstLine.length < 80
-    const title = hasTitle ? firstLine : `${childDetails.name}'s ${result.template.name}`
+    const title = hasTitle ? firstLine : `${childDetails.name}'s ${result.world.name} Story`
     const storyBody = hasTitle ? lines.slice(1).join('\n').trim() : storyText.trim()
 
     log('STORY', `Done! Title: "${title}", Body: ${storyBody.length} chars (${elapsed}ms total)`)
