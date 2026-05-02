@@ -277,8 +277,10 @@ function LibraryEmptyState({ isDark, colors }: EmptyStateProps) {
 }
 
 function ListSeparator() {
-  return <View style={{ height: 10 }} />
+  return <View style={separatorStyle} />
 }
+
+const separatorStyle = { height: 10 } as const
 
 const styles = StyleSheet.create({
   root: {

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react'
+import React, { memo, useCallback, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { useThemeColors } from '@/hooks/useThemeColors'
@@ -22,6 +22,24 @@ function getAmplitude(i: number, totalBars: number): number {
     * (0.5 + 0.5 * Math.sin(t * Math.PI))
 }
 
+/** Pre-computed bar dimension styles (stable across renders). */
+function buildBarDimensions(totalBars: number, barWidth: number) {
+  return Array.from({ length: totalBars }, (_, i) => {
+    const height = Math.max(4, getAmplitude(i, totalBars) * SCRUBBER_HEIGHT)
+    return { width: barWidth, height, borderRadius: height / 2 }
+  })
+}
+
+const WaveformBar = memo(function WaveformBar({
+  dimensions,
+  backgroundColor,
+}: {
+  dimensions: { width: number; height: number; borderRadius: number }
+  backgroundColor: string
+}) {
+  return <View style={[dimensions, { backgroundColor }]} />
+})
+
 export function WaveformScrubber({
   progress,
   onSeek,
@@ -38,12 +56,10 @@ export function WaveformScrubber({
     ? 'rgba(242,237,227,0.22)'
     : 'rgba(43,33,48,0.14)'
 
-  const bars = useMemo(() =>
-    Array.from({ length: totalBars }, (_, i) => {
-      const amp = getAmplitude(i, totalBars)
-      return Math.max(4, amp * SCRUBBER_HEIGHT)
-    }),
-  [totalBars])
+  const barDimensions = useMemo(
+    () => buildBarDimensions(totalBars, barWidth),
+    [totalBars, barWidth]
+  )
 
   const handleSeek = useCallback((x: number) => {
     const clamped = Math.max(0, Math.min(1, x / containerWidth))
@@ -63,18 +79,11 @@ export function WaveformScrubber({
   return (
     <GestureDetector gesture={composed}>
       <View style={[styles.container, { width: containerWidth }]}>
-        {bars.map((height, i) => (
-          <View
+        {barDimensions.map((dims, i) => (
+          <WaveformBar
             key={i}
-            style={[
-              styles.bar,
-              {
-                width: barWidth,
-                height,
-                borderRadius: height / 2,
-                backgroundColor: i <= activeIndex ? activeColor : inactiveColor,
-              },
-            ]}
+            dimensions={dims}
+            backgroundColor={i <= activeIndex ? activeColor : inactiveColor}
           />
         ))}
       </View>
@@ -88,8 +97,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: BAR_SPACING,
-  },
-  bar: {
-    // width, height, borderRadius, backgroundColor set dynamically
   },
 })

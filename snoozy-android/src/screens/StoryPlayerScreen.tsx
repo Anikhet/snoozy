@@ -173,7 +173,13 @@ function NightBackground({
       {Array.from({ length: 32 }, (_, i) => (
         <View
           key={i}
-          style={[styles.nightStar, { left: (i * 53 + 17) % screenWidth, top: (i * 37 + 11) % 600 }]}
+          style={[
+            styles.nightStar,
+            { transform: [
+              { translateX: (i * 53 + 17) % screenWidth },
+              { translateY: (i * 37 + 11) % 600 },
+            ] },
+          ]}
         >
           <SnoozyStar
             size={(1 + (i % 4) * 0.6) * 2}
