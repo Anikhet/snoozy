@@ -11,7 +11,10 @@ export interface Template {
   name: string
   description: string
   icon: string
-  cardColorLight: string
-  cardColorDark: string
+  glyph: string
+  gradientStartLight: string
+  gradientEndLight: string
+  gradientStartDark: string
+  gradientEndDark: string
   fields: TemplateField[]
 }

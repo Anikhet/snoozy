@@ -15,6 +15,10 @@ import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular'
 import { Nunito_500Medium } from '@expo-google-fonts/nunito/500Medium'
 import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold'
 import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold'
+import { PlayfairDisplay_400Regular } from '@expo-google-fonts/playfair-display/400Regular'
+import { PlayfairDisplay_500Medium } from '@expo-google-fonts/playfair-display/500Medium'
+import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display/400Regular_Italic'
+import { PlayfairDisplay_500Medium_Italic } from '@expo-google-fonts/playfair-display/500Medium_Italic'
 import { Colors } from '@/config/tokens'
 import { Screen } from '@/types/navigation'
 import { useStoryStore } from '@/stores/storyStore'
@@ -37,6 +41,10 @@ export default function App() {
     Nunito_500Medium,
     Nunito_600SemiBold,
     Nunito_700Bold,
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_500Medium,
+    PlayfairDisplay_400Regular_Italic,
+    PlayfairDisplay_500Medium_Italic,
   })
 
   const scheme = useColorScheme()
