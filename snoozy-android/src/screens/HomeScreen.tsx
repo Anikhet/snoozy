@@ -25,6 +25,7 @@ import {
 import { useStoryStore } from '@/stores/storyStore'
 import { Story, StoryStatus } from '@/types/story'
 import { StoryRow } from '@/components/StoryRow'
+import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -162,7 +163,7 @@ export function HomeScreen() {
                 >
                   <Text style={[styles.wordmarkLetter, { color: colors.primary }]}>S</Text>
                 </View>
-                <Text style={[Fonts.bodyBold, { color: colors.ink }]}>Storybell</Text>
+                <Text style={[Fonts.bodyBold, { color: colors.ink }]}>Snoozy</Text>
               </View>
               <Pressable
                 style={[styles.settingsBtn, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Sizing.buttonHeight + Spacing.xxl,
+    paddingBottom: Sizing.buttonHeight + Spacing.xxl + TAB_BAR_HEIGHT,
   },
   separator: {
     height: 10,

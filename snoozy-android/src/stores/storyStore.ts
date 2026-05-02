@@ -25,6 +25,7 @@ interface StoryStore {
   selectedTemplate: Template | null
   selectedWorldId: string | null
   selectedVibeId: string | null
+  generatingStoryId: string | null
   childDetails: ChildDetails
   /** Name/age declared during onboarding. Seeds every story form so the
    *  parent doesn't retype the same details every night. */
@@ -39,6 +40,10 @@ interface StoryStore {
   navigateTo: (screen: Screen) => void
   navigateToWorldPicker: () => void
   navigateToStoryConfig: (worldId: string, vibeId: string) => void
+  navigateToGenerating: () => void
+  navigateToStoryEnd: () => void
+  navigateToLibrary: () => void
+  navigateToInsights: () => void
   goHome: () => void
   selectTemplate: (template: Template) => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
@@ -53,6 +58,8 @@ interface StoryStore {
   startSleepTimer: (seconds: number | null) => void
   cancelSleepTimer: () => void
   stopPlayback: () => void
+  toggleFavorite: (storyId: string) => void
+  rateStory: (storyId: string, stars: number) => void
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => {
@@ -65,11 +72,17 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     set({ sleepTimerRemaining: remaining })
   })
 
+  // Navigate to StoryEnd when audio finishes naturally
+  audioService.setCompletionListener(() => {
+    set({ currentScreen: Screen.StoryEnd })
+  })
+
   return {
     currentScreen: Screen.Home,
     selectedTemplate: null,
     selectedWorldId: null,
     selectedVibeId: null,
+    generatingStoryId: null,
     childDetails: { ...DEFAULT_CHILD_DETAILS },
     onboardingDefaults: null,
     currentStory: null,
@@ -86,10 +99,41 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     navigateToStoryConfig: (worldId, vibeId) =>
       set({ selectedWorldId: worldId, selectedVibeId: vibeId, currentScreen: Screen.StoryConfig }),
 
+    navigateToGenerating: () => set({ currentScreen: Screen.Generating }),
+
+    navigateToStoryEnd: () => set({ currentScreen: Screen.StoryEnd }),
+
+    navigateToLibrary: () => set({ currentScreen: Screen.Library }),
+
+    navigateToInsights: () => set({ currentScreen: Screen.Insights }),
+
+    toggleFavorite: (storyId) => {
+      const story = get().savedStories.find((s) => s.id === storyId)
+      if (!story) return
+      const updated = { ...story, isFavorite: !story.isFavorite }
+      set((s) => ({
+        savedStories: s.savedStories.map((st) => (st.id === storyId ? updated : st)),
+      }))
+      storageService.saveStory(updated).catch(() => {})
+    },
+
+    rateStory: (storyId, stars) => {
+      const story = get().savedStories.find((s) => s.id === storyId)
+      if (!story) return
+      const updated = { ...story, rating: stars }
+      set((s) => ({
+        savedStories: s.savedStories.map((st) => (st.id === storyId ? updated : st)),
+      }))
+      storageService.saveStory(updated).catch(() => {})
+    },
+
     goHome: () =>
       set((s) => ({
         currentScreen: Screen.Home,
         selectedTemplate: null,
+        generatingStoryId: null,
+        selectedWorldId: null,
+        selectedVibeId: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
       })),
@@ -116,23 +160,22 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       })),
 
     /**
-     * Creates a placeholder story, navigates home immediately,
+     * Creates a placeholder story, navigates to Generating screen,
      * and kicks off generation in the background.
+     * Works for both the template flow (TemplatePicker) and world/vibe flow (WorldPicker).
      */
     generateStory: (token) => {
-      const { selectedTemplate, childDetails } = get()
-      if (!selectedTemplate) return
+      const { selectedTemplate, selectedWorldId, childDetails } = get()
+      const templateId = selectedTemplate?.id ?? selectedWorldId
+      if (!templateId) return
 
       const storyId = generateUUID()
-      const placeholder = createPlaceholderStory(
-        storyId,
-        selectedTemplate.id,
-        childDetails.name
-      )
+      const placeholder = createPlaceholderStory(storyId, templateId, childDetails.name)
 
       set((s) => ({
         savedStories: [placeholder, ...s.savedStories],
-        currentScreen: Screen.Home,
+        currentScreen: Screen.Generating,
+        generatingStoryId: storyId,
         selectedTemplate: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
@@ -142,7 +185,6 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       generationTasks.set(storyId, abortController)
 
       const details = { ...childDetails }
-      const templateId = selectedTemplate.id
       const voiceId = details.voiceId
 
       runGeneration(storyId, templateId, details, voiceId, token, abortController.signal)

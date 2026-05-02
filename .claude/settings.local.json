@@ -3,7 +3,8 @@
     "allow": [
       "Bash(\"$LOCALAPPDATA/Android/Sdk/emulator/emulator.exe\" -list-avds)",
       "Bash(npm show *)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

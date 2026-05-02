@@ -15,6 +15,8 @@ export interface Story {
   createdAt: string
   audioFileName: string
   status: StoryStatus
+  isFavorite?: boolean
+  rating?: number
 }
 
 export interface ChildDetails {

@@ -32,6 +32,11 @@ import { StoryFormScreen } from '@/screens/StoryFormScreen'
 import { StoryPlayerScreen } from '@/screens/StoryPlayerScreen'
 import WorldPickerScreen from './src/screens/WorldPickerScreen'
 import StoryConfigScreen from './src/screens/StoryConfigScreen'
+import GeneratingScreen from './src/screens/GeneratingScreen'
+import StoryEndScreen from './src/screens/StoryEndScreen'
+import { LibraryScreen } from '@/screens/LibraryScreen'
+import { InsightsScreen } from '@/screens/InsightsScreen'
+import { SplashScreen } from '@/screens/SplashScreen'
 import { AuthScreen } from '@/screens/AuthScreen'
 import {
   OnboardingScreen,
@@ -39,6 +44,7 @@ import {
   ONBOARDING_NAME_KEY,
   ONBOARDING_AGE_KEY,
 } from '@/screens/OnboardingScreen'
+import { BottomTabBar } from '@/components/BottomTabBar'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || ''
 
@@ -63,6 +69,7 @@ export default function App() {
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
 
+  const [showSplash, setShowSplash] = useState(true)
   const [onboardingState, setOnboardingState] = useState<
     'loading' | 'needed' | 'complete'
   >('loading')
@@ -71,8 +78,6 @@ export default function App() {
     configureAudioMode()
     loadSavedStories()
 
-    // Check onboarding completion + hydrate persisted child details so the
-    // story form pre-fills the name/age each session.
     ;(async () => {
       try {
         const complete = await AsyncStorage.getItem(ONBOARDING_KEY)
@@ -104,7 +109,9 @@ export default function App() {
           <View style={[styles.flex, { backgroundColor: colors.background }]}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <SafeAreaView style={styles.flex}>
-              {onboardingState === 'needed' ? (
+              {showSplash ? (
+                <SplashScreen onFinish={() => setShowSplash(false)} />
+              ) : onboardingState === 'needed' ? (
                 <Animated.View
                   key="onboarding"
                   style={styles.flex}
@@ -126,6 +133,28 @@ export default function App() {
                         exiting={FadeOut.duration(TRANSITION_DURATION)}
                       >
                         <HomeScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {currentScreen === Screen.Library ? (
+                      <Animated.View
+                        key="library"
+                        style={styles.flex}
+                        entering={FadeIn.duration(TRANSITION_DURATION)}
+                        exiting={FadeOut.duration(TRANSITION_DURATION)}
+                      >
+                        <LibraryScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {currentScreen === Screen.Insights ? (
+                      <Animated.View
+                        key="insights"
+                        style={styles.flex}
+                        entering={FadeIn.duration(TRANSITION_DURATION)}
+                        exiting={FadeOut.duration(TRANSITION_DURATION)}
+                      >
+                        <InsightsScreen />
                       </Animated.View>
                     ) : null}
 
@@ -183,6 +212,31 @@ export default function App() {
                         <StoryConfigScreen />
                       </Animated.View>
                     ) : null}
+
+                    {currentScreen === Screen.Generating ? (
+                      <Animated.View
+                        key="generating"
+                        style={styles.flex}
+                        entering={FadeIn.duration(TRANSITION_DURATION)}
+                        exiting={FadeOut.duration(TRANSITION_DURATION)}
+                      >
+                        <GeneratingScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {currentScreen === Screen.StoryEnd ? (
+                      <Animated.View
+                        key="storyEnd"
+                        style={styles.flex}
+                        entering={FadeIn.duration(TRANSITION_DURATION)}
+                        exiting={FadeOut.duration(TRANSITION_DURATION)}
+                      >
+                        <StoryEndScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {/* Persistent tab bar — self-manages visibility */}
+                    <BottomTabBar />
                   </SignedIn>
 
                   <SignedOut>

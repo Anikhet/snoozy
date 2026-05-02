@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   BackHandler,
+  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,16 +11,31 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
-import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Night, Spacing } from '@/config/tokens'
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Night, Fonts, Spacing, Radii } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TIMER_OPTIONS } from '@/services/audioService'
-import {
-  CoverScene,
-  DreamingMoon,
-  SnoozyStar,
-  WaveformScrubber,
-} from '@/components/Visuals'
+import { WaveformScrubber } from '@/components/Visuals'
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window')
+const COVER_HEIGHT = SCREEN_HEIGHT * 0.58
+
+// Maps worldId to a gradient pair for the cover art fallback
+const WORLD_GRADIENTS: Record<string, [string, string]> = {
+  kingdom: ['#2E2B4A', '#3B3458'],
+  forest:  ['#1E3A30', '#2C4A3E'],
+  space:   ['#2A254A', '#3B3458'],
+  ocean:   ['#1E2E3A', '#2E3E4A'],
+  clouds:  ['#2A2F5E', '#1A2144'],
+  jungle:  ['#2A3020', '#3A4028'],
+}
 
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
@@ -27,15 +43,13 @@ function formatTime(totalSeconds: number): string {
   return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
-/** Ambient light mode → cover scene hero, lavender wave.
- *  Dreaming dark mode → night moon hero, glass sleep-timer drawer. */
 export function StoryPlayerScreen() {
-  const { colors, isDark } = useThemeColors()
   const currentStory = useStoryStore((s) => s.currentStory)
   const isPlaying = useStoryStore((s) => s.isPlaying)
   const currentTime = useStoryStore((s) => s.currentTime)
   const duration = useStoryStore((s) => s.duration)
   const sleepTimerRemaining = useStoryStore((s) => s.sleepTimerRemaining)
+  const selectedWorldId = useStoryStore((s) => s.selectedWorldId)
   const togglePlayPause = useStoryStore((s) => s.togglePlayPause)
   const seek = useStoryStore((s) => s.seek)
   const startSleepTimer = useStoryStore((s) => s.startSleepTimer)
@@ -43,10 +57,13 @@ export function StoryPlayerScreen() {
   const stopPlayback = useStoryStore((s) => s.stopPlayback)
 
   const [showTimerPicker, setShowTimerPicker] = useState(false)
+  const [showText, setShowText] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
+  const [isFavorited, setIsFavorited] = useState(false)
 
-  useEffect(() => () => stopPlayback(), [stopPlayback])
+  const playScale = useSharedValue(1)
 
+  // Back-button handling (Android)
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       stopPlayback()
@@ -56,14 +73,15 @@ export function StoryPlayerScreen() {
   }, [stopPlayback])
 
   const progress = duration > 0 ? currentTime / duration : 0
+  const isSleepTimerActive = sleepTimerRemaining !== null
 
+  // Gesture for scrubber
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
         .onChange((e) => {
           if (barWidth <= 0 || duration <= 0) return
-          const f = Math.max(0, Math.min(1, e.x / barWidth))
-          seek(f * duration)
+          seek(Math.max(0, Math.min(1, e.x / barWidth)) * duration)
         })
         .runOnJS(true),
     [barWidth, duration, seek],
@@ -74,8 +92,7 @@ export function StoryPlayerScreen() {
       Gesture.Tap()
         .onEnd((e) => {
           if (barWidth <= 0 || duration <= 0) return
-          const f = Math.max(0, Math.min(1, e.x / barWidth))
-          seek(f * duration)
+          seek(Math.max(0, Math.min(1, e.x / barWidth)) * duration)
         })
         .runOnJS(true),
     [barWidth, duration, seek],
@@ -86,459 +103,463 @@ export function StoryPlayerScreen() {
     [panGesture, tapGesture],
   )
 
+  const playBtnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: playScale.value }],
+  }))
+
+  function handlePlayPress() {
+    playScale.value = withSpring(0.92, { damping: 12 }, () => {
+      playScale.value = withSpring(1)
+    })
+    togglePlayPause()
+  }
+
   if (!currentStory) return null
 
-  const ink = isDark ? Night.ink : colors.ink
-  const inkSoft = isDark ? Night.inkSoft : colors.inkSoft
-  const isSleepTimerActive = sleepTimerRemaining !== null
+  const worldGradient =
+    WORLD_GRADIENTS[selectedWorldId ?? ''] ?? (Night.bg ? [Night.bg, Night.bgDeep] : ['#0F1530', '#070B1E'])
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? Night.bg : colors.background }}>
-      {isDark ? <NightBackdrop /> : null}
+    <View style={styles.root}>
+      {/* Full-bleed cover art / fallback gradient */}
+      <View style={styles.cover} pointerEvents="none">
+        <LinearGradient
+          colors={worldGradient as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        {/* Overlay: fade cover into dark player area */}
+        <LinearGradient
+          colors={['transparent', 'transparent', Night.bg]}
+          locations={[0, 0.3, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+      {/* Top controls (absolute, over cover) */}
+      <Animated.View
+        entering={FadeInDown.delay(200).duration(400)}
+        style={styles.topControls}
+        pointerEvents="box-none"
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <HeaderBtn isDark={isDark} color={ink} onPress={stopPlayback}>
-            <Ionicons name="close" size={14} color={ink} />
-          </HeaderBtn>
-          <Text style={[Fonts.eyebrow, { color: inkSoft }]}>
-            {isDark ? 'DREAMING' : 'NOW PLAYING'}
-          </Text>
-          <HeaderBtn isDark={isDark} color={ink} onPress={() => {}}>
-            <Ionicons name="heart-outline" size={14} color={ink} />
-          </HeaderBtn>
-        </View>
-
-        {/* Hero */}
-        <View style={styles.hero}>
-          {isDark ? (
-            <View style={{ alignItems: 'center', paddingTop: 20 }}>
-              <DreamingMoon size={196} />
-            </View>
-          ) : (
-            <CoverScene height={280} />
-          )}
-        </View>
-
-        {/* Title */}
-        <View style={styles.title}>
-          <Text style={[Fonts.eyebrow, { color: inkSoft, textAlign: 'center' }]}>
-            {(isDark ? 'A CHAPTER FOR ' : 'A STORY FOR ') +
-              currentStory.childName.toUpperCase()}
-          </Text>
-          <Text
-            style={[
-              styles.titleText,
-              { color: ink, fontFamily: 'Fraunces_500Medium_Italic' },
-            ]}
-            numberOfLines={2}
-          >
-            {currentStory.title}
-          </Text>
-        </View>
-
-        {/* Scrubber */}
-        <View style={styles.scrubberBlock}>
-          <GestureDetector gesture={composedGesture}>
-            <View
-              onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
-              style={{ width: '100%' }}
-            >
-              <WaveformScrubber
-                progress={progress}
-                bars={isDark ? 56 : 48}
-                activeColor={isDark ? Night.ink : colors.primary}
-                inactiveColor={
-                  isDark ? 'rgba(242,237,227,0.22)' : 'rgba(43,33,48,0.14)'
-                }
-                height={38}
-              />
-            </View>
-          </GestureDetector>
-          <View style={styles.timeRow}>
-            <Text style={[Fonts.mono, { color: inkSoft }]}>{formatTime(currentTime)}</Text>
-            <Text style={[Fonts.mono, { color: inkSoft }]}>
-              {isDark ? `-${formatTime(Math.max(0, duration - currentTime))}` : formatTime(duration)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Controls */}
-        <View style={styles.controls}>
-          <SeekBtn label="−15" onPress={() => seek(Math.max(0, currentTime - 15))} isDark={isDark} color={ink} />
-          <Pressable onPress={togglePlayPause}>
-            {isDark ? (
-              <LinearGradient
-                colors={['#F9F2E4', colors.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.playBtn, { shadowColor: colors.accent, shadowOpacity: 0.45, shadowRadius: 22, shadowOffset: { width: 0, height: 12 }, elevation: 14 }]}
-              >
-                <PlayGlyph color={Night.bg} playing={isPlaying} />
-              </LinearGradient>
-            ) : (
-              <LinearGradient
-                colors={[colors.ink, '#3D3142']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.playBtn, { shadowColor: colors.ink, shadowOpacity: 0.32, shadowRadius: 18, shadowOffset: { width: 0, height: 12 }, elevation: 12 }]}
-              >
-                <PlayGlyph color={colors.background} playing={isPlaying} />
-              </LinearGradient>
-            )}
-          </Pressable>
-          <SeekBtn label="+15" onPress={() => seek(Math.min(duration, currentTime + 15))} isDark={isDark} color={ink} />
-        </View>
-
-        {/* Sleep timer */}
-        <View style={styles.sleepTimer}>
-          {isDark ? (
-            <View style={styles.nightDrawer}>
-              <LinearGradient
-                colors={[colors.primary, colors.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.drawerBadge}
-              >
-                <Text style={{ color: '#fff', fontSize: 14 }}>{'\u263E'}</Text>
-              </LinearGradient>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[Fonts.eyebrow, { color: Night.inkSoft, fontSize: 10 }]}>
-                  SLEEP TIMER
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: 'Fraunces_500Medium_Italic',
-                    fontSize: 16,
-                    color: Night.ink,
-                    marginTop: 2,
-                  }}
-                >
-                  {isSleepTimerActive
-                    ? `Fade out in ${formatTime(sleepTimerRemaining ?? 0)}`
-                    : 'Tap edit to set a timer'}
-                </Text>
-              </View>
-              <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
-                <View style={[styles.editChip, { backgroundColor: 'rgba(242,237,227,0.1)' }]}>
-                  <Text style={{ color: Night.ink, fontFamily: 'Nunito_700Bold', fontSize: 11 }}>
-                    Edit
-                  </Text>
-                </View>
-              </Pressable>
-            </View>
-          ) : isSleepTimerActive ? (
-            <View style={[styles.sleepChip, { backgroundColor: colors.primarySoft }]}>
-              <View style={[styles.sleepChipDot, { backgroundColor: colors.primary }]}>
-                <Text style={{ color: '#fff', fontSize: 11 }}>{'\u263E'}</Text>
-              </View>
-              <Text style={{ color: colors.primaryInk, fontFamily: 'Nunito_700Bold', fontSize: 12 }}>
-                Sleep timer · {formatTime(sleepTimerRemaining ?? 0)}
-              </Text>
-              <Pressable onPress={cancelSleepTimer} style={{ marginLeft: 4 }}>
-                <Ionicons name="close" size={12} color={colors.primaryInk} />
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable onPress={() => setShowTimerPicker((v) => !v)}>
-              <View style={[styles.sleepChip, { backgroundColor: colors.primarySoft }]}>
-                <View style={[styles.sleepChipDot, { backgroundColor: colors.primary }]}>
-                  <Text style={{ color: '#fff', fontSize: 11 }}>{'\u263E'}</Text>
-                </View>
-                <Text style={{ color: colors.primaryInk, fontFamily: 'Nunito_700Bold', fontSize: 12 }}>
-                  Sleep timer
-                </Text>
-              </View>
-            </Pressable>
-          )}
-
-          {showTimerPicker ? (
-            <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {TIMER_OPTIONS.map((option) => (
-                <Pressable
-                  key={option.label}
-                  onPress={() => {
-                    startSleepTimer(option.seconds)
-                    setShowTimerPicker(false)
-                  }}
-                >
-                  <View
-                    style={[
-                      styles.timerOption,
-                      {
-                        backgroundColor: isDark ? Night.glass : colors.surface,
-                        borderColor: isDark ? Night.hair : colors.hair,
-                      },
-                    ]}
-                  >
-                    <Text style={{ color: ink, fontFamily: 'Nunito_600SemiBold', fontSize: 12 }}>
-                      {option.label}
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-        </View>
-
-        {/* Story text */}
-        <Text
-          style={{
-            color: ink,
-            fontFamily: 'Fraunces_400Regular',
-            fontSize: 17,
-            lineHeight: 26,
-            paddingHorizontal: Spacing.lg,
-            paddingTop: 28,
-            paddingBottom: 40,
-          }}
+        <Pressable
+          style={styles.topBtn}
+          onPress={stopPlayback}
+          accessibilityRole="button"
+          accessibilityLabel="Close player"
         >
-          {currentStory.storyText}
-        </Text>
-      </ScrollView>
-    </View>
-  )
-}
+          <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+        </Pressable>
+        <View style={styles.topRight}>
+          <Pressable
+            style={styles.topBtn}
+            onPress={() => setIsFavorited((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Ionicons
+              name={isFavorited ? 'heart' : 'heart-outline'}
+              size={20}
+              color={isFavorited ? '#E9A97A' : '#FFFFFF'}
+            />
+          </Pressable>
+          <Pressable
+            style={styles.topBtn}
+            onPress={() => {}}
+            accessibilityRole="button"
+            accessibilityLabel="More options"
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </Animated.View>
 
-function NightBackdrop() {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <LinearGradient
-        colors={[Night.bg, Night.bgDeep]}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* ambient stars */}
-      {Array.from({ length: 32 }).map((_, i) => {
-        const x = ((i * 53 + 17) % 340)
-        const y = ((i * 37 + 11) % 800)
-        const s = 1 + (i % 4) * 0.6
-        return (
-          <View key={i} style={{ position: 'absolute', left: x, top: y }}>
-            <SnoozyStar size={s * 2} color="#fff" opacity={0.3 + (i % 5) * 0.12} />
+      {/* Scrollable player content (starts ~50% down) */}
+      <SafeAreaView edges={['bottom']} style={styles.flex}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Spacer so content starts below the cover */}
+          <View style={{ height: COVER_HEIGHT * 0.52 }} />
+
+          {/* Story metadata */}
+          <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.metadata}>
+            <View style={styles.worldRow}>
+              <Ionicons name="globe-outline" size={12} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.worldLabel}>
+                {currentStory.childName.toUpperCase()}
+              </Text>
+            </View>
+            <Text style={[Fonts.serifTitle, styles.storyTitle]} numberOfLines={2}>
+              {currentStory.title}
+            </Text>
+            {duration > 0 ? (
+              <View style={styles.durationRow}>
+                <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.6)" />
+                <Text style={styles.durationText}>{formatTime(duration)}</Text>
+              </View>
+            ) : null}
+          </Animated.View>
+
+          {/* Read-along toggle */}
+          <View style={styles.textToggleRow}>
+            <Pressable
+              style={styles.textToggleBtn}
+              onPress={() => setShowText((v) => !v)}
+            >
+              <Text style={styles.textToggleLabel}>
+                {showText ? 'Hide text' : '📖  Read along'}
+              </Text>
+            </Pressable>
           </View>
-        )
-      })}
-      {/* distant glows */}
-      <View
-        style={{
-          position: 'absolute',
-          left: -80,
-          top: -80,
-          width: 260,
-          height: 260,
-          borderRadius: 130,
-          backgroundColor: 'rgba(91,91,214,0.35)',
-          opacity: 0.6,
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          right: -100,
-          top: 100,
-          width: 300,
-          height: 300,
-          borderRadius: 150,
-          backgroundColor: 'rgba(233,169,122,0.22)',
-          opacity: 0.6,
-        }}
-      />
+
+          {showText ? (
+            <Animated.View
+              entering={FadeInDown.duration(400)}
+              style={styles.storyTextCard}
+            >
+              <ScrollView
+                style={styles.storyTextScroll}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={styles.storyTextBody}>{currentStory.storyText}</Text>
+              </ScrollView>
+            </Animated.View>
+          ) : null}
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Progress / Scrubber */}
+          <Animated.View
+            entering={FadeInUp.delay(450).duration(500)}
+            style={styles.scrubberBlock}
+          >
+            <GestureDetector gesture={composedGesture}>
+              <View
+                onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+                style={styles.scrubberHit}
+              >
+                <WaveformScrubber
+                  progress={progress}
+                  bars={56}
+                  activeColor={Night.ink}
+                  inactiveColor="rgba(242,237,227,0.22)"
+                  height={38}
+                />
+              </View>
+            </GestureDetector>
+            <View style={styles.timeRow}>
+              <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+              <Text style={styles.timeText}>
+                -{formatTime(Math.max(0, duration - currentTime))}
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* Playback controls */}
+          <Animated.View
+            entering={FadeInUp.delay(450).duration(500)}
+            style={styles.controls}
+          >
+            <Pressable
+              style={styles.seekBtn}
+              onPress={() => seek(Math.max(0, currentTime - 15))}
+              accessibilityRole="button"
+              accessibilityLabel="Skip back 15 seconds"
+            >
+              <Ionicons name="play-skip-back" size={28} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.seekLabel}>15</Text>
+            </Pressable>
+
+            <Animated.View style={playBtnStyle}>
+              <Pressable
+                style={styles.playBtn}
+                onPress={handlePlayPress}
+                accessibilityRole="button"
+                accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
+              >
+                <LinearGradient
+                  colors={[Night.ink, '#E9A97A']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.playBtnGradient}
+                >
+                  <Ionicons
+                    name={isPlaying ? 'pause' : 'play'}
+                    size={32}
+                    color={Night.bg}
+                  />
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+
+            <Pressable
+              style={styles.seekBtn}
+              onPress={() => seek(Math.min(duration, currentTime + 15))}
+              accessibilityRole="button"
+              accessibilityLabel="Skip forward 15 seconds"
+            >
+              <Ionicons name="play-skip-forward" size={28} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.seekLabel}>15</Text>
+            </Pressable>
+          </Animated.View>
+
+          {/* Sleep timer */}
+          <View style={styles.sleepRow}>
+            <Pressable
+              style={styles.sleepChip}
+              onPress={() => setShowTimerPicker((v) => !v)}
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name="moon-outline"
+                size={16}
+                color={isSleepTimerActive ? '#F5C842' : 'rgba(255,255,255,0.5)'}
+              />
+              <Text
+                style={[
+                  styles.sleepLabel,
+                  isSleepTimerActive && { color: '#F5C842' },
+                ]}
+              >
+                {isSleepTimerActive
+                  ? `Sleep in ${formatTime(sleepTimerRemaining ?? 0)}`
+                  : 'Sleep timer'}
+              </Text>
+              {isSleepTimerActive ? (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation()
+                    cancelSleepTimer()
+                  }}
+                  hitSlop={8}
+                >
+                  <Ionicons name="close-circle" size={14} color="rgba(255,255,255,0.5)" />
+                </Pressable>
+              ) : null}
+            </Pressable>
+
+            {showTimerPicker ? (
+              <View style={styles.timerOptions}>
+                {TIMER_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.label}
+                    style={styles.timerOption}
+                    onPress={() => {
+                      startSleepTimer(option.seconds)
+                      setShowTimerPicker(false)
+                    }}
+                  >
+                    <Text style={styles.timerOptionText}>{option.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+          </View>
+
+          <View style={{ height: Spacing.xxl }} />
+        </ScrollView>
+      </SafeAreaView>
     </View>
-  )
-}
-
-function HeaderBtn({
-  children,
-  isDark,
-  color,
-  onPress,
-}: {
-  children: React.ReactNode
-  isDark: boolean
-  color: string
-  onPress: () => void
-}) {
-  return (
-    <Pressable onPress={onPress}>
-      <View
-        style={[
-          styles.headerBtn,
-          isDark
-            ? { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: Night.hair }
-            : { backgroundColor: '#FFFFFF', borderColor: 'rgba(43,33,48,0.08)' },
-        ]}
-      >
-        {children}
-      </View>
-    </Pressable>
-  )
-}
-
-function SeekBtn({
-  label,
-  onPress,
-  isDark,
-  color,
-}: {
-  label: string
-  onPress: () => void
-  isDark: boolean
-  color: string
-}) {
-  return (
-    <Pressable onPress={onPress}>
-      <View
-        style={[
-          styles.seekBtn,
-          isDark
-            ? {
-                backgroundColor: 'rgba(255,255,255,0.06)',
-                borderColor: Night.hair,
-                borderWidth: 1,
-              }
-            : null,
-        ]}
-      >
-        <Text style={{ color, fontFamily: 'monospace', fontSize: 13, fontWeight: '700' }}>
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  )
-}
-
-function PlayGlyph({ color, playing }: { color: string; playing: boolean }) {
-  if (playing) {
-    return (
-      <View style={{ flexDirection: 'row', gap: 4 }}>
-        <View style={{ width: 5, height: 22, backgroundColor: color, borderRadius: 1.5 }} />
-        <View style={{ width: 5, height: 22, backgroundColor: color, borderRadius: 1.5 }} />
-      </View>
-    )
-  }
-  // triangle pointing right
-  return (
-    <View
-      style={{
-        width: 0,
-        height: 0,
-        borderTopWidth: 11,
-        borderBottomWidth: 11,
-        borderLeftWidth: 18,
-        borderTopColor: 'transparent',
-        borderBottomColor: 'transparent',
-        borderLeftColor: color,
-        marginLeft: 4,
-      }}
-    />
   )
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 8,
-    gap: 22,
+  root: {
+    flex: 1,
+    backgroundColor: Night.bg,
   },
-  header: {
+  flex: {
+    flex: 1,
+  },
+  cover: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: COVER_HEIGHT,
+  },
+  topControls: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 56, // safe area approximation; real edge handled by SafeAreaView below
   },
-  headerBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
+  topRight: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  topBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hero: {},
-  title: {
-    alignItems: 'center',
-    gap: 6,
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
   },
-  titleText: {
-    fontSize: 26,
-    textAlign: 'center',
-    lineHeight: 30,
-    letterSpacing: -0.4,
+  metadata: {
+    gap: 6,
+    paddingTop: Spacing.md,
+  },
+  worldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  worldLabel: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  storyTitle: {
+    color: Night.ink,
+    fontSize: 30,
+    letterSpacing: -0.6,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  durationText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  textToggleRow: {
+    marginTop: Spacing.md,
+  },
+  textToggleBtn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  textToggleLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: Night.ink,
+  },
+  storyTextCard: {
+    marginTop: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: Radii.card,
+    padding: 16,
+  },
+  storyTextScroll: {
+    height: 200,
+  },
+  storyTextBody: {
+    fontFamily: 'Fraunces_400Regular',
+    fontSize: 17,
+    lineHeight: 28,
+    color: 'rgba(242,237,227,0.85)',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: Spacing.lg,
   },
   scrubberBlock: {
     gap: 8,
+  },
+  scrubberHit: {
+    width: '100%',
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  timeText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: 'rgba(242,237,227,0.7)',
+  },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 24,
+    gap: 32,
+    marginTop: Spacing.xl,
   },
   seekBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
+  },
+  seekLabel: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.6)',
   },
   playBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: 'hidden',
+  },
+  playBtnGradient: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#E9A97A',
+    shadowOpacity: 0.45,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 14,
   },
-  sleepTimer: {
+  sleepRow: {
     alignItems: 'center',
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
   },
   sleepChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
-  sleepChipDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
+  sleepLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
   },
-  nightDrawer: {
+  timerOptions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 22,
-    backgroundColor: 'rgba(242,237,227,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(242,237,227,0.14)',
-    width: '100%',
-  },
-  drawerBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    alignItems: 'center',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-  },
-  editChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+    gap: 8,
   },
   timerOption: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 50,
     borderWidth: 1,
+    borderColor: Night.hair,
+    backgroundColor: Night.glass,
+  },
+  timerOptionText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: Night.ink,
   },
 })
