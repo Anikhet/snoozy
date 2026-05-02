@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { Fonts } from '@/config/tokens'
 
 interface ChipProps {
   label: string
@@ -10,7 +10,7 @@ interface ChipProps {
 }
 
 export const Chip = memo(function Chip({ label, isSelected, onPress }: ChipProps) {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
 
   return (
     <Pressable onPress={onPress}>
@@ -18,15 +18,16 @@ export const Chip = memo(function Chip({ label, isSelected, onPress }: ChipProps
         style={[
           styles.container,
           {
-            backgroundColor: isSelected ? colors.primary : colors.surface,
+            backgroundColor: isSelected ? colors.ink : colors.surface,
+            borderColor: isSelected ? colors.ink : colors.hair,
+            borderWidth: isSelected ? 0 : 1,
           },
-          getCardShadow(isDark),
         ]}
       >
         <Text
           style={[
-            Fonts.caption,
-            { color: isSelected ? '#FFFFFF' : colors.textPrimary },
+            Fonts.captionSemiBold,
+            { color: isSelected ? colors.background : colors.ink },
           ]}
         >
           {label}
@@ -38,8 +39,10 @@ export const Chip = memo(function Chip({ label, isSelected, onPress }: ChipProps
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.small,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })

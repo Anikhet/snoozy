@@ -6,11 +6,12 @@ import {
   Text,
   View,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { AppIcon } from '@/components/AppIcon'
-import { Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { Fonts, Radii } from '@/config/tokens'
+import { Triangle } from '@/components/Triangle'
 import { StoryStatus } from '@/types/story'
 import { TEMPLATES } from '@/config/templates'
 
@@ -39,11 +40,14 @@ export const StoryRow = memo(function StoryRow({
 }: StoryRowProps) {
   const { colors, isDark } = useThemeColors()
   const template = TEMPLATES.find((t) => t.id === templateId)
-  const iconName = template?.icon ?? 'book'
   const isDisabled = status === StoryStatus.Generating
 
-  const iconColor =
-    status === StoryStatus.Failed ? colors.error : colors.secondary
+  const gradientStart = isDark
+    ? (template?.gradientStartDark ?? '#2E2B4A')
+    : (template?.gradientStartLight ?? '#E8E5FF')
+  const gradientEnd = isDark
+    ? (template?.gradientEndDark ?? '#3B3458')
+    : (template?.gradientEndLight ?? '#B8ABE8')
 
   function handlePress() {
     if (status === StoryStatus.Ready) onPlay(id)
@@ -59,17 +63,29 @@ export const StoryRow = memo(function StoryRow({
       <View
         style={[
           styles.container,
-          { backgroundColor: colors.surface },
-          getCardShadow(isDark),
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.hair,
+            shadowColor: colors.ink,
+          },
         ]}
       >
-        <View style={styles.iconFrame}>
-          <AppIcon name={iconName} size={20} color={iconColor} />
-        </View>
+        {/* Gradient thumb with glyph */}
+        <LinearGradient
+          colors={[gradientStart, gradientEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.thumb}
+        >
+          <Text style={styles.thumbGlyph}>
+            {template?.glyph ?? '\u263E'}
+          </Text>
+        </LinearGradient>
 
+        {/* Text content */}
         <View style={styles.textContainer}>
           <Text
-            style={[Fonts.headline, { color: colors.textPrimary }]}
+            style={[Fonts.serifBody, { color: colors.ink }]}
             numberOfLines={1}
           >
             {title}
@@ -78,11 +94,10 @@ export const StoryRow = memo(function StoryRow({
             status={status}
             childName={childName}
             createdAt={createdAt}
-            colors={colors}
           />
         </View>
 
-        <TrailingAction status={status} colors={colors} />
+        <TrailingAction status={status} />
       </View>
     </Pressable>
   )
@@ -92,19 +107,19 @@ function SubtitleView({
   status,
   childName,
   createdAt,
-  colors,
 }: {
   status: StoryStatus
   childName: string
   createdAt: string
-  colors: ReturnType<typeof useThemeColors>['colors']
 }) {
+  const { colors } = useThemeColors()
+
   if (status === StoryStatus.Generating) {
     return (
       <View style={styles.subtitleRow}>
         <ActivityIndicator size="small" color={colors.primary} />
-        <Text style={[Fonts.caption, { color: colors.primary }]}>
-          Generating...
+        <Text style={[styles.subtitleText, { color: colors.primary }]}>
+          Weaving the story\u2026
         </Text>
       </View>
     )
@@ -112,8 +127,8 @@ function SubtitleView({
 
   if (status === StoryStatus.Failed) {
     return (
-      <Text style={[Fonts.caption, { color: colors.error }]}>
-        Tap to retry
+      <Text style={[styles.subtitleText, { color: colors.error }]}>
+        Didn&apos;t quite come together \u2014 tap to retry
       </Text>
     )
   }
@@ -123,39 +138,45 @@ function SubtitleView({
   })
 
   return (
-    <Text style={[Fonts.caption, { color: colors.textSecondary }]}>
-      For {childName} {'\u2022'} {relativeDate}
-    </Text>
+    <View style={styles.subtitleRow}>
+      <Text style={[styles.subtitleText, { color: colors.inkSoft }]}>
+        For {childName}
+      </Text>
+      <View style={[styles.bulletDot, { backgroundColor: colors.inkMute }]} />
+      <Text style={[styles.subtitleText, { color: colors.inkSoft }]}>
+        {relativeDate}
+      </Text>
+    </View>
   )
 }
 
-function TrailingAction({
-  status,
-  colors,
-}: {
-  status: StoryStatus
-  colors: ReturnType<typeof useThemeColors>['colors']
-}) {
+function TrailingAction({ status }: { status: StoryStatus }) {
+  const { colors } = useThemeColors()
+
   if (status === StoryStatus.Generating) {
-    return <ActivityIndicator size="small" color={colors.primary} />
+    return (
+      <View style={styles.actionCircle}>
+        <ActivityIndicator size="small" color={colors.primary} />
+      </View>
+    )
   }
 
   if (status === StoryStatus.Ready) {
     return (
       <View
-        style={[
-          styles.actionCircle,
-          { backgroundColor: colors.primary + '1F' },
-        ]}
+        style={[styles.actionCircle, { backgroundColor: colors.primarySoft }]}
       >
-        <Ionicons name="play" size={16} color={colors.primary} />
+        <Triangle size={12} color={colors.primary} />
       </View>
     )
   }
 
   return (
     <View
-      style={[styles.actionCircle, { backgroundColor: colors.error + '1F' }]}
+      style={[
+        styles.actionCircle,
+        { backgroundColor: colors.error + '1F' },
+      ]}
     >
       <Ionicons name="refresh" size={16} color={colors.error} />
     </View>
@@ -166,24 +187,45 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: Radii.small,
-    gap: Spacing.md,
+    padding: 12,
+    borderRadius: Radii.card,
+    gap: 16,
+    borderWidth: 1,
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  iconFrame: {
-    width: 40,
-    height: 40,
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  thumbGlyph: {
+    fontSize: 22,
+    fontFamily: 'PlayfairDisplay_400Regular',
+    color: '#FFFFFF',
+  },
   textContainer: {
     flex: 1,
-    gap: Spacing.xs,
+    gap: 4,
   },
   subtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 6,
+  },
+  subtitleText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'Nunito_400Regular',
+  },
+  bulletDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
   },
   actionCircle: {
     width: 40,
