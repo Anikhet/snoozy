@@ -21,7 +21,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Colors, Fonts, Radii, Sizing, Spacing, getLiftShadow } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { StoryCoverTile } from '@/components/StoryCoverTile'
 
@@ -218,7 +218,7 @@ export default function StoryEndScreen() {
               colors={[colors.primary, '#9B8EC4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[styles.primaryBtn, getLiftShadow(false)]}
+              style={styles.primaryBtn}
             >
               <Text style={[Fonts.buttonLabel, styles.primaryBtnLabel]}>✦  New Story</Text>
             </LinearGradient>

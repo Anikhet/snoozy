@@ -25,8 +25,6 @@ import {
   Radii,
   Sizing,
   Spacing,
-  getCardShadow,
-  getLiftShadow,
 } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 
@@ -119,7 +117,7 @@ function WorldTile({ world, selected, onSelect, colors }: WorldTileProps) {
 }
 
 export default function WorldPickerScreen() {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const goHome = useStoryStore((s) => s.goHome)
   const navigateToStoryConfig = useStoryStore((s) => s.navigateToStoryConfig)
 
@@ -137,7 +135,7 @@ export default function WorldPickerScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable
-            style={[styles.backBtn, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
+            style={[styles.backBtn, { backgroundColor: colors.surface }]}
             onPress={goHome}
             accessibilityRole="button"
             accessibilityLabel="Go back"
@@ -192,7 +190,7 @@ export default function WorldPickerScreen() {
           entering={FadeInUp.delay(300).duration(500)}
           style={[
             styles.card,
-            { backgroundColor: colors.surface, ...getCardShadow(isDark) },
+            { backgroundColor: colors.surface },
           ]}
         >
           {/* World grid */}
@@ -284,7 +282,7 @@ export default function WorldPickerScreen() {
               colors={[colors.primary, '#9B8EC4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[styles.ctaGradient, getLiftShadow(isDark)]}
+              style={styles.ctaGradient}
             >
               <Text style={[Fonts.buttonLabel, styles.ctaLabel]}>✦  Begin the Story</Text>
             </LinearGradient>

@@ -20,7 +20,7 @@ export const TemplateCard = memo(function TemplateCard({ template, onTap }: Temp
 
   return (
     <Pressable onPress={onTap} style={styles.pressable}>
-      <View style={[styles.container, { shadowColor: colors.ink }]}>
+      <View style={styles.container}>
         <LinearGradient
           colors={gradient}
           start={{ x: 0, y: 0 }}
@@ -86,10 +86,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(43,33,48,0.04)',
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
   },
   inner: {
     flex: 1,

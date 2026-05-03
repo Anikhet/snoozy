@@ -141,11 +141,6 @@ export function StoryFormScreen() {
                         {
                           backgroundColor: selected ? colors.ink : colors.surface,
                           borderColor: selected ? 'transparent' : colors.hair,
-                          shadowColor: colors.ink,
-                          shadowOpacity: selected ? 0.22 : 0,
-                          shadowRadius: 6,
-                          shadowOffset: { width: 0, height: 6 },
-                          elevation: selected ? 4 : 0,
                         },
                       ]}
                     >

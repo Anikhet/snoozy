@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { useSignIn, useSignUp } from '@clerk/clerk-expo'
-import { Colors, Fonts, Spacing, Radii, getCardShadow } from '@/config/tokens'
+import { Colors, Fonts, Spacing, Radii } from '@/config/tokens'
 import { AppIcon } from '@/components/AppIcon'
 import { SnoozyButton } from '@/components/SnoozyButton'
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'
@@ -124,7 +124,7 @@ export function AuthScreen() {
                 placeholder="Email"
                 placeholderTextColor={colors.textSecondary + '80'}
                 onChangeText={setEmail}
-                style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }, getCardShadow(isDark)]}
+                style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }]}
               />
               <TextInput
                 secureTextEntry
@@ -132,7 +132,7 @@ export function AuthScreen() {
                 placeholder="Password"
                 placeholderTextColor={colors.textSecondary + '80'}
                 onChangeText={setPassword}
-                style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface, marginTop: Spacing.md }, getCardShadow(isDark)]}
+                style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface, marginTop: Spacing.md }]}
               />
             </>
           ) : (
@@ -141,7 +141,7 @@ export function AuthScreen() {
               placeholder="Verification Code"
               placeholderTextColor={colors.textSecondary + '80'}
               onChangeText={setCode}
-              style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }, getCardShadow(isDark)]}
+              style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surface }]}
             />
           )}
 

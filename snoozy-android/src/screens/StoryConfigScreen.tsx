@@ -22,8 +22,6 @@ import {
   Radii,
   Sizing,
   Spacing,
-  getCardShadow,
-  getLiftShadow,
 } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { AppConfig } from '@/config/appConfig'
@@ -51,7 +49,7 @@ const VIBES = [
 ]
 
 export default function StoryConfigScreen() {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const { getToken } = useAuth()
   const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)
   const generateStory = useStoryStore((s) => s.generateStory)
@@ -107,7 +105,7 @@ export default function StoryConfigScreen() {
             style={styles.header}
           >
             <Pressable
-              style={[styles.backBtn, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
+              style={[styles.backBtn, { backgroundColor: colors.surface }]}
               onPress={navigateToWorldPicker}
               accessibilityRole="button"
               accessibilityLabel="Go back"
@@ -164,7 +162,7 @@ export default function StoryConfigScreen() {
           {/* Form card */}
           <Animated.View
             entering={FadeInUp.delay(400).duration(450)}
-            style={[styles.card, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
+            style={[styles.card, { backgroundColor: colors.surface }]}
           >
             {/* Field: Name */}
             <Text style={[Fonts.bodyBold, { color: colors.ink, marginBottom: 8 }]}>
@@ -303,7 +301,7 @@ export default function StoryConfigScreen() {
               colors={[colors.primary, '#9B8EC4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[styles.ctaGradient, getLiftShadow(isDark)]}
+              style={styles.ctaGradient}
             >
               {isGenerating ? (
                 <>

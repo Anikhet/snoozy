@@ -163,29 +163,3 @@ export const Fonts = StyleSheet.create({
   headline: { fontSize: 17, fontFamily: 'Nunito_500Medium' },
   caption2: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
 })
-
-/**
- * Soft lifted-card shadow — deeper in light mode, gentler glow in dark.
- */
-export function getCardShadow(isDark: boolean) {
-  return {
-    shadowColor: isDark ? '#FFFFFF' : '#000000',
-    shadowOpacity: isDark ? 0.04 : 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
-  } as const
-}
-
-/**
- * Heavier shadow for primary CTAs and floating elements.
- */
-export function getLiftShadow(isDark: boolean) {
-  return {
-    shadowColor: isDark ? '#000000' : '#2B2130',
-    shadowOpacity: isDark ? 0.4 : 0.22,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
-  } as const
-}

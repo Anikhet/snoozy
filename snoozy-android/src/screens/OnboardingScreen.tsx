@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Radii, Sizing, Spacing, getLiftShadow } from '@/config/tokens'
+import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 
 export const ONBOARDING_KEY = 'snoozy_onboarding_complete'
@@ -28,7 +28,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AGES = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const [name, setName] = useState('')
   const [age, setAge] = useState(5)
   const [saving, setSaving] = useState(false)
@@ -195,7 +195,6 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
                 end={{ x: 1, y: 0 }}
                 style={[
                   styles.ctaButton,
-                  isValid ? getLiftShadow(isDark) : {},
                 ]}
               >
                 <Text
