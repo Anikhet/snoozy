@@ -63,7 +63,7 @@ export const Colors = {
 
     primary: '#9BA0FF',
     primarySoft: '#2A2F5E',
-    primaryInk: '#9699e5ff',
+    primaryInk: '#493cd4ff',
     accent: '#E9A97A',
     gold: '#D8B87A',
     error: '#FF8A8A',

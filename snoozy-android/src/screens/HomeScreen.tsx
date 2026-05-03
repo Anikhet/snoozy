@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import MaskedView from '@react-native-masked-view/masked-view'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -161,9 +162,17 @@ export function HomeScreen() {
           <View>
             {/* Greeting */}
             <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.greeting}>
-              <Text style={[styles.greetingLead, { color: colors.primaryInk }]}>{getGreetingLead()}</Text>
+              <MaskedView maskElement={<Text style={styles.greetingLead}>{getGreetingLead()}</Text>}>
+                <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <Text style={[styles.greetingLead, { opacity: 0 }]}>{getGreetingLead()}</Text>
+                </LinearGradient>
+              </MaskedView>
               <View style={styles.nameRow}>
-                <Text style={[styles.childName, { color: colors.primaryInk }]}>{childName}</Text>
+                <MaskedView maskElement={<Text style={styles.childName}>{childName}</Text>}>
+                  <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                    <Text style={[styles.childName, { opacity: 0 }]}>{childName}</Text>
+                  </LinearGradient>
+                </MaskedView>
                 <Text style={[styles.starGlyph, { color: colors.starGold }]}>✦</Text>
               </View>
               {/* <Text style={[styles.greetingSub, { color: colors.vibeSelected }]}>
@@ -332,6 +341,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     letterSpacing: 0.1,
+    color: '#000',
   },
   greetingSub: {
     fontFamily: 'Nunito_600SemiBold',
@@ -347,6 +357,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 44,
     letterSpacing: -1,
+    color: '#000',
   },
   starGlyph: {
     fontSize: 30,

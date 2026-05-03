@@ -6,7 +6,8 @@
       "Bash(wait)",
       "Bash(grep -v \"^$\")",
       "Bash(file /Users/pkats-mac/snoozy/snoozy-android/assets/images/mascot*.png)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('RN:', d.get\\('dependencies',{}\\).get\\('react-native','?'\\)\\); print\\('Expo:', d.get\\('dependencies',{}\\).get\\('expo','?'\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('RN:', d.get\\('dependencies',{}\\).get\\('react-native','?'\\)\\); print\\('Expo:', d.get\\('dependencies',{}\\).get\\('expo','?'\\)\\)\")",
+      "Bash(npx expo *)"
     ]
   }
 }

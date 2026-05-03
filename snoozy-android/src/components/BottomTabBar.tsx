@@ -17,8 +17,8 @@ const PILL_HEIGHT = 64
 const PILL_MARGIN_H = 16    // pill distance from screen left / right edges
 const PILL_MARGIN_B = 16    // pill distance from safe-area bottom
 
-// FAB centre sits at the pill's top edge → half FAB above, half below
-const FAB_BOTTOM = PILL_MARGIN_B + PILL_HEIGHT - FAB_SIZE / 2
+// FAB sits deeper into the pill — roughly 60% inside, 40% above
+const FAB_BOTTOM = PILL_MARGIN_B + PILL_HEIGHT - FAB_SIZE * 1
 // ───────────────────────────────────────────────────────────────────────────────
 
 const TAB_SCREENS: Screen[] = [Screen.Home, Screen.Library, Screen.Insights, Screen.Profile]
@@ -55,14 +55,20 @@ function TabButton({
       accessibilityState={{ selected: isActive }}
       android_ripple={{ color: 'transparent' }}
     >
-      {/* Soft chip highlight behind icon when active */}
-      <View style={[styles.iconChip, isActive && { backgroundColor: colors.primarySoft }]}>
-        <Ionicons
-          name={(isActive ? tab.icon : `${tab.icon}-outline`) as never}
-          size={20}
-          color={isActive ? (colors.primary as string) : (colors.inkMute as string)}
-        />
-      </View>
+      {isActive ? (
+        <LinearGradient
+          colors={[colors.primary, '#9B8EC4']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.iconChip}
+        >
+          <Ionicons name={tab.icon as never} size={20} color="#FFFFFF" />
+        </LinearGradient>
+      ) : (
+        <View style={styles.iconChip}>
+          <Ionicons name={`${tab.icon}-outline` as never} size={20} color={colors.inkMute as string} />
+        </View>
+      )}
       <Text
         style={[
           styles.tabLabel,
@@ -234,11 +240,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   iconChip: {
-    width: 42,
+    width: 44,
     height: 28,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   tabLabel: {
     fontSize: 11,
