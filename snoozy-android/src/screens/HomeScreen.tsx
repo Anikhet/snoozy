@@ -141,9 +141,15 @@ export function HomeScreen() {
       >
         <LinearGradient
           colors={['transparent', `${colors.background}22`, `${colors.background}99`]}
-          locations={[0, 0.7, 1]}
+          locations={[0, 0, 1]}
           style={StyleSheet.absoluteFill}
         />
+
+        {/* <LinearGradient
+          colors={['transparent', `${colors.background}AA`, colors.background]}
+          locations={[0, 0.55, 1]}
+          style={StyleSheet.absoluteFill}
+        /> */}
       </ImageBackground>
 
       <SafeAreaView edges={['bottom']} style={styles.safeArea}>
@@ -151,6 +157,7 @@ export function HomeScreen() {
         data={savedStories.slice(0, 3)}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        scrollEnabled={savedStories.length > 0}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -163,7 +170,7 @@ export function HomeScreen() {
               <Text style={styles.greetingLead}>{getGreetingLead()}</Text>
               <View style={styles.nameRow}>
                 <Text style={styles.childName}>{childName}</Text>
-                <Text style={[styles.starGlyph, { color: colors.starGold }]}>✦</Text>
+                {/* <Text style={[styles.starGlyph, { color: colors.starGold }]}>✦</Text> */}
               </View>
               {/* <Text style={[styles.greetingSub, { color: colors.vibeSelected }]}>
                 Ready for a magical story?
