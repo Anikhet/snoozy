@@ -26,7 +26,7 @@ import { StoryRow } from '@/components/StoryRow'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { StoryCoverTile } from '@/components/StoryCoverTile'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 function getGreetingLead(): string {
   const hour = new Date().getHours()
@@ -140,8 +140,8 @@ export function HomeScreen() {
         resizeMode="cover"
       >
         <LinearGradient
-          colors={['transparent', `${colors.background}AA`, colors.background]}
-          locations={[0, 0.55, 1]}
+          colors={['transparent', `${colors.background}22`, `${colors.background}99`]}
+          locations={[0, 0.7, 1]}
           style={StyleSheet.absoluteFill}
         />
       </ImageBackground>
@@ -313,7 +313,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgImage: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,
@@ -362,7 +366,7 @@ const styles = StyleSheet.create({
     marginBottom: -80,
   },
   mascot: {
-    width: SCREEN_WIDTH * 1.2,
+    width: SCREEN_WIDTH * 1.1,
     height: SCREEN_WIDTH * 1.2,
   },
   continueCard: {

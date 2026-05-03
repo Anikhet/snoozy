@@ -15,7 +15,7 @@ const FAB_SIZE = 56
 const FAB_RING = 4          // background-colour ring separating FAB from pill
 const PILL_HEIGHT = 64
 const PILL_MARGIN_H = 16    // pill distance from screen left / right edges
-const PILL_MARGIN_B = 16    // pill distance from safe-area bottom
+const PILL_MARGIN_B = 24    // pill distance from safe-area bottom
 
 // FAB sits deeper into the pill — roughly 60% inside, 40% above
 const FAB_BOTTOM = PILL_MARGIN_B + PILL_HEIGHT - FAB_SIZE * 1
