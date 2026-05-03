@@ -147,7 +147,7 @@ export function HomeScreen() {
         />
       </ImageBackground>
 
-      <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
+      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
       <FlatList
         data={savedStories}
         renderItem={renderItem}
@@ -159,32 +159,16 @@ export function HomeScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View>
-            {/* Top bar */}
-            <View style={styles.topBar}>
-              <View style={{ flex: 1 }} />
-              <Pressable
-                style={({ pressed }) => [
-                  styles.settingsBtn,
-                  { backgroundColor: colors.surface, ...getCardShadow(isDark) },
-                  { opacity: pressed ? 0.7 : 1 },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Settings"
-              >
-                <Ionicons name="settings-outline" size={22} color={colors.inkSoft} />
-              </Pressable>
-            </View>
-
             {/* Greeting */}
             <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.greeting}>
-              <Text style={[Fonts.body, { color: colors.inkSoft }]}>{getGreetingLead()}</Text>
+              <Text style={[styles.greetingLead, { color: colors.primaryInk }]}>{getGreetingLead()}</Text>
               <View style={styles.nameRow}>
-                <Text style={[styles.childName, { color: colors.ink }]}>{childName}</Text>
+                <Text style={[styles.childName, { color: colors.primaryInk }]}>{childName}</Text>
                 <Text style={[styles.starGlyph, { color: colors.starGold }]}>✦</Text>
               </View>
-              <Text style={[Fonts.body, { color: colors.inkSoft }]}>
+              {/* <Text style={[styles.greetingSub, { color: colors.vibeSelected }]}>
                 Ready for a magical story?
-              </Text>
+              </Text> */}
             </Animated.View>
 
             {/* Mascot hero */}
@@ -340,39 +324,19 @@ const styles = StyleSheet.create({
   separator: {
     height: 10,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Spacing.sm,
-  },
-  wordmarkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  wordmarkBox: {
-    width: 36,
-    height: 36,
-    borderRadius: Radii.small,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wordmarkLetter: {
-    fontFamily: 'Fraunces_500Medium_Italic',
-    fontSize: 18,
-  },
-  settingsBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   greeting: {
     paddingTop: Spacing.md,
-    gap: 2,
+    gap: 0,
+  },
+  greetingLead: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 18,
+    letterSpacing: 0.1,
+  },
+  greetingSub: {
+    fontFamily: 'Nunito_600SemiBold',
+    paddingTop: 0,
+    fontSize: 18,
   },
   nameRow: {
     flexDirection: 'row',
@@ -380,12 +344,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   childName: {
-    fontFamily: 'Nunito_400Regular',
-    fontSize: 38,
-    letterSpacing: -0.8,
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 44,
+    letterSpacing: -1,
   },
   starGlyph: {
-    fontSize: 28,
+    fontSize: 30,
   },
   mascotWrapper: {
     alignItems: 'center',

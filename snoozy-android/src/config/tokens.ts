@@ -17,7 +17,7 @@ export const Colors = {
 
     primary: '#5B5BD6',
     primarySoft: '#E6E5FF',
-    primaryInk: '#3A3AA8',
+    primaryInk: '#493cd4ff',
     accent: '#E9A97A',
     gold: '#C9A56B',
     error: '#D96C6C',
@@ -63,7 +63,7 @@ export const Colors = {
 
     primary: '#9BA0FF',
     primarySoft: '#2A2F5E',
-    primaryInk: '#CBCDFF',
+    primaryInk: '#9699e5ff',
     accent: '#E9A97A',
     gold: '#D8B87A',
     error: '#FF8A8A',

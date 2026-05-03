@@ -9,4 +9,5 @@ export enum Screen {
   StoryEnd = 'storyEnd',
   Library = 'library',
   Insights = 'insights',
+  Profile = 'profile',
 }

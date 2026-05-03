@@ -36,6 +36,7 @@ import GeneratingScreen from './src/screens/GeneratingScreen'
 import StoryEndScreen from './src/screens/StoryEndScreen'
 import { LibraryScreen } from '@/screens/LibraryScreen'
 import { InsightsScreen } from '@/screens/InsightsScreen'
+import { ProfileScreen } from '@/screens/ProfileScreen'
 import { SplashScreen } from '@/screens/SplashScreen'
 import { AuthScreen } from '@/screens/AuthScreen'
 import {
@@ -155,6 +156,17 @@ export default function App() {
                         exiting={FadeOut.duration(TRANSITION_DURATION)}
                       >
                         <InsightsScreen />
+                      </Animated.View>
+                    ) : null}
+
+                    {currentScreen === Screen.Profile ? (
+                      <Animated.View
+                        key="profile"
+                        style={styles.flex}
+                        entering={FadeIn.duration(TRANSITION_DURATION)}
+                        exiting={FadeOut.duration(TRANSITION_DURATION)}
+                      >
+                        <ProfileScreen />
                       </Animated.View>
                     ) : null}
 
