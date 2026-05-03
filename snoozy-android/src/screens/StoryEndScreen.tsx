@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.68,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.38,
+    height: SCREEN_WIDTH * 0.38,
   },
   ratingSection: {
     alignItems: 'center',

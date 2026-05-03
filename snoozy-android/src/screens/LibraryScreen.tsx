@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyMascot: {
-    width: SCREEN_WIDTH * 0.45,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.32,
+    height: SCREEN_WIDTH * 0.32,
   },
 })

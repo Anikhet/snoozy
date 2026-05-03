@@ -225,8 +225,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.5,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.36,
+    height: SCREEN_WIDTH * 0.36,
   },
   headline: {
     marginBottom: Spacing.lg,

@@ -329,8 +329,8 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.55,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.32,
+    height: SCREEN_WIDTH * 0.32,
   },
   card: {
     marginHorizontal: Spacing.lg,

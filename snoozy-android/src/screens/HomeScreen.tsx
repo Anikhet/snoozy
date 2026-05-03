@@ -125,11 +125,8 @@ export function HomeScreen() {
   )
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
-      style={[styles.root, { backgroundColor: colors.background }]}
-    >
-      {/* Full-bleed background illustration */}
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      {/* Full-bleed background illustration — locked behind everything */}
       <ImageBackground
         source={require('../../assets/images/bg-home.png')}
         style={styles.bgImage}
@@ -137,11 +134,12 @@ export function HomeScreen() {
       >
         <LinearGradient
           colors={['transparent', `${colors.background}AA`, colors.background]}
-          locations={[0, 0.45, 1]}
+          locations={[0, 0.55, 1]}
           style={StyleSheet.absoluteFill}
         />
       </ImageBackground>
 
+      <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
       <FlatList
         data={savedStories}
         renderItem={renderItem}
@@ -304,7 +302,8 @@ export function HomeScreen() {
           </View>
         </Animated.View>
       ) : null}
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   )
 }
 
@@ -312,12 +311,11 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
+  safeArea: {
+    flex: 1,
+  },
   bgImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '55%',
+    ...StyleSheet.absoluteFillObject,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,
@@ -378,8 +376,8 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.md,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.72,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 1.2,
+    height: SCREEN_WIDTH * 1.2,
   },
   continueCard: {
     borderRadius: Radii.cardLarge,
@@ -435,8 +433,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyMascot: {
-    width: SCREEN_WIDTH * 0.5,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.32,
+    height: SCREEN_WIDTH * 0.32,
   },
   stickyBar: {
     position: 'absolute',

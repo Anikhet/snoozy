@@ -120,8 +120,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.6,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.38,
+    height: SCREEN_WIDTH * 0.38,
   },
   nameRow: {
     flexDirection: 'row',

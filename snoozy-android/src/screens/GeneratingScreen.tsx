@@ -335,8 +335,8 @@ const styles = StyleSheet.create({
     borderRadius: SCREEN_WIDTH * 0.35,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.65,
-    aspectRatio: 1,
+    width: SCREEN_WIDTH * 0.38,
+    height: SCREEN_WIDTH * 0.38,
   },
   worldPill: {
     backgroundColor: 'rgba(255,255,255,0.08)',
