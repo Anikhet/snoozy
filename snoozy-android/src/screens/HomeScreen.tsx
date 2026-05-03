@@ -20,8 +20,6 @@ import {
   Radii,
   Sizing,
   Spacing,
-  getCardShadow,
-  getLiftShadow,
 } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Story, StoryStatus } from '@/types/story'
@@ -40,7 +38,7 @@ function getGreetingLead(): string {
 }
 
 export function HomeScreen() {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)
   const navigateToLibrary = useStoryStore((s) => s.navigateToLibrary)
@@ -127,7 +125,7 @@ export function HomeScreen() {
         colors={[colors.primary, '#9B8EC4']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={[styles.ctaGradient, getLiftShadow(isDark)]}
+        style={styles.ctaGradient}
       >
         <Text style={[Fonts.buttonLabel, styles.ctaLabel]}>✦  Create a Story</Text>
       </LinearGradient>
@@ -196,7 +194,7 @@ export function HomeScreen() {
                 entering={FadeInDown.delay(250).duration(500)}
                 style={[
                   styles.continueCard,
-                  { backgroundColor: colors.surface, ...getCardShadow(isDark) },
+                  { backgroundColor: colors.surface },
                 ]}
               >
                 <Text style={[Fonts.bodyBold, { color: colors.ink, marginBottom: Spacing.sm }]}>

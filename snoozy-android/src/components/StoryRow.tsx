@@ -52,7 +52,6 @@ export const StoryRow = memo(function StoryRow({
           {
             backgroundColor: colors.surface,
             borderColor: colors.hair,
-            shadowColor: colors.ink,
           },
         ]}
       >
@@ -158,10 +157,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.card,
     gap: Spacing.md,
     borderWidth: 1,
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
   },
   thumb: {
     width: 56,

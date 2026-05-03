@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Spacing, getLiftShadow } from '@/config/tokens'
+import { Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Screen } from '@/types/navigation'
 
@@ -85,7 +85,7 @@ function TabButton({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 export function BottomTabBar() {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const currentScreen = useStoryStore((s) => s.currentScreen)
   const navigateTo = useStoryStore((s) => s.navigateTo)
   const navigateToLibrary = useStoryStore((s) => s.navigateToLibrary)
@@ -100,22 +100,6 @@ export function BottomTabBar() {
     else navigateTo(screen)
   }
 
-  // Soft all-around glow — floats the pill off the background
-  const pillShadow = isDark
-    ? {
-        shadowColor: '#000000',
-        shadowOpacity: 0.55,
-        shadowRadius: 28,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 16,
-      }
-    : {
-        shadowColor: '#2B1E30',
-        shadowOpacity: 0.11,
-        shadowRadius: 28,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 14,
-      }
 
   return (
     <Animated.View
@@ -129,7 +113,6 @@ export function BottomTabBar() {
         style={[
           styles.pill,
           { backgroundColor: colors.surface, borderColor: colors.hair },
-          pillShadow,
         ]}
       >
         {/* Left: Home + Library */}
@@ -175,7 +158,7 @@ export function BottomTabBar() {
               colors={[colors.primary, '#9B8EC4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[styles.fab, getLiftShadow(isDark)]}
+              style={styles.fab}
             >
               <Ionicons name="add" size={28} color="#FFFFFF" />
             </LinearGradient>

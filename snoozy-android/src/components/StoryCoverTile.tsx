@@ -258,9 +258,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Fraunces_500Medium',
     textAlign: 'center',
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.55)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
   },
   sparkleRow: {
     position: 'absolute',
