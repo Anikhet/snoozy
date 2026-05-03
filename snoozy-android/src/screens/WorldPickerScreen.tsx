@@ -277,7 +277,7 @@ export default function WorldPickerScreen() {
             android_ripple={{ color: 'transparent' }}
             shouldRasterizeIOS
             renderToHardwareTextureAndroid
-            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canProceed ? 1 : 0.5 })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canProceed ? 1 : 0.5, borderRadius: Radii.button })}
             accessibilityRole="button"
           >
             <LinearGradient

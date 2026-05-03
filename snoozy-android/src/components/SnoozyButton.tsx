@@ -88,7 +88,7 @@ export function SnoozyButton({
 }
 
 const styles = StyleSheet.create({
-  pressable: { alignSelf: 'stretch' },
+  pressable: { alignSelf: 'stretch', borderRadius: Radii.button },
   container: {
     flexDirection: 'row',
     alignItems: 'center',

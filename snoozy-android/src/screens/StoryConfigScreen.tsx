@@ -296,7 +296,7 @@ export default function StoryConfigScreen() {
             android_ripple={{ color: 'transparent' }}
             shouldRasterizeIOS
             renderToHardwareTextureAndroid
-            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canGenerate && !isGenerating ? 1 : 0.5 })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canGenerate && !isGenerating ? 1 : 0.5, borderRadius: Radii.button })}
             accessibilityRole="button"
           >
             <LinearGradient

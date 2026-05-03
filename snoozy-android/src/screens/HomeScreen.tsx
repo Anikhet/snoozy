@@ -119,7 +119,6 @@ export function HomeScreen() {
       style={({ pressed }) => ({
         opacity: pressed ? 0.82 : 1,
         borderRadius: Radii.button,
-        overflow: 'hidden',
       })}
     >
       <LinearGradient

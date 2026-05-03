@@ -122,21 +122,33 @@ export function InsightsScreen() {
         </Animated.View>
 
         {/* Stat cards row */}
-        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.statsRow} shouldRasterizeIOS renderToHardwareTextureAndroid>
+        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.statsRow}>
           {/* Hero: total stories */}
-          <View style={[styles.heroCard, getCardShadow(isDark), { backgroundColor: colors.primary }]}>
+          <View
+            style={[styles.heroCard, getCardShadow(isDark), { backgroundColor: colors.primary }]}
+            shouldRasterizeIOS
+            renderToHardwareTextureAndroid
+          >
             <Text style={styles.heroNumber}>{readyStories.length}</Text>
             <Text style={styles.heroLabel}>Stories{'\n'}Created</Text>
           </View>
 
           <View style={styles.statPair}>
             {/* This week */}
-            <View style={[styles.statCard, getCardShadow(isDark), { backgroundColor: colors.surface }]}>
+            <View
+              style={[styles.statCard, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+              shouldRasterizeIOS
+              renderToHardwareTextureAndroid
+            >
               <Text style={[styles.statNumber, { color: colors.primary }]}>{thisWeekCount}</Text>
               <Text style={[Fonts.caption, { color: colors.inkMute }]}>This week</Text>
             </View>
             {/* Streak */}
-            <View style={[styles.statCard, getCardShadow(isDark), { backgroundColor: colors.surface }]}>
+            <View
+              style={[styles.statCard, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+              shouldRasterizeIOS
+              renderToHardwareTextureAndroid
+            >
               <Text style={[styles.statNumber, { color: colors.starGold }]}>{streak}</Text>
               <Text style={[Fonts.caption, { color: colors.inkMute }]}>Day streak</Text>
             </View>
