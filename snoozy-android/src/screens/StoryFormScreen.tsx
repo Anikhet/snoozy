@@ -20,16 +20,6 @@ import { AppConfig } from '@/config/appConfig'
 import { VOICES } from '@/config/voices'
 import { SnoozyButton } from '@/components/SnoozyButton'
 
-const COLOR_OPTIONS: { name: string; hex: string }[] = [
-  { name: 'Rose', hex: '#E9A6B3' },
-  { name: 'Sky', hex: '#94B9D6' },
-  { name: 'Sun', hex: '#E9C77A' },
-  { name: 'Moss', hex: '#A7C7A1' },
-  { name: 'Plum', hex: '#9B8CC2' },
-  { name: 'Peach', hex: '#F0B393' },
-]
-
-const ANIMAL_OPTIONS = ['Bunny', 'Bear', 'Fox', 'Owl', 'Deer', 'Cat', 'Dog', 'Elephant']
 
 /** Editorial prompt, large italic name field, ink-pill age chips,
  *  pastel color dots, two-column voice grid, indigo gradient CTA. */
@@ -45,18 +35,8 @@ export function StoryFormScreen() {
   const isFormValid = useCallback(() => {
     if (!template) return false
     if (!childDetails.name.trim()) return false
-    return template.fields.every((field) => {
-      switch (field.type) {
-        case 'color':
-          return !!childDetails.favoriteColor
-        case 'animal':
-          return !!childDetails.favoriteAnimal
-        case 'text':
-          return !!childDetails.favoriteThing
-        default:
-          return false
-      }
-    })
+    if (!childDetails.age) return false
+    return true
   }, [template, childDetails])
 
   if (!template) return null
@@ -185,71 +165,6 @@ export function StoryFormScreen() {
             </ScrollView>
           </View>
 
-          {/* Template-specific fields */}
-          {template.fields.map((field) => (
-            <View key={field.id} style={styles.field}>
-              <Text style={[styles.eyebrow, { color: colors.inkMute }]}>
-                {field.label.toUpperCase()}
-              </Text>
-              {field.type === 'color' ? (
-                <ColorDots
-                  selected={childDetails.favoriteColor}
-                  onSelect={(name) => updateChildDetails({ favoriteColor: name })}
-                  colors={colors}
-                />
-              ) : field.type === 'animal' ? (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {ANIMAL_OPTIONS.map((a) => {
-                    const selected = childDetails.favoriteAnimal === a
-                    return (
-                      <Pressable
-                        key={a}
-                        onPress={() => updateChildDetails({ favoriteAnimal: a })}
-                      >
-                        <View
-                          style={[
-                            styles.animalChip,
-                            {
-                              backgroundColor: selected ? colors.ink : colors.surface,
-                              borderColor: selected ? 'transparent' : colors.hair,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={{
-                              color: selected ? colors.background : colors.ink,
-                              fontFamily: 'Nunito_700Bold',
-                              fontSize: 13,
-                            }}
-                          >
-                            {a}
-                          </Text>
-                        </View>
-                      </Pressable>
-                    )
-                  })}
-                </View>
-              ) : (
-                <View
-                  style={[
-                    styles.nameField,
-                    { backgroundColor: colors.surface, borderColor: colors.hair },
-                  ]}
-                >
-                  <TextInput
-                    value={childDetails.favoriteThing ?? ''}
-                    onChangeText={(text) => updateChildDetails({ favoriteThing: text })}
-                    placeholder="e.g. dinosaurs, rainbows, rockets"
-                    placeholderTextColor={colors.inkMute}
-                    maxLength={50}
-                    style={[
-                      { color: colors.ink, fontFamily: 'Nunito_400Regular', fontSize: 16 },
-                    ]}
-                  />
-                </View>
-              )}
-            </View>
-          ))}
 
           {/* Voice grid */}
           <View style={styles.field}>
@@ -327,65 +242,6 @@ export function StoryFormScreen() {
   )
 }
 
-function ColorDots({
-  selected,
-  onSelect,
-  colors,
-}: {
-  selected?: string
-  onSelect: (name: string) => void
-  colors: ReturnType<typeof useThemeColors>['colors']
-}) {
-  return (
-    <View>
-      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 10 }}>
-        {COLOR_OPTIONS.map((c) => {
-          const isSelected = selected === c.name
-          return (
-            <Pressable key={c.name} onPress={() => onSelect(c.name)}>
-              <View style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
-                {isSelected ? (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      width: 54,
-                      height: 54,
-                      borderRadius: 27,
-                      borderWidth: 1,
-                      borderColor: colors.ink + '33',
-                    }}
-                  />
-                ) : null}
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: c.hex,
-                    borderWidth: isSelected ? 3 : 0,
-                    borderColor: colors.ink,
-                  }}
-                />
-              </View>
-            </Pressable>
-          )
-        })}
-      </View>
-      {selected ? (
-        <Text
-          style={{
-            color: colors.inkSoft,
-            fontFamily: 'Fraunces_400Regular_Italic',
-            fontSize: 13,
-            marginTop: 8,
-          }}
-        >
-          {selected} it is.
-        </Text>
-      ) : null}
-    </View>
-  )
-}
 
 const styles = StyleSheet.create({
   root: {
@@ -455,12 +311,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  animalChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
+
   voiceGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

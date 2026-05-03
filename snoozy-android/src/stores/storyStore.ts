@@ -20,6 +20,15 @@ import { generateUUID } from '@/utils/uuid'
  */
 const generationTasks = new Map<string, AbortController>()
 
+const WORLD_TO_TEMPLATE_ID: Record<string, string> = {
+  kingdom: 'dreamland',
+  forest:  'fairy-garden',
+  space:   'space-explorer',
+  ocean:   'underwater-journey',
+  clouds:  'under-the-stars',
+  jungle:  'animal-friends',
+}
+
 interface StoryStore {
   currentScreen: Screen
   selectedTemplate: Template | null
@@ -166,11 +175,12 @@ export const useStoryStore = create<StoryStore>((set, get) => {
      */
     generateStory: (token) => {
       const { selectedTemplate, selectedWorldId, childDetails } = get()
-      const templateId = selectedTemplate?.id ?? selectedWorldId
-      if (!templateId) return
+      const rawId = selectedTemplate?.id ?? selectedWorldId
+      if (!rawId) return
+      const apiTemplateId = WORLD_TO_TEMPLATE_ID[rawId] ?? rawId
 
       const storyId = generateUUID()
-      const placeholder = createPlaceholderStory(storyId, templateId, childDetails.name)
+      const placeholder = createPlaceholderStory(storyId, rawId, childDetails.name)
 
       set((s) => ({
         savedStories: [placeholder, ...s.savedStories],
@@ -187,7 +197,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const details = { ...childDetails }
       const voiceId = details.voiceId
 
-      runGeneration(storyId, templateId, details, voiceId, token, abortController.signal)
+      runGeneration(storyId, rawId, apiTemplateId, details, voiceId, token, abortController.signal)
     },
 
     playStory: (story) => {
@@ -284,7 +294,8 @@ function freshChildDetails(
  */
 async function runGeneration(
   storyId: string,
-  templateId: string,
+  worldId: string,
+  apiTemplateId: string,
   childDetails: ChildDetails,
   voiceId: string,
   token: string,
@@ -292,7 +303,7 @@ async function runGeneration(
 ): Promise<void> {
   try {
     const { title, storyText } = await apiService.generateStory(
-      templateId,
+      apiTemplateId,
       childDetails,
       token,
       signal
@@ -305,7 +316,7 @@ async function runGeneration(
       id: storyId,
       title,
       storyText,
-      templateId,
+      templateId: worldId,
       childName: childDetails.name,
       createdAt: new Date().toISOString(),
       audioFileName,

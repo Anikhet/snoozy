@@ -153,14 +153,15 @@ export default function GeneratingScreen() {
   // Rotate loading copy every 2.8s
   useEffect(() => {
     const interval = setInterval(() => {
-      textOpacity.value = withTiming(0, { duration: 400 }, () => {
+      textOpacity.value = withTiming(0, { duration: 400 })
+      setTimeout(() => {
         setLineIndex((prev) => {
           const next = (prev + 1) % LOADING_LINES.length
           setLineText(LOADING_LINES[next](childName))
           return next
         })
         textOpacity.value = withTiming(1, { duration: 400 })
-      })
+      }, 400)
     }, 2800)
     return () => clearInterval(interval)
   }, [childName])

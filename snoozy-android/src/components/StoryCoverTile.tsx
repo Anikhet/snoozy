@@ -74,22 +74,42 @@ type WorldMeta = {
 }
 
 const WORLD_META: Record<string, WorldMeta> = {
-  kingdom: { emoji: '🏰', name: 'Magical Kingdom' },
-  forest:  { emoji: '🌲', name: 'Enchanted Forest' },
-  space:   { emoji: '🚀', name: 'Outer Space' },
-  ocean:   { emoji: '🐠', name: 'Ocean Deep' },
-  clouds:  { emoji: '☁️', name: 'Cloud Kingdom' },
-  jungle:  { emoji: '🦁', name: 'Magical Safari' },
+  // World picker IDs
+  kingdom:            { emoji: '🏰', name: 'Magical Kingdom' },
+  forest:             { emoji: '🌲', name: 'Enchanted Forest' },
+  space:              { emoji: '🚀', name: 'Outer Space' },
+  ocean:              { emoji: '🐠', name: 'Ocean Deep' },
+  clouds:             { emoji: '☁️', name: 'Cloud Kingdom' },
+  jungle:             { emoji: '🦁', name: 'Magical Safari' },
+  // Template picker IDs
+  'dreamland':          { emoji: '🌙', name: 'Dreamland' },
+  'animal-friends':     { emoji: '🦊', name: 'Animal Friends' },
+  'under-the-stars':    { emoji: '✨', name: 'Under the Stars' },
+  'underwater-journey': { emoji: '🐠', name: 'Underwater' },
+  'space-explorer':     { emoji: '🚀', name: 'Space Explorer' },
+  'fairy-garden':       { emoji: '🌸', name: 'Fairy Garden' },
+  'snowy-mountain':     { emoji: '❄️', name: 'Snowy Mountain' },
+  'rainy-day-cozy':     { emoji: '🌧️', name: 'Rainy Day' },
 }
 
 // Bundled at build time — require() calls must be static literals.
 const WORLD_IMAGES = {
-  kingdom: require('../../assets/images/worlds/world-kingdom.png'),
-  forest:  require('../../assets/images/worlds/world-forest.png'),
-  space:   require('../../assets/images/worlds/world-space.png'),
-  ocean:   require('../../assets/images/worlds/world-ocean.png'),
-  clouds:  require('../../assets/images/worlds/world-clouds.png'),
-  jungle:  require('../../assets/images/worlds/world-jungle.png'),
+  // World picker IDs
+  kingdom:            require('../../assets/images/worlds/world-kingdom.png'),
+  forest:             require('../../assets/images/worlds/world-forest.png'),
+  space:              require('../../assets/images/worlds/world-space.png'),
+  ocean:              require('../../assets/images/worlds/world-ocean.png'),
+  clouds:             require('../../assets/images/worlds/world-clouds.png'),
+  jungle:             require('../../assets/images/worlds/world-jungle.png'),
+  // Template picker IDs mapped to closest world image
+  'dreamland':          require('../../assets/images/worlds/world-kingdom.png'),
+  'animal-friends':     require('../../assets/images/worlds/world-jungle.png'),
+  'under-the-stars':    require('../../assets/images/worlds/world-space.png'),
+  'underwater-journey': require('../../assets/images/worlds/world-ocean.png'),
+  'space-explorer':     require('../../assets/images/worlds/world-space.png'),
+  'fairy-garden':       require('../../assets/images/worlds/world-forest.png'),
+  'snowy-mountain':     require('../../assets/images/worlds/world-clouds.png'),
+  'rainy-day-cozy':     require('../../assets/images/worlds/world-forest.png'),
 } as const
 
 // ─── Component ─────────────────────────────────────────────────────────────────

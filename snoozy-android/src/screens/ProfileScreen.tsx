@@ -18,7 +18,7 @@ import { copyAsync, documentDirectory } from 'expo-file-system/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Radii, Spacing, getCardShadow } from '@/config/tokens'
+import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { VOICES } from '@/config/voices'
@@ -28,7 +28,7 @@ const AVATAR_STORAGE_KEY = 'snoozy_profile_avatar'
 const AGES = Array.from({ length: 12 }, (_, i) => i + 1)
 
 export function ProfileScreen() {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const { signOut } = useAuth()
   const { user } = useUser()
 
@@ -142,7 +142,7 @@ export function ProfileScreen() {
             ].map(({ value, label }) => (
               <View
                 key={label}
-                style={[styles.statTile, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
+                style={[styles.statTile, { backgroundColor: colors.surface }]}
               >
                 <Text style={[Fonts.serifTitle, { color: colors.primary }]}>{value}</Text>
                 <Text style={[Fonts.eyebrow, { color: colors.inkMute, marginTop: 2 }]}>{label}</Text>
@@ -152,7 +152,7 @@ export function ProfileScreen() {
 
           {/* ── Story Preferences ──────────────────────────── */}
           <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-            <View style={[styles.card, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={[Fonts.eyebrow, styles.sectionLabel, { color: colors.inkMute }]}>
                 STORY PREFERENCES
               </Text>
@@ -254,7 +254,7 @@ export function ProfileScreen() {
 
           {/* ── Narrator Voice ─────────────────────────────── */}
           <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-            <View style={[styles.card, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={[Fonts.eyebrow, styles.sectionLabel, { color: colors.inkMute }]}>
                 NARRATOR VOICE
               </Text>
@@ -279,7 +279,7 @@ export function ProfileScreen() {
 
           {/* ── Account ────────────────────────────────────── */}
           <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-            <View style={[styles.card, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={[Fonts.eyebrow, styles.sectionLabel, { color: colors.inkMute }]}>
                 ACCOUNT
               </Text>
