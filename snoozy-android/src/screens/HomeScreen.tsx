@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import MaskedView from '@react-native-masked-view/masked-view'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -161,17 +160,9 @@ export function HomeScreen() {
           <View>
             {/* Greeting */}
             <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.greeting}>
-              <MaskedView maskElement={<Text style={styles.greetingLead}>{getGreetingLead()}</Text>}>
-                <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <Text style={[styles.greetingLead, { opacity: 0 }]}>{getGreetingLead()}</Text>
-                </LinearGradient>
-              </MaskedView>
+              <Text style={styles.greetingLead}>{getGreetingLead()}</Text>
               <View style={styles.nameRow}>
-                <MaskedView maskElement={<Text style={styles.childName}>{childName}</Text>}>
-                  <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                    <Text style={[styles.childName, { opacity: 0 }]}>{childName}</Text>
-                  </LinearGradient>
-                </MaskedView>
+                <Text style={styles.childName}>{childName}</Text>
                 <Text style={[styles.starGlyph, { color: colors.starGold }]}>✦</Text>
               </View>
               {/* <Text style={[styles.greetingSub, { color: colors.vibeSelected }]}>
@@ -180,7 +171,10 @@ export function HomeScreen() {
             </Animated.View>
 
             {/* Mascot hero */}
-            <Animated.View entering={FadeIn.delay(200).duration(600)} style={styles.mascotWrapper}>
+            <Animated.View
+              entering={FadeIn.delay(200).duration(600)}
+              style={[styles.mascotWrapper, savedStories.length === 0 && styles.mascotWrapperEmpty]}
+            >
               <Image
                 source={require('../../assets/images/mascot-reading.png')}
                 style={styles.mascot}
@@ -247,46 +241,29 @@ export function HomeScreen() {
             {/* Inline CTA */}
             <Animated.View
               entering={FadeInDown.delay(500).duration(500)}
-              style={styles.inlineCta}
+              style={[styles.inlineCta, savedStories.length === 0 && styles.inlineCtaEmpty]}
               shouldRasterizeIOS
               renderToHardwareTextureAndroid
             >
+              {savedStories.length === 0 ? (
+                <Text style={[styles.ctaHint, { color: colors.inkMute }]}>
+                  Your next bedtime adventure is one tap away
+                </Text>
+              ) : null}
               {ctaButton}
             </Animated.View>
 
-            {/* Library header */}
-            <Animated.View
-              entering={FadeInDown.delay(400).duration(500)}
-              style={styles.libraryHeader}
-            >
-              <Text style={[Fonts.bodyBold, { color: colors.ink }]}>Your Library</Text>
-              <Text style={[Fonts.caption, { color: colors.primary }]}>
-                {savedStories.length > 0
-                  ? `${savedStories.length} ${savedStories.length === 1 ? 'story' : 'stories'}`
-                  : 'See all'}
-              </Text>
-            </Animated.View>
-
-            {/* Empty state */}
-            {savedStories.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Image
-                  source={require('../../assets/images/mascot-resting.png')}
-                  style={styles.emptyMascot}
-                  resizeMode="contain"
-                />
-                <Text style={[Fonts.serifItalic, { color: colors.inkMute, textAlign: 'center' }]}>
-                  No stories yet
+            {/* Library header — hidden when no stories */}
+            {savedStories.length > 0 ? (
+              <Animated.View
+                entering={FadeInDown.delay(400).duration(500)}
+                style={styles.libraryHeader}
+              >
+                <Text style={[Fonts.bodyBold, { color: colors.ink }]}>Your Library</Text>
+                <Text style={[Fonts.caption, { color: colors.primary }]}>
+                  {`${savedStories.length} ${savedStories.length === 1 ? 'story' : 'stories'}`}
                 </Text>
-                <Text
-                  style={[
-                    Fonts.caption,
-                    { color: colors.inkMute, textAlign: 'center', marginTop: 4 },
-                  ]}
-                >
-                  Your first adventure is one tap away
-                </Text>
-              </View>
+              </Animated.View>
             ) : null}
           </View>
         }
@@ -353,7 +330,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     letterSpacing: 0.1,
-    color: '#000',
+    color: '#2D1F6E',
   },
   greetingSub: {
     fontFamily: 'Nunito_600SemiBold',
@@ -369,7 +346,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 44,
     letterSpacing: -1,
-    color: '#000',
+    color: '#2D1F6E',
   },
   starGlyph: {
     fontSize: 30,
@@ -379,6 +356,10 @@ const styles = StyleSheet.create({
     marginTop: -70,
     marginBottom: -150,
     paddingHorizontal: Spacing.sm,
+  },
+  mascotWrapperEmpty: {
+    marginTop: 20,
+    marginBottom: -80,
   },
   mascot: {
     width: SCREEN_WIDTH * 1.2,
@@ -417,6 +398,15 @@ const styles = StyleSheet.create({
   inlineCta: {
     marginBottom: Spacing.lg,
   },
+  inlineCtaEmpty: {
+    marginTop: Spacing.xxl,
+  },
+  ctaHint: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
   ctaGradient: {
     height: Sizing.buttonHeight,
     borderRadius: Radii.button,
@@ -432,16 +422,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  emptyMascot: {
-    width: SCREEN_WIDTH * 0.32,
-    height: SCREEN_WIDTH * 0.32,
-  },
-  stickyBar: {
+stickyBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
