@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   Dimensions,
   Image,
+  ImageBackground,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Ionicons } from '@expo/vector-icons'
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -15,106 +15,35 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withSequence,
-  withTiming,
   withSpring,
+  withTiming,
+  Easing,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Night } from '@/config/tokens'
-import { Fonts, Spacing } from '@/config/tokens'
+import { Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { StoryStatus } from '@/types/story'
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-const MIDNIGHT = '#0F0A2E'
+const BAR_WIDTH = SCREEN_WIDTH - Spacing.xl * 2
+const PROGRESS_DURATION = 14000 // ~15s to reach 90%
 
 const LOADING_LINES = [
-  (name: string) => `Sprinkling stardust for ${name}…`,
-  () => 'Waking up the story fairies…',
+  (name: string) => `Crafting ${name}'s magical story…`,
+  () => 'Adding a sprinkle of magic ✨',
   (name: string) => `Writing ${name}'s name in the stars…`,
   () => 'The adventure is almost ready…',
   () => 'Whispering magic into every word…',
   (name: string) => `Painting the world just for ${name}…`,
 ]
 
-// Deterministic star positions — no randomness at render time
-const STARS = Array.from({ length: 20 }, (_, i) => ({
-  x: ((i * 53 + 17) % (SCREEN_WIDTH - 8)),
-  y: ((i * 79 + 31) % (SCREEN_HEIGHT - 8)),
-  size: 2 + (i % 3),
-  color: i % 3 === 0 ? '#F5C842' : i % 3 === 1 ? '#C4B5FD' : '#FFFFFF',
-  opacity: 0.6 + (i % 3) * 0.1,
-  delay: i * 180,
-}))
-
-// Star fill timing in ms from screen mount
-const STAR_FILL_TIMES = [0, 3000, 7000, 12000, -1] // -1 = fills on ready
-
-function StarParticle({ star }: { star: (typeof STARS)[number] }) {
-  const opacity = useSharedValue(star.opacity)
-
-  useEffect(() => {
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.1, { duration: 1200 + star.delay }),
-        withTiming(star.opacity, { duration: 1200 }),
-      ),
-      -1,
-      false,
-    )
-  }, [])
-
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }))
-
-  return (
-    <Animated.View
-      style={[
-        styles.starParticle,
-        {
-          left: star.x,
-          top: star.y,
-          width: star.size,
-          height: star.size,
-          borderRadius: star.size / 2,
-          backgroundColor: star.color,
-        },
-        style,
-      ]}
-    />
-  )
-}
-
-function ProgressStar({
-  filled,
-  index,
-}: {
-  filled: boolean
-  index: number
-}) {
-  const scale = useSharedValue(1)
-  const prevFilled = useRef(false)
-
-  useEffect(() => {
-    if (filled && !prevFilled.current) {
-      scale.value = withSpring(1.3, { damping: 8 }, () => {
-        scale.value = withSpring(1)
-      })
-    }
-    prevFilled.current = filled
-  }, [filled])
-
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
-
-  return (
-    <Animated.View style={style}>
-      <Ionicons
-        name={filled ? 'star' : 'star-outline'}
-        size={22}
-        color={filled ? '#F5C842' : 'rgba(255,255,255,0.2)'}
-      />
-    </Animated.View>
-  )
-}
+const SUB_LINES = [
+  'Stories are better when dreams come to life…',
+  'This usually takes about 15 seconds',
+  'Good things take a little magic…',
+  'Almost there, hold tight…',
+]
 
 export default function GeneratingScreen() {
   const savedStories = useStoryStore((s) => s.savedStories)
@@ -122,76 +51,68 @@ export default function GeneratingScreen() {
   const playStory = useStoryStore((s) => s.playStory)
   const goHome = useStoryStore((s) => s.goHome)
   const childDetails = useStoryStore((s) => s.childDetails)
-  const selectedWorldId = useStoryStore((s) => s.selectedWorldId)
 
   const childName = childDetails.name || 'your dreamer'
-  const worldLabel = selectedWorldId
-    ? WORLD_LABELS[selectedWorldId] ?? selectedWorldId
-    : null
 
-  const [lineIndex, setLineIndex] = useState(0)
+  const lineIndexRef = useRef(0)
   const [lineText, setLineText] = useState(LOADING_LINES[0](childName))
+  const [subText, setSubText] = useState(SUB_LINES[0])
   const [isError, setIsError] = useState(false)
-  const [filledStars, setFilledStars] = useState(1) // first star fills immediately
 
   const textOpacity = useSharedValue(1)
-  const flashOpacity = useSharedValue(0)
   const floatY = useSharedValue(0)
+  const progressWidth = useSharedValue(0)
+  const flashOpacity = useSharedValue(0)
 
-  // Mascot float animation
+  // Mascot gentle float
   useEffect(() => {
     floatY.value = withRepeat(
       withSequence(
-        withTiming(-12, { duration: 2200 }),
-        withTiming(0, { duration: 2200 }),
+        withTiming(-10, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
       false,
     )
   }, [])
 
-  // Rotate loading copy every 2.8s
+  // Progress bar: ease to ~90% over PROGRESS_DURATION
+  useEffect(() => {
+    progressWidth.value = withTiming(BAR_WIDTH * 0.9, {
+      duration: PROGRESS_DURATION,
+      easing: Easing.out(Easing.cubic),
+    })
+  }, [])
+
+  // Rotate loading copy every 3s
   useEffect(() => {
     const interval = setInterval(() => {
-      textOpacity.value = withTiming(0, { duration: 400 })
+      textOpacity.value = withTiming(0, { duration: 350 })
       setTimeout(() => {
-        setLineIndex((prev) => {
-          const next = (prev + 1) % LOADING_LINES.length
-          setLineText(LOADING_LINES[next](childName))
-          return next
-        })
-        textOpacity.value = withTiming(1, { duration: 400 })
-      }, 400)
-    }, 2800)
+        lineIndexRef.current = (lineIndexRef.current + 1) % LOADING_LINES.length
+        setLineText(LOADING_LINES[lineIndexRef.current](childName))
+        setSubText(SUB_LINES[lineIndexRef.current % SUB_LINES.length])
+        textOpacity.value = withTiming(1, { duration: 350 })
+      }, 350)
+    }, 3000)
     return () => clearInterval(interval)
   }, [childName])
 
-  // Progressive star fill
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setFilledStars(2), STAR_FILL_TIMES[1]),
-      setTimeout(() => setFilledStars(3), STAR_FILL_TIMES[2]),
-      setTimeout(() => setFilledStars(4), STAR_FILL_TIMES[3]),
-    ]
-    return () => timers.forEach(clearTimeout)
-  }, [])
-
-  // Watch for generation completion or failure
+  // Watch for completion / failure
   useEffect(() => {
     if (!generatingStoryId) return
     const story = savedStories.find((s) => s.id === generatingStoryId)
     if (!story) return
 
     if (story.status === StoryStatus.Ready) {
-      setFilledStars(5)
+      progressWidth.value = withSpring(BAR_WIDTH, { damping: 18, stiffness: 120 })
       const timer = setTimeout(() => {
-        // Brief white flash then navigate to player
         flashOpacity.value = withSequence(
           withTiming(1, { duration: 200 }),
           withTiming(0, { duration: 200 }),
         )
         setTimeout(() => playStory(story), 400)
-      }, 600)
+      }, 700)
       return () => clearTimeout(timer)
     }
 
@@ -204,192 +125,181 @@ export default function GeneratingScreen() {
     transform: [{ translateY: floatY.value }],
   }))
 
-  const textStyle = useAnimatedStyle(() => ({ opacity: textOpacity.value }))
+  const textAnimStyle = useAnimatedStyle(() => ({ opacity: textOpacity.value }))
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: progressWidth.value,
+  }))
+
   const flashStyle = useAnimatedStyle(() => ({ opacity: flashOpacity.value }))
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.root}>
-      {/* Background */}
-      <View style={styles.bg} pointerEvents="none">
-        <LinearGradient
-          colors={['#1A0F4E', MIDNIGHT]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        {STARS.map((star, i) => (
-          <StarParticle key={i} star={star} />
-        ))}
-      </View>
+    <View style={styles.root}>
+      <ImageBackground
+        source={require('../../assets/images/bg-loading.png')}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      />
 
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Mascot + glow halo */}
-        <View style={styles.mascotContainer}>
-          <LinearGradient
-            colors={['#5B3DA8AA', '#5B3DA800']}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={styles.halo}
-          />
-          <Animated.View entering={FadeIn.duration(800)} style={mascotStyle}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        {/* Brand title */}
+        <Animated.View
+          entering={FadeInDown.duration(600)}
+          style={styles.header}
+        >
+          <Text style={styles.brandTitle}>Snoozy</Text>
+          <Text style={styles.brandSubtitle}>Crafting your magical story…</Text>
+        </Animated.View>
+
+        {/* Mascot */}
+        <View style={styles.mascotWrapper}>
+          <Animated.View
+            entering={FadeIn.delay(200).duration(800)}
+            style={mascotStyle}
+          >
             <Image
-              source={require('../../assets/images/mascot-reading.png')}
+              source={require('../../assets/images/mascot-sleeping.png')}
               style={styles.mascot}
               resizeMode="contain"
             />
           </Animated.View>
         </View>
 
-        {/* World context pill */}
-        {worldLabel ? (
-          <Animated.View
-            entering={FadeInDown.delay(400).duration(600)}
-            style={styles.worldPill}
-          >
-            <Text style={styles.worldPillText}>{worldLabel}</Text>
+        {/* Progress bar */}
+        <Animated.View
+          entering={FadeInDown.delay(400).duration(600)}
+          style={styles.barTrack}
+        >
+          <Animated.View style={[styles.barFill, progressStyle]}>
+            {/* Glowing tip */}
+            <View style={styles.barTip} />
           </Animated.View>
-        ) : null}
+        </Animated.View>
 
         {/* Loading copy */}
-        <View style={styles.copyBlock}>
+        <Animated.View
+          entering={FadeInDown.delay(600).duration(600)}
+          style={styles.copyBlock}
+        >
           {isError ? (
-            <Text style={[Fonts.serifItalic, styles.loadingText]}>
-              Something went wrong — let's try again
-            </Text>
-          ) : (
-            <Animated.Text style={[Fonts.serifItalic, styles.loadingText, textStyle]}>
-              {lineText}
-            </Animated.Text>
-          )}
-          {!isError ? (
-            <Text style={styles.subText}>This usually takes about 15 seconds</Text>
-          ) : null}
-
-          {isError ? (
-            <Animated.View entering={FadeIn.delay(200).duration(400)}>
-              <Text
-                style={styles.retryBtn}
-                onPress={goHome}
-                accessibilityRole="button"
-              >
-                Try Again
+            <>
+              <Text style={styles.loadingText}>
+                Something went wrong — let's try again
               </Text>
+              <Pressable onPress={goHome} style={styles.retryBtn}>
+                <Text style={styles.retryLabel}>Try Again</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Animated.View style={[styles.copyInner, textAnimStyle]}>
+              <Text style={styles.loadingText}>{lineText}</Text>
+              <Text style={styles.subText}>{subText}</Text>
             </Animated.View>
-          ) : null}
-        </View>
+          )}
+        </Animated.View>
+      </SafeAreaView>
 
-        {/* Progress stars */}
-        <View style={styles.starsRow}>
-          {Array.from({ length: 5 }, (_, i) => (
-            <ProgressStar key={i} filled={i < filledStars} index={i} />
-          ))}
-        </View>
-      </View>
-
-      {/* Bottom wordmark */}
-      <Text style={styles.wordmark}>SNOOZY</Text>
-
-      {/* Flash overlay for transition */}
+      {/* Flash overlay */}
       <Animated.View
         style={[StyleSheet.absoluteFill, styles.flashOverlay, flashStyle]}
         pointerEvents="none"
       />
-    </SafeAreaView>
+    </View>
   )
-}
-
-const WORLD_LABELS: Record<string, string> = {
-  kingdom: '🏰  Magical Kingdom',
-  forest:  '🌲  Enchanted Forest',
-  space:   '🚀  Outer Space',
-  ocean:   '🐠  Ocean Deep',
-  clouds:  '☁️  Cloud Kingdom',
-  jungle:  '🦁  Magical Safari',
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: MIDNIGHT,
+    backgroundColor: '#E8E2F8',
   },
-  bg: {
-    ...StyleSheet.absoluteFillObject,
+  safe: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
   },
-  starParticle: {
-    position: 'absolute',
+  header: {
+    alignItems: 'center',
+    paddingTop: Spacing.xl,
+    gap: 6,
   },
-  content: {
+  brandTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 42,
+    color: '#2D1F6E',
+    letterSpacing: -1,
+  },
+  brandSubtitle: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 15,
+    color: '#7B6B9E',
+    letterSpacing: 0.1,
+  },
+  mascotWrapper: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  mascotContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  halo: {
-    position: 'absolute',
-    width: SCREEN_WIDTH * 0.7,
-    height: SCREEN_WIDTH * 0.7,
-    borderRadius: SCREEN_WIDTH * 0.35,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.38,
-    height: SCREEN_WIDTH * 0.38,
+    width: SCREEN_WIDTH * 0.72,
+    height: SCREEN_WIDTH * 0.72,
   },
-  worldPill: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 50,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    marginTop: Spacing.lg,
+  barTrack: {
+    width: BAR_WIDTH,
+    height: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(93,62,180,0.15)',
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
   },
-  worldPillText: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+  barFill: {
+    height: '100%',
+    borderRadius: 10,
+    backgroundColor: '#7B5BD6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  barTip: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#F5C842',
+    marginRight: -2,
   },
   copyBlock: {
     alignItems: 'center',
-    marginTop: Spacing.lg,
-    gap: Spacing.sm,
+    paddingBottom: Spacing.xl,
+    minHeight: 70,
+    justifyContent: 'center',
+  },
+  copyInner: {
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
   loadingText: {
-    color: Night.ink,
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 18,
+    color: '#2D1F6E',
     textAlign: 'center',
-    fontSize: 22,
   },
   subText: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: '#7B6B9E',
     textAlign: 'center',
   },
   retryBtn: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 14,
-    color: Night.ink,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
+    backgroundColor: 'rgba(93,62,180,0.12)',
+    paddingHorizontal: 28,
+    paddingVertical: 12,
     borderRadius: 50,
-    overflow: 'hidden',
     marginTop: Spacing.sm,
   },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: Spacing.xl,
-  },
-  wordmark: {
+  retryLabel: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 11,
-    letterSpacing: 2,
-    color: 'rgba(255,255,255,0.3)',
-    textAlign: 'center',
-    paddingBottom: Spacing.md,
+    fontSize: 15,
+    color: '#2D1F6E',
   },
   flashOverlay: {
     backgroundColor: '#FFFFFF',

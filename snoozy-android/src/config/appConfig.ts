@@ -5,7 +5,7 @@ import { Platform } from 'react-native'
  * iOS simulator can use localhost directly.
  */
 // Set to true to skip login/auth screens during development
-export const DEV_MODE = true
+export const DEV_MODE = false
 
 export const AppConfig = {
   backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || 'http://192.168.1.10:3001',

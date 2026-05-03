@@ -20,7 +20,7 @@ import { Colors } from '@/config/tokens'
 import { Screen } from '@/types/navigation'
 import { useStoryStore } from '@/stores/storyStore'
 import { configureAudioMode } from '@/services/audioService'
-import { ClerkProvider, SignedOut } from '@clerk/clerk-expo'
+import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-expo'
 import { tokenCache } from '@/utils/tokenCache'
 import { HomeScreen } from '@/screens/HomeScreen'
 import { TemplatePickerScreen } from '@/screens/TemplatePickerScreen'
@@ -96,6 +96,67 @@ export default function App() {
 
   if (!fontsLoaded || onboardingState === 'loading') return null
 
+  const appScreens = (
+    <>
+      {currentScreen === Screen.Home ? (
+        <Animated.View key="home" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <HomeScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.Library ? (
+        <Animated.View key="library" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <LibraryScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.Insights ? (
+        <Animated.View key="insights" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <InsightsScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.Profile ? (
+        <Animated.View key="profile" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <ProfileScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.TemplatePicker ? (
+        <Animated.View key="templatePicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+          <TemplatePickerScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.StoryForm ? (
+        <Animated.View key="storyForm" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+          <StoryFormScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.Player ? (
+        <Animated.View key="player" style={styles.flex} entering={SlideInDown.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <StoryPlayerScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.WorldPicker ? (
+        <Animated.View key="worldPicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+          <WorldPickerScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.StoryConfig ? (
+        <Animated.View key="storyConfig" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+          <StoryConfigScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.Generating ? (
+        <Animated.View key="generating" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <GeneratingScreen />
+        </Animated.View>
+      ) : null}
+      {currentScreen === Screen.StoryEnd ? (
+        <Animated.View key="storyEnd" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+          <StoryEndScreen />
+        </Animated.View>
+      ) : null}
+      <BottomTabBar />
+    </>
+  )
+
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
       <GestureHandlerRootView style={styles.flex}>
@@ -118,132 +179,10 @@ export default function App() {
                 </Animated.View>
               ) : (
                 <>
-                  {DEV_MODE ? null : <SignedOut><AuthScreen /></SignedOut>}
-                  <>
-                    {currentScreen === Screen.Home ? (
-                      <Animated.View
-                        key="home"
-                        style={styles.flex}
-                        entering={FadeIn.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <HomeScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.Library ? (
-                      <Animated.View
-                        key="library"
-                        style={styles.flex}
-                        entering={FadeIn.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <LibraryScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.Insights ? (
-                      <Animated.View
-                        key="insights"
-                        style={styles.flex}
-                        entering={FadeIn.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <InsightsScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.Profile ? (
-                      <Animated.View
-                        key="profile"
-                        style={styles.flex}
-                        entering={FadeIn.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <ProfileScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.TemplatePicker ? (
-                      <Animated.View
-                        key="templatePicker"
-                        style={styles.flex}
-                        entering={SlideInRight.duration(TRANSITION_DURATION)}
-                        exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
-                      >
-                        <TemplatePickerScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.StoryForm ? (
-                      <Animated.View
-                        key="storyForm"
-                        style={styles.flex}
-                        entering={SlideInRight.duration(TRANSITION_DURATION)}
-                        exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
-                      >
-                        <StoryFormScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.Player ? (
-                      <Animated.View
-                        key="player"
-                        style={styles.flex}
-                        entering={SlideInDown.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <StoryPlayerScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.WorldPicker ? (
-                      <Animated.View
-                        key="worldPicker"
-                        style={styles.flex}
-                        entering={SlideInRight.duration(TRANSITION_DURATION)}
-                        exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
-                      >
-                        <WorldPickerScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.StoryConfig ? (
-                      <Animated.View
-                        key="storyConfig"
-                        style={styles.flex}
-                        entering={SlideInRight.duration(TRANSITION_DURATION)}
-                        exiting={SlideOutLeft.duration(TRANSITION_DURATION)}
-                      >
-                        <StoryConfigScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.Generating ? (
-                      <Animated.View
-                        key="generating"
-                        style={styles.flex}
-                        entering={FadeIn.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <GeneratingScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {currentScreen === Screen.StoryEnd ? (
-                      <Animated.View
-                        key="storyEnd"
-                        style={styles.flex}
-                        entering={FadeIn.duration(TRANSITION_DURATION)}
-                        exiting={FadeOut.duration(TRANSITION_DURATION)}
-                      >
-                        <StoryEndScreen />
-                      </Animated.View>
-                    ) : null}
-
-                    {/* Persistent tab bar — self-manages visibility */}
-                    <BottomTabBar />
-                  </>
+                  {!DEV_MODE && <SignedOut><AuthScreen /></SignedOut>}
+                  {!DEV_MODE
+                    ? <SignedIn>{appScreens}</SignedIn>
+                    : appScreens}
                 </>
               )}
             </SafeAreaView>
