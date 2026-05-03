@@ -9,7 +9,11 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('RN:', d.get\\('dependencies',{}\\).get\\('react-native','?'\\)\\); print\\('Expo:', d.get\\('dependencies',{}\\).get\\('expo','?'\\)\\)\")",
       "Bash(npx expo *)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
-      "Bash(node_modules/.bin/tsc --noEmit)"
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(xargs ls *)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-kingdom.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-forest.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-ocean.png)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-space.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-clouds.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-jungle.png)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-kingdom.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-forest.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-clouds.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-space.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-ocean.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-jungle.png)"
     ]
   }
 }

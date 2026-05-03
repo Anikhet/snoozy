@@ -17,7 +17,6 @@ import {
   Fonts,
   Radii,
   Spacing,
-  getCardShadow,
 } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Story, StoryStatus } from '@/types/story'
@@ -43,7 +42,7 @@ function StoryCard({
   onPlay: (story: Story) => void
   onFavorite: (id: string) => void
 }) {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const date = new Date(story.createdAt).toLocaleDateString('en', {
     month: 'short',
     day: 'numeric',
@@ -52,15 +51,16 @@ function StoryCard({
   return (
     <Animated.View
       entering={FadeInDown.delay(index * 50).duration(400)}
-      style={[styles.card, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+      style={[styles.card, { backgroundColor: colors.surface }]}
     >
       {/* Thumbnail */}
-      <StoryCoverTile title={story.title} worldId={story.templateId} size="md" borderRadius={0} />
+      <StoryCoverTile title={story.title} worldId={story.templateId} size="md" borderRadius={Radii.card} showTitle={false} style={{ height: CARD_WIDTH }} />
 
       {/* Favorite button */}
       <Pressable
         style={styles.favoriteBtn}
         onPress={() => onFavorite(story.id)}
+        hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
         accessibilityRole="button"
         accessibilityLabel={story.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       >
@@ -84,6 +84,7 @@ function StoryCard({
         <Pressable
           style={[styles.playBtn, { backgroundColor: colors.primary }]}
           onPress={() => onPlay(story)}
+          hitSlop={{ top: 7, right: 7, bottom: 7, left: 7 }}
           accessibilityRole="button"
           accessibilityLabel="Play story"
         >
