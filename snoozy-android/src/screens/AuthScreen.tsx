@@ -16,7 +16,8 @@ import { useSignIn, useSignUp, useSSO } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Radii, Spacing } from '@/config/tokens'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Radii, Sizing, Spacing } from '@/config/tokens'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -86,23 +87,27 @@ function PrimaryButton({ label, onPress, loading }: { label: string; onPress: ()
     <Pressable
       onPress={onPress}
       disabled={loading}
-      style={({ pressed }) => [btnStyles.pill, { opacity: pressed || loading ? 0.75 : 1 }]}
+      android_ripple={{ color: 'transparent' }}
+      style={({ pressed }) => ({ opacity: pressed || loading ? 0.82 : 1, borderRadius: Radii.button })}
     >
-      <Ionicons name="sparkles" size={16} color="#F5C842" />
-      <Text style={btnStyles.label}>{label}</Text>
+      <LinearGradient
+        colors={['#5B5BD6', '#9B8EC4']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={btnStyles.gradient}
+      >
+        <Text style={btnStyles.label}>✦  {label}</Text>
+      </LinearGradient>
     </Pressable>
   )
 }
 
 const btnStyles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row',
+  gradient: {
+    height: Sizing.buttonHeight,
+    borderRadius: Radii.button,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4B2FAD',
-    height: 56,
-    borderRadius: 50,
-    gap: 8,
   },
   label: {
     fontFamily: 'Nunito_700Bold',
