@@ -26,6 +26,7 @@ import { useStoryStore } from '@/stores/storyStore'
 import { Story, StoryStatus } from '@/types/story'
 import { StoryRow } from '@/components/StoryRow'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
+import { StoryCoverTile } from '@/components/StoryCoverTile'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -208,11 +209,11 @@ export function HomeScreen() {
                   Continue Listening
                 </Text>
                 <View style={styles.continueRow}>
-                  <LinearGradient
-                    colors={[colors.cardLavender, colors.cardLavenderDeep]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.continueThumbnail}
+                  <StoryCoverTile
+                    title={continuationStory.title}
+                    worldId={continuationStory.templateId}
+                    size="sm"
+                    borderRadius={Radii.card}
                   />
                   <View style={styles.continueMeta}>
                     <Text style={[Fonts.bodyBold, { color: colors.ink }]} numberOfLines={1}>
@@ -389,11 +390,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-  },
-  continueThumbnail: {
-    width: 72,
-    height: 72,
-    borderRadius: Radii.card,
   },
   continueMeta: {
     flex: 1,

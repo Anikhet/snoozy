@@ -23,19 +23,11 @@ import { Night, Fonts, Spacing, Radii } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TIMER_OPTIONS } from '@/services/audioService'
 import { WaveformScrubber } from '@/components/Visuals'
+import { StoryCoverTile } from '@/components/StoryCoverTile'
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 const COVER_HEIGHT = SCREEN_HEIGHT * 0.58
 
-// Maps worldId to a gradient pair for the cover art fallback
-const WORLD_GRADIENTS: Record<string, [string, string]> = {
-  kingdom: ['#2E2B4A', '#3B3458'],
-  forest:  ['#1E3A30', '#2C4A3E'],
-  space:   ['#2A254A', '#3B3458'],
-  ocean:   ['#1E2E3A', '#2E3E4A'],
-  clouds:  ['#2A2F5E', '#1A2144'],
-  jungle:  ['#2A3020', '#3A4028'],
-}
 
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
@@ -49,7 +41,6 @@ export function StoryPlayerScreen() {
   const currentTime = useStoryStore((s) => s.currentTime)
   const duration = useStoryStore((s) => s.duration)
   const sleepTimerRemaining = useStoryStore((s) => s.sleepTimerRemaining)
-  const selectedWorldId = useStoryStore((s) => s.selectedWorldId)
   const togglePlayPause = useStoryStore((s) => s.togglePlayPause)
   const seek = useStoryStore((s) => s.seek)
   const startSleepTimer = useStoryStore((s) => s.startSleepTimer)
@@ -116,17 +107,15 @@ export function StoryPlayerScreen() {
 
   if (!currentStory) return null
 
-  const worldGradient =
-    WORLD_GRADIENTS[selectedWorldId ?? ''] ?? (Night.bg ? [Night.bg, Night.bgDeep] : ['#0F1530', '#070B1E'])
-
   return (
     <View style={styles.root}>
-      {/* Full-bleed cover art / fallback gradient */}
+      {/* Full-bleed cover art behind dark overlay */}
       <View style={styles.cover} pointerEvents="none">
-        <LinearGradient
-          colors={worldGradient as [string, string]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <StoryCoverTile
+          title={currentStory.title}
+          worldId={currentStory.templateId}
+          size="hero"
+          borderRadius={0}
           style={StyleSheet.absoluteFill}
         />
         {/* Overlay: fade cover into dark player area */}

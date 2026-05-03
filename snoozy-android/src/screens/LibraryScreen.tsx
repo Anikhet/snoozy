@@ -9,7 +9,6 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -23,19 +22,12 @@ import {
 import { useStoryStore } from '@/stores/storyStore'
 import { Story, StoryStatus } from '@/types/story'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
+import { StoryCoverTile } from '@/components/StoryCoverTile'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const COLUMN_GAP = Spacing.sm
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - COLUMN_GAP) / 2
 
-const CARD_GRADIENTS: [string, string][] = [
-  ['#E8E5FF', '#B8ABE8'],
-  ['#FBE1CC', '#F4C7A0'],
-  ['#D7ECDD', '#B6D6BF'],
-  ['#D4E4F0', '#B9D0E5'],
-  ['#F6DCE1', '#E9B5C1'],
-  ['#DCD5F1', '#B8ABE8'],
-]
 
 type FilterKey = 'all' | 'favorites'
 type SortKey = 'recent' | 'az'
@@ -52,7 +44,6 @@ function StoryCard({
   onFavorite: (id: string) => void
 }) {
   const { colors, isDark } = useThemeColors()
-  const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length]
   const date = new Date(story.createdAt).toLocaleDateString('en', {
     month: 'short',
     day: 'numeric',
@@ -64,7 +55,7 @@ function StoryCard({
       style={[styles.card, getCardShadow(isDark), { backgroundColor: colors.surface }]}
     >
       {/* Thumbnail */}
-      <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.thumbnail} />
+      <StoryCoverTile title={story.title} worldId={story.templateId} size="md" borderRadius={0} />
 
       {/* Favorite button */}
       <Pressable
@@ -332,10 +323,6 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     borderRadius: Radii.card,
     overflow: 'hidden',
-  },
-  thumbnail: {
-    width: '100%',
-    height: CARD_WIDTH * 0.65,
   },
   favoriteBtn: {
     position: 'absolute',

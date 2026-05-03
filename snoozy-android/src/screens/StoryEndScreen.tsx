@@ -23,6 +23,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors, Fonts, Radii, Sizing, Spacing, getLiftShadow } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
+import { StoryCoverTile } from '@/components/StoryCoverTile'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -169,16 +170,13 @@ export default function StoryEndScreen() {
 
           {/* Story title recap */}
           {currentStory ? (
-            <Animated.View
-              entering={FadeInUp.delay(450).duration(500)}
-              style={[styles.titlePill, { backgroundColor: colors.primarySoft }]}
-            >
-              <Text
-                style={[Fonts.caption, { color: colors.primary, textAlign: 'center' }]}
-                numberOfLines={1}
-              >
-                {currentStory.title}
-              </Text>
+            <Animated.View entering={FadeInUp.delay(450).duration(500)}>
+              <StoryCoverTile
+                title={currentStory.title}
+                worldId={currentStory.templateId}
+                size="md"
+                style={{ width: 160, height: 160 }}
+              />
             </Animated.View>
           ) : null}
         </View>
@@ -290,12 +288,6 @@ const styles = StyleSheet.create({
   mascot: {
     width: SCREEN_WIDTH * 0.68,
     aspectRatio: 1,
-  },
-  titlePill: {
-    borderRadius: 50,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    maxWidth: SCREEN_WIDTH * 0.75,
   },
   ratingSection: {
     alignItems: 'center',
