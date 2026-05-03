@@ -80,7 +80,7 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
             <Text style={[Fonts.serifTitle, { color: colors.ink }]}>Who are we</Text>
             <Text
               style={{
-                fontFamily: 'Fraunces_400Regular_Italic',
+                fontFamily: 'Nunito_700Bold',
                 fontSize: 30,
                 color: colors.primary,
                 letterSpacing: -0.6,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   nameInput: {
-    fontFamily: 'Fraunces_500Medium_Italic',
+    fontFamily: 'Nunito_600SemiBold',
     fontSize: 28,
     letterSpacing: -0.4,
     padding: 0,

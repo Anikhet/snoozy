@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native'
 
 /**
  * Snoozy premium palette — editorial, warm, storybook-leaning.
- * Serif (Fraunces) for emotional beats; rounded sans (Nunito) for UI.
+ * Nunito (rounded sans) throughout for UI.
  */
 export const Colors = {
   light: {
@@ -135,16 +135,15 @@ export const Sizing = {
 } as const
 
 /**
- * Typography — Fraunces (serif) for editorial beats, Nunito (rounded sans) for UI,
- * system monospace for timers/metadata.
+ * Typography — Nunito (rounded sans) throughout, system monospace for timers/metadata.
  */
 export const Fonts = StyleSheet.create({
-  // Serif — emotional beats
-  serifDisplay: { fontSize: 38, fontFamily: 'Fraunces_400Regular', letterSpacing: -0.8 },
-  serifTitle: { fontSize: 30, fontFamily: 'Fraunces_400Regular', letterSpacing: -0.6 },
-  serifHeadline: { fontSize: 22, fontFamily: 'Fraunces_500Medium', letterSpacing: -0.2 },
-  serifBody: { fontSize: 17, fontFamily: 'Fraunces_400Regular' },
-  serifItalic: { fontSize: 20, fontFamily: 'Fraunces_500Medium_Italic' },
+  // Display — large editorial sizes
+  serifDisplay: { fontSize: 38, fontFamily: 'Nunito_700Bold', letterSpacing: -0.8 },
+  serifTitle: { fontSize: 30, fontFamily: 'Nunito_700Bold', letterSpacing: -0.6 },
+  serifHeadline: { fontSize: 22, fontFamily: 'Nunito_700Bold', letterSpacing: -0.2 },
+  serifBody: { fontSize: 17, fontFamily: 'Nunito_400Regular' },
+  serifItalic: { fontSize: 20, fontFamily: 'Nunito_600SemiBold' },
 
   // Sans (rounded) — UI
   body: { fontSize: 15, fontFamily: 'Nunito_400Regular' },

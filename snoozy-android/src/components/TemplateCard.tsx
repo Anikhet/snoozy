@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   glyph: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 20,
     color: '#2B2130',
   },

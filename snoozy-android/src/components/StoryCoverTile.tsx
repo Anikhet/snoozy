@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.92)',
   },
   titleText: {
-    fontFamily: 'Fraunces_500Medium',
+    fontFamily: 'Nunito_600SemiBold',
     textAlign: 'center',
     color: '#FFFFFF',
   },

@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   titleLine1: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 28,
     letterSpacing: -0.6,
   },

@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   childName: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 38,
     letterSpacing: -0.8,
   },

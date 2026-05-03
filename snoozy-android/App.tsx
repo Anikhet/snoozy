@@ -16,10 +16,6 @@ import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular'
 import { Nunito_500Medium } from '@expo-google-fonts/nunito/500Medium'
 import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold'
 import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold'
-import { Fraunces_400Regular } from '@expo-google-fonts/fraunces/400Regular'
-import { Fraunces_400Regular_Italic } from '@expo-google-fonts/fraunces/400Regular_Italic'
-import { Fraunces_500Medium } from '@expo-google-fonts/fraunces/500Medium'
-import { Fraunces_500Medium_Italic } from '@expo-google-fonts/fraunces/500Medium_Italic'
 import { Colors } from '@/config/tokens'
 import { Screen } from '@/types/navigation'
 import { useStoryStore } from '@/stores/storyStore'
@@ -57,10 +53,6 @@ export default function App() {
     Nunito_500Medium,
     Nunito_600SemiBold,
     Nunito_700Bold,
-    Fraunces_400Regular,
-    Fraunces_400Regular_Italic,
-    Fraunces_500Medium,
-    Fraunces_500Medium_Italic,
   })
 
   const scheme = useColorScheme()

@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   appName: {
-    fontFamily: 'Fraunces_500Medium_Italic',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 44,
     color: '#2B2130',
     letterSpacing: -1,

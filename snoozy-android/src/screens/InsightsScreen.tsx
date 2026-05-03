@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     minHeight: 110,
   },
   heroNumber: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 48,
     color: '#FFFFFF',
     lineHeight: 52,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statNumber: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 30,
     lineHeight: 34,
   },

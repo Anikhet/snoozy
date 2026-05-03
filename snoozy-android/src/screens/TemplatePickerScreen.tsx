@@ -52,7 +52,7 @@ export function TemplatePickerScreen() {
             {
               color: colors.primary,
               fontSize: 34,
-              fontFamily: 'Fraunces_400Regular_Italic',
+              fontFamily: 'Nunito_700Bold',
             },
           ]}
         >
@@ -87,7 +87,7 @@ export function TemplatePickerScreen() {
             textAlign: 'center',
             marginTop: 16,
             fontSize: 12,
-            fontFamily: 'Fraunces_400Regular_Italic',
+            fontFamily: 'Nunito_400Regular',
           },
         ]}
       >

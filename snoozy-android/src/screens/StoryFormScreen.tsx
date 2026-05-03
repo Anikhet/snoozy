@@ -90,7 +90,7 @@ export function StoryFormScreen() {
                 Fonts.serifTitle,
                 {
                   color: colors.primary,
-                  fontFamily: 'Fraunces_400Regular_Italic',
+                  fontFamily: 'Nunito_700Bold',
                 },
               ]}
             >
@@ -115,7 +115,7 @@ export function StoryFormScreen() {
                 maxLength={50}
                 style={[
                   styles.nameInput,
-                  { color: colors.ink, fontFamily: 'Fraunces_500Medium_Italic' },
+                  { color: colors.ink, fontFamily: 'Nunito_600SemiBold' },
                 ]}
               />
             </View>
@@ -147,7 +147,7 @@ export function StoryFormScreen() {
                       <Text
                         style={{
                           color: selected ? colors.background : colors.ink,
-                          fontFamily: 'Fraunces_500Medium',
+                          fontFamily: 'Nunito_600SemiBold',
                           fontSize: 18,
                         }}
                       >
@@ -185,7 +185,7 @@ export function StoryFormScreen() {
                       <Text
                         style={{
                           color: selected ? colors.background : colors.ink,
-                          fontFamily: 'Fraunces_500Medium',
+                          fontFamily: 'Nunito_600SemiBold',
                           fontSize: 15,
                         }}
                       >
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.7)',
   },
   templateChipGlyph: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 14,
   },
   title: {

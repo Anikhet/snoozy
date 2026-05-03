@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     height: 200,
   },
   storyTextBody: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 17,
     lineHeight: 28,
     color: 'rgba(242,237,227,0.85)',
