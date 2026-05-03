@@ -4,7 +4,7 @@ import Svg, { G, Rect, Text as SvgText } from 'react-native-svg'
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Radii, Spacing, getCardShadow } from '@/config/tokens'
+import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 
@@ -38,7 +38,7 @@ function ProgressBar({ ratio, color, delay }: { ratio: number; color: string; de
 }
 
 export function InsightsScreen() {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
 
   const readyStories = useMemo(() => savedStories.filter((s) => s.status === 'ready'), [savedStories])
@@ -125,7 +125,7 @@ export function InsightsScreen() {
         <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.statsRow}>
           {/* Hero: total stories */}
           <View
-            style={[styles.heroCard, getCardShadow(isDark), { backgroundColor: colors.primary }]}
+            style={[styles.heroCard, { backgroundColor: colors.primary }]}
             shouldRasterizeIOS
             renderToHardwareTextureAndroid
           >
@@ -136,7 +136,7 @@ export function InsightsScreen() {
           <View style={styles.statPair}>
             {/* This week */}
             <View
-              style={[styles.statCard, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
               shouldRasterizeIOS
               renderToHardwareTextureAndroid
             >
@@ -145,7 +145,7 @@ export function InsightsScreen() {
             </View>
             {/* Streak */}
             <View
-              style={[styles.statCard, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
               shouldRasterizeIOS
               renderToHardwareTextureAndroid
             >
@@ -158,7 +158,7 @@ export function InsightsScreen() {
         {/* Weekly bar chart */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
-          style={[styles.section, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+          style={[styles.section, { backgroundColor: colors.surface }]}
           shouldRasterizeIOS
           renderToHardwareTextureAndroid
         >
@@ -220,7 +220,7 @@ export function InsightsScreen() {
         {vibeBreakdown.length > 0 ? (
           <Animated.View
             entering={FadeInDown.delay(300).duration(400)}
-            style={[styles.section, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+            style={[styles.section, { backgroundColor: colors.surface }]}
             shouldRasterizeIOS
             renderToHardwareTextureAndroid
           >
