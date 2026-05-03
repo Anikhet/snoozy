@@ -43,6 +43,7 @@ export function HomeScreen() {
   const { colors, isDark } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)
+  const navigateToLibrary = useStoryStore((s) => s.navigateToLibrary)
   const playStory = useStoryStore((s) => s.playStory)
   const deleteStory = useStoryStore((s) => s.deleteStory)
   const retryStory = useStoryStore((s) => s.retryStory)
@@ -150,7 +151,7 @@ export function HomeScreen() {
 
       <SafeAreaView edges={['bottom']} style={styles.safeArea}>
       <FlatList
-        data={savedStories}
+        data={savedStories.slice(0, 3)}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         onScroll={handleScroll}
@@ -290,6 +291,19 @@ export function HomeScreen() {
               </View>
             ) : null}
           </View>
+        }
+        ListFooterComponent={
+          savedStories.length > 3 ? (
+            <Pressable
+              onPress={navigateToLibrary}
+              style={[styles.viewAllBtn, { borderColor: colors.hair }]}
+              accessibilityRole="button"
+              accessibilityLabel="View all stories"
+            >
+              <Text style={[Fonts.caption, { color: colors.primary }]}>View all stories</Text>
+              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+            </Pressable>
+          ) : null
         }
       />
 
@@ -441,5 +455,15 @@ const styles = StyleSheet.create({
   stickyContent: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+    borderRadius: Radii.small,
+    borderWidth: 1,
   },
 })

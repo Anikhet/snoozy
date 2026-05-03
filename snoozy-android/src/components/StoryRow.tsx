@@ -7,12 +7,11 @@ import {
   View,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { formatDistanceToNow } from 'date-fns'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { StoryStatus } from '@/types/story'
-import { TEMPLATES } from '@/config/templates'
+import { StoryCoverTile } from '@/components/StoryCoverTile'
 
 interface StoryRowProps {
   id: string
@@ -37,15 +36,8 @@ export const StoryRow = memo(function StoryRow({
   onDelete,
   onRetry,
 }: StoryRowProps) {
-  const { colors, isDark } = useThemeColors()
-  const template = TEMPLATES.find((t) => t.id === templateId)
+  const { colors } = useThemeColors()
   const isDisabled = status === StoryStatus.Generating
-
-  const gradient = template
-    ? isDark
-      ? template.gradient.dark
-      : template.gradient.light
-    : (isDark ? ['#2E2B4A', '#3B3458'] : ['#E8E5FF', '#B8ABE8'])
 
   function handlePress() {
     if (status === StoryStatus.Ready) onPlay(id)
@@ -64,17 +56,14 @@ export const StoryRow = memo(function StoryRow({
           },
         ]}
       >
-        <View style={styles.thumb}>
-          <LinearGradient
-            colors={gradient as readonly [string, string]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <Text style={[styles.glyph, { color: colors.ink }]}>
-            {template?.glyph ?? '\u2726'}
-          </Text>
-        </View>
+        <StoryCoverTile
+          worldId={templateId}
+          title=""
+          size="sm"
+          borderRadius={16}
+          showTitle={false}
+          style={styles.thumb}
+        />
 
         <View style={styles.textContainer}>
           <Text
@@ -177,14 +166,6 @@ const styles = StyleSheet.create({
   thumb: {
     width: 56,
     height: 56,
-    borderRadius: 16,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glyph: {
-    fontFamily: 'Fraunces_400Regular',
-    fontSize: 22,
   },
   textContainer: {
     flex: 1,
