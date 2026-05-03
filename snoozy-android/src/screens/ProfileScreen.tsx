@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { copyAsync, documentDirectory } from 'expo-file-system/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuth, useUser } from '@clerk/clerk-expo'
+import { DEV_MODE } from '@/config/appConfig'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
@@ -84,7 +85,7 @@ export function ProfileScreen() {
   const thisWeek = savedStories.filter((s) => new Date(s.createdAt).getTime() > weekAgo).length
 
   const currentVoice = VOICES.find((v) => v.id === childDetails.voiceId) ?? VOICES[0]
-  const email = user?.primaryEmailAddress?.emailAddress ?? '—'
+  const email = DEV_MODE ? 'dev@snoozy.app' : (user?.primaryEmailAddress?.emailAddress ?? '—')
 
   const handleLogout = useCallback(async () => {
     await signOut()

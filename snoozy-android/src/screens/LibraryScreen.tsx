@@ -9,6 +9,8 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import MaskedView from '@react-native-masked-view/masked-view'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -167,7 +169,7 @@ export function LibraryScreen() {
 
   return (
     <SafeAreaView
-      edges={['top', 'bottom']}
+      edges={['bottom']}
       style={[styles.root, { backgroundColor: colors.background }]}
     >
       <FlatList
@@ -182,7 +184,11 @@ export function LibraryScreen() {
           <View>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={[Fonts.serifTitle, { color: colors.ink }]}>Library</Text>
+              <MaskedView maskElement={<Text style={styles.pageTitle}>Library</Text>}>
+                <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <Text style={[styles.pageTitle, { opacity: 0 }]}>Library</Text>
+                </LinearGradient>
+              </MaskedView>
               <Pressable
                 onPress={() => setSort((s) => (s === 'recent' ? 'az' : 'recent'))}
                 style={[styles.sortBtn, { backgroundColor: colors.surface }]}
@@ -280,8 +286,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  pageTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 44,
+    letterSpacing: -1,
+    color: '#000',
   },
   sortBtn: {
     flexDirection: 'row',

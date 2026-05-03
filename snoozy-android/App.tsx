@@ -20,7 +20,7 @@ import { Colors } from '@/config/tokens'
 import { Screen } from '@/types/navigation'
 import { useStoryStore } from '@/stores/storyStore'
 import { configureAudioMode } from '@/services/audioService'
-import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-expo'
+import { ClerkProvider, SignedOut } from '@clerk/clerk-expo'
 import { tokenCache } from '@/utils/tokenCache'
 import { HomeScreen } from '@/screens/HomeScreen'
 import { TemplatePickerScreen } from '@/screens/TemplatePickerScreen'
@@ -42,6 +42,7 @@ import {
   ONBOARDING_AGE_KEY,
 } from '@/screens/OnboardingScreen'
 import { BottomTabBar } from '@/components/BottomTabBar'
+import { DEV_MODE } from '@/config/appConfig'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || ''
 
@@ -117,7 +118,8 @@ export default function App() {
                 </Animated.View>
               ) : (
                 <>
-                  <SignedIn>
+                  {DEV_MODE ? null : <SignedOut><AuthScreen /></SignedOut>}
+                  <>
                     {currentScreen === Screen.Home ? (
                       <Animated.View
                         key="home"
@@ -241,11 +243,7 @@ export default function App() {
 
                     {/* Persistent tab bar — self-manages visibility */}
                     <BottomTabBar />
-                  </SignedIn>
-
-                  <SignedOut>
-                    <AuthScreen />
-                  </SignedOut>
+                  </>
                 </>
               )}
             </SafeAreaView>

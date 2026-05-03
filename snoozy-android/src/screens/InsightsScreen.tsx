@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react'
 import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import MaskedView from '@react-native-masked-view/masked-view'
 import Svg, { G, Rect, Text as SvgText } from 'react-native-svg'
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -106,7 +108,7 @@ export function InsightsScreen() {
 
   return (
     <SafeAreaView
-      edges={['top', 'bottom']}
+      edges={['bottom']}
       style={[styles.root, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -115,7 +117,11 @@ export function InsightsScreen() {
       >
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
-          <Text style={[Fonts.serifTitle, { color: colors.ink }]}>Insights</Text>
+          <MaskedView maskElement={<Text style={styles.pageTitle}>Insights</Text>}>
+            <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <Text style={[styles.pageTitle, { opacity: 0 }]}>Insights</Text>
+            </LinearGradient>
+          </MaskedView>
           <Text style={[Fonts.caption, { color: colors.inkMute }]}>
             {readyStories.length} {readyStories.length === 1 ? 'story' : 'stories'} total
           </Text>
@@ -268,8 +274,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  pageTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 44,
+    letterSpacing: -1,
+    color: '#000',
   },
   statsRow: {
     flexDirection: 'row',

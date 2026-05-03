@@ -4,6 +4,9 @@ import { Platform } from 'react-native'
  * Backend URL: Android emulator uses 10.0.2.2 to reach host localhost.
  * iOS simulator can use localhost directly.
  */
+// Set to true to skip login/auth screens during development
+export const DEV_MODE = true
+
 export const AppConfig = {
   backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || 'http://192.168.1.10:3001',
   maxStoryLength: 5000,
