@@ -293,7 +293,10 @@ export default function StoryConfigScreen() {
           <Pressable
             onPress={handleGenerate}
             disabled={!canGenerate || isGenerating}
-            style={{ opacity: canGenerate && !isGenerating ? 1 : 0.5 }}
+            android_ripple={{ color: 'transparent' }}
+            shouldRasterizeIOS
+            renderToHardwareTextureAndroid
+            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canGenerate && !isGenerating ? 1 : 0.5 })}
             accessibilityRole="button"
           >
             <LinearGradient

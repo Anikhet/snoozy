@@ -122,7 +122,7 @@ export function InsightsScreen() {
         </Animated.View>
 
         {/* Stat cards row */}
-        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.statsRow}>
+        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.statsRow} shouldRasterizeIOS renderToHardwareTextureAndroid>
           {/* Hero: total stories */}
           <View style={[styles.heroCard, getCardShadow(isDark), { backgroundColor: colors.primary }]}>
             <Text style={styles.heroNumber}>{readyStories.length}</Text>
@@ -147,6 +147,8 @@ export function InsightsScreen() {
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
           style={[styles.section, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+          shouldRasterizeIOS
+          renderToHardwareTextureAndroid
         >
           <Text style={[Fonts.bodyBold, { color: colors.ink, marginBottom: Spacing.md }]}>
             Last 7 Days
@@ -207,6 +209,8 @@ export function InsightsScreen() {
           <Animated.View
             entering={FadeInDown.delay(300).duration(400)}
             style={[styles.section, getCardShadow(isDark), { backgroundColor: colors.surface }]}
+            shouldRasterizeIOS
+            renderToHardwareTextureAndroid
           >
             <Text style={[Fonts.bodyBold, { color: colors.ink, marginBottom: Spacing.md }]}>
               Favourite Worlds

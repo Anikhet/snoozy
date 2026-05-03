@@ -175,12 +175,19 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
           <View style={styles.spacer} />
 
           {/* CTA */}
-          <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.ctaWrapper}>
+          <Animated.View
+            entering={FadeInDown.delay(600).duration(500)}
+            style={styles.ctaWrapper}
+            shouldRasterizeIOS
+            renderToHardwareTextureAndroid
+          >
             <Pressable
               onPress={handleStart}
               disabled={!isValid || saving}
               accessibilityRole="button"
               accessibilityState={{ disabled: !isValid }}
+              android_ripple={{ color: 'transparent' }}
+              style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}
             >
               <LinearGradient
                 colors={isValid ? [colors.primary, '#9B8EC4'] : [colors.hair, colors.hair]}

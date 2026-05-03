@@ -309,7 +309,7 @@ export function StoryFormScreen() {
           style={styles.ctaFade}
         />
         <View style={[styles.ctaInner, { backgroundColor: colors.background }]}>
-          <View style={{ opacity: valid ? 1 : 0.55 }}>
+          <View style={{ opacity: valid ? 1 : 0.55 }} shouldRasterizeIOS renderToHardwareTextureAndroid>
             <SnoozyButton
               title="Begin the story"
               icon="sparkles"

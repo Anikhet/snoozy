@@ -274,7 +274,10 @@ export default function WorldPickerScreen() {
               canProceed && navigateToStoryConfig(selectedWorldId!, selectedVibeId!)
             }
             disabled={!canProceed}
-            style={{ opacity: canProceed ? 1 : 0.5 }}
+            android_ripple={{ color: 'transparent' }}
+            shouldRasterizeIOS
+            renderToHardwareTextureAndroid
+            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canProceed ? 1 : 0.5 })}
             accessibilityRole="button"
           >
             <LinearGradient

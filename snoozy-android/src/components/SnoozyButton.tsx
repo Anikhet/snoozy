@@ -40,7 +40,14 @@ export function SnoozyButton({
 
   if (style === 'indigo') {
     return (
-      <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        android_ripple={{ color: 'transparent' }}
+        shouldRasterizeIOS
+        renderToHardwareTextureAndroid
+        style={({ pressed }) => [styles.pressable, { opacity: pressed ? 0.82 : 1 }]}
+      >
         <LinearGradient
           colors={[colors.primary, '#7272D8']}
           start={{ x: 0, y: 0 }}
@@ -58,7 +65,14 @@ export function SnoozyButton({
       ? colors.surface
       : colors.ink
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      android_ripple={{ color: 'transparent' }}
+      shouldRasterizeIOS
+      renderToHardwareTextureAndroid
+      style={({ pressed }) => [styles.pressable, { opacity: pressed ? 0.82 : 1 }]}
+    >
       <View
         style={[
           styles.container,

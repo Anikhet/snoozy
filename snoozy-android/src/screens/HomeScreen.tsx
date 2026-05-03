@@ -112,7 +112,16 @@ export function HomeScreen() {
   const childName = childDetails.name || 'Dreamer'
 
   const ctaButton = (
-    <Pressable onPress={navigateToWorldPicker} accessibilityRole="button">
+    <Pressable
+      onPress={navigateToWorldPicker}
+      accessibilityRole="button"
+      android_ripple={{ color: 'transparent' }}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.82 : 1,
+        borderRadius: Radii.button,
+        overflow: 'hidden',
+      })}
+    >
       <LinearGradient
         colors={[colors.primary, '#9B8EC4']}
         start={{ x: 0, y: 0 }}
@@ -155,7 +164,11 @@ export function HomeScreen() {
             <View style={styles.topBar}>
               <View style={{ flex: 1 }} />
               <Pressable
-                style={[styles.settingsBtn, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
+                style={({ pressed }) => [
+                  styles.settingsBtn,
+                  { backgroundColor: colors.surface, ...getCardShadow(isDark) },
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel="Settings"
               >
@@ -225,7 +238,11 @@ export function HomeScreen() {
                     ) : null}
                   </View>
                   <Pressable
-                    style={[styles.continuePlayBtn, { backgroundColor: colors.primary }]}
+                    style={({ pressed }) => [
+                      styles.continuePlayBtn,
+                      { backgroundColor: colors.primary },
+                      { opacity: pressed ? 0.75 : 1 },
+                    ]}
                     onPress={() => playStory(continuationStory)}
                     accessibilityRole="button"
                     accessibilityLabel="Play story"
@@ -237,7 +254,12 @@ export function HomeScreen() {
             ) : null}
 
             {/* Inline CTA */}
-            <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.inlineCta}>
+            <Animated.View
+              entering={FadeInDown.delay(500).duration(500)}
+              style={styles.inlineCta}
+              shouldRasterizeIOS
+              renderToHardwareTextureAndroid
+            >
               {ctaButton}
             </Animated.View>
 
@@ -281,7 +303,12 @@ export function HomeScreen() {
 
       {/* Sticky CTA bar */}
       {showSticky ? (
-        <Animated.View entering={FadeIn.duration(200)} style={styles.stickyBar}>
+        <Animated.View
+          entering={FadeIn.duration(200)}
+          style={styles.stickyBar}
+          shouldRasterizeIOS
+          renderToHardwareTextureAndroid
+        >
           <LinearGradient
             colors={['transparent', colors.background]}
             style={styles.stickyFade}

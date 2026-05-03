@@ -204,11 +204,15 @@ export default function StoryEndScreen() {
         <Animated.View
           entering={FadeInUp.delay(650).duration(500)}
           style={styles.actions}
+          shouldRasterizeIOS
+          renderToHardwareTextureAndroid
         >
           {/* Primary: New Story */}
           <Pressable
             onPress={navigateToWorldPicker}
             accessibilityRole="button"
+            android_ripple={{ color: 'transparent' }}
+            style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}
           >
             <LinearGradient
               colors={[colors.primary, '#9B8EC4']}

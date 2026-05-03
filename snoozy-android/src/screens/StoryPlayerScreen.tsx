@@ -264,7 +264,7 @@ export function StoryPlayerScreen() {
               <Text style={styles.seekLabel}>15</Text>
             </Pressable>
 
-            <Animated.View style={playBtnStyle}>
+            <Animated.View style={playBtnStyle} shouldRasterizeIOS renderToHardwareTextureAndroid>
               <Pressable
                 style={styles.playBtn}
                 onPress={handlePlayPress}
