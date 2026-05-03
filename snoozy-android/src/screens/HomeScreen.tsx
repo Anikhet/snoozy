@@ -136,7 +136,7 @@ export function HomeScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Full-bleed background illustration — locked behind everything */}
       <ImageBackground
-        source={require('../../assets/images/bg-home.png')}
+        source={require('../../assets/images/bg-loading.png')}
         style={styles.bgImage}
         resizeMode="cover"
       >
