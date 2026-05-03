@@ -7,7 +7,9 @@
       "Bash(grep -v \"^$\")",
       "Bash(file /Users/pkats-mac/snoozy/snoozy-android/assets/images/mascot*.png)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('RN:', d.get\\('dependencies',{}\\).get\\('react-native','?'\\)\\); print\\('Expo:', d.get\\('dependencies',{}\\).get\\('expo','?'\\)\\)\")",
-      "Bash(npx expo *)"
+      "Bash(npx expo *)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/tsc --noEmit)"
     ]
   }
 }
