@@ -153,17 +153,7 @@ export function HomeScreen() {
           <View>
             {/* Top bar */}
             <View style={styles.topBar}>
-              <View style={styles.wordmarkRow}>
-                <View
-                  style={[
-                    styles.wordmarkBox,
-                    { borderColor: colors.primary, backgroundColor: colors.surface },
-                  ]}
-                >
-                  <Text style={[styles.wordmarkLetter, { color: colors.primary }]}>S</Text>
-                </View>
-                <Text style={[Fonts.bodyBold, { color: colors.ink }]}>Snoozy</Text>
-              </View>
+              <View style={{ flex: 1 }} />
               <Pressable
                 style={[styles.settingsBtn, { backgroundColor: colors.surface, ...getCardShadow(isDark) }]}
                 accessibilityRole="button"
@@ -364,7 +354,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   childName: {
-    fontFamily: 'Fraunces_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 38,
     letterSpacing: -0.8,
   },
@@ -373,7 +363,9 @@ const styles = StyleSheet.create({
   },
   mascotWrapper: {
     alignItems: 'center',
-    marginVertical: Spacing.md,
+    marginTop: -70,
+    marginBottom: -150,
+    paddingHorizontal: Spacing.sm,
   },
   mascot: {
     width: SCREEN_WIDTH * 1.2,
