@@ -65,6 +65,7 @@ interface StoryStore {
   stopPlayback: () => void
   toggleFavorite: (storyId: string) => void
   rateStory: (storyId: string, stars: number) => void
+  cancelGeneration: () => void
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => {
@@ -248,6 +249,28 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         currentScreen: Screen.Home,
         currentStory: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
+      }))
+    },
+
+    cancelGeneration: () => {
+      const { generatingStoryId } = get()
+      if (generatingStoryId) {
+        const controller = generationTasks.get(generatingStoryId)
+        if (controller) {
+          controller.abort()
+          generationTasks.delete(generatingStoryId)
+        }
+      }
+      set((s) => ({
+        currentScreen: Screen.Home,
+        generatingStoryId: null,
+        selectedWorldId: null,
+        selectedVibeId: null,
+        childDetails: freshChildDetails(s.onboardingDefaults),
+        currentStory: null,
+        savedStories: generatingStoryId
+          ? s.savedStories.filter((st) => st.id !== generatingStoryId)
+          : s.savedStories,
       }))
     },
   }

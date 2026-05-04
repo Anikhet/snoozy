@@ -50,6 +50,7 @@ export default function GeneratingScreen() {
   const generatingStoryId = useStoryStore((s) => s.generatingStoryId)
   const playStory = useStoryStore((s) => s.playStory)
   const goHome = useStoryStore((s) => s.goHome)
+  const cancelGeneration = useStoryStore((s) => s.cancelGeneration)
   const childDetails = useStoryStore((s) => s.childDetails)
 
   const childName = childDetails.name || 'your dreamer'
@@ -187,7 +188,7 @@ export default function GeneratingScreen() {
                 Something went wrong — let's try again
               </Text>
               <Pressable onPress={goHome} style={styles.retryBtn}>
-                <Text style={styles.retryLabel}>Try Again</Text>
+                <Text style={styles.retryLabel}>Go Home</Text>
               </Pressable>
             </>
           ) : (
@@ -197,6 +198,17 @@ export default function GeneratingScreen() {
             </Animated.View>
           )}
         </Animated.View>
+        {/* Cancel — only visible while generating, not on error */}
+        {!isError && (
+          <Pressable
+            onPress={cancelGeneration}
+            style={({ pressed }) => [styles.cancelBtn, { opacity: pressed ? 0.5 : 1 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel story generation"
+          >
+            <Text style={styles.cancelLabel}>Cancel</Text>
+          </Pressable>
+        )}
       </SafeAreaView>
 
       {/* Flash overlay */}
@@ -303,5 +315,16 @@ const styles = StyleSheet.create({
   },
   flashOverlay: {
     backgroundColor: '#FFFFFF',
+  },
+  cancelBtn: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  cancelLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: '#7B6B9E',
+    textAlign: 'center',
   },
 })
