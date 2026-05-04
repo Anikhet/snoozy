@@ -235,10 +235,16 @@ export function AuthScreen() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/bg-home.png')}
+      source={require('../../assets/images/bg-loading.png')}
       style={styles.root}
       resizeMode="cover"
     >
+      <LinearGradient
+        colors={['transparent', '#EDE8F822', '#EDE8F899']}
+        locations={[0, 0, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -305,7 +311,6 @@ function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple,
       <Animated.View entering={FadeInUp.delay(150).duration(500)} style={styles.card}>
         <View style={styles.welcomeRow}>
           <Text style={styles.welcomeText}>Welcome back, dreamer</Text>
-          <Text style={styles.sparkle}> ✦</Text>
         </View>
         <Text style={styles.cardSub}>Sign in to continue your story</Text>
 
@@ -366,7 +371,6 @@ function SignUpView({ firstName, setFirstName, lastName, setLastName, email, set
       <Animated.View entering={FadeInUp.delay(100).duration(500)} style={[styles.card, styles.cardTopSpaced]}>
         <View style={styles.welcomeRow}>
           <Text style={[styles.welcomeText, styles.signupTitle]}>{'Create your\nSnoozy account'}</Text>
-          <Text style={styles.sparkle}> ✦</Text>
         </View>
         <Text style={styles.cardSub}>Let's start your dreamy adventure</Text>
 
@@ -460,7 +464,7 @@ const styles = StyleSheet.create({
   brandSub: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#7B6B9E' },
 
   // Mascot
-  mascotBlock: { width: SCREEN_WIDTH * 0.6, height: SCREEN_WIDTH * 0.55, alignItems: 'center', justifyContent: 'center' },
+  mascotBlock: { width: SCREEN_WIDTH * 0.7, height: SCREEN_WIDTH * 0.6, alignItems: 'center', justifyContent: 'center', marginBottom: -24 },
   mascot: { width: '100%', height: '100%' },
 
   // Card

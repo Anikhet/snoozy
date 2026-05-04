@@ -170,7 +170,6 @@ export function HomeScreen() {
               <Text style={styles.greetingLead}>{getGreetingLead()}</Text>
               <View style={styles.nameRow}>
                 <Text style={styles.childName}>{childName}</Text>
-                {/* <Text style={[styles.starGlyph, { color: colors.starGold }]}>✦</Text> */}
               </View>
               {/* <Text style={[styles.greetingSub, { color: colors.vibeSelected }]}>
                 Ready for a magical story?
@@ -358,9 +357,6 @@ const styles = StyleSheet.create({
     fontSize: 44,
     letterSpacing: -1,
     color: '#2D1F6E',
-  },
-  starGlyph: {
-    fontSize: 30,
   },
   mascotWrapper: {
     alignItems: 'center',

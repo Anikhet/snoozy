@@ -23,8 +23,6 @@ import { configureAudioMode } from '@/services/audioService'
 import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-expo'
 import { tokenCache } from '@/utils/tokenCache'
 import { HomeScreen } from '@/screens/HomeScreen'
-import { TemplatePickerScreen } from '@/screens/TemplatePickerScreen'
-import { StoryFormScreen } from '@/screens/StoryFormScreen'
 import { StoryPlayerScreen } from '@/screens/StoryPlayerScreen'
 import WorldPickerScreen from './src/screens/WorldPickerScreen'
 import StoryConfigScreen from './src/screens/StoryConfigScreen'
@@ -116,16 +114,6 @@ export default function App() {
       {currentScreen === Screen.Profile ? (
         <Animated.View key="profile" style={styles.flex} entering={FadeIn.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
           <ProfileScreen />
-        </Animated.View>
-      ) : null}
-      {currentScreen === Screen.TemplatePicker ? (
-        <Animated.View key="templatePicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
-          <TemplatePickerScreen />
-        </Animated.View>
-      ) : null}
-      {currentScreen === Screen.StoryForm ? (
-        <Animated.View key="storyForm" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
-          <StoryFormScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.Player ? (
