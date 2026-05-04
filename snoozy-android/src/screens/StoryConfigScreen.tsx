@@ -26,27 +26,10 @@ import {
 import { useStoryStore } from '@/stores/storyStore'
 import { AppConfig } from '@/config/appConfig'
 import { VOICES } from '@/config/voices'
+import { WORLDS, VIBES } from '@/config/storyOptions'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const VOICE_TILE_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2 - 10) / 2
-
-// Mirrors the arrays in WorldPickerScreen — single source of truth if moved to a shared config
-const WORLDS = [
-  { id: 'kingdom', emoji: '🏰', name: 'Magical Kingdom' },
-  { id: 'forest',  emoji: '🌲', name: 'Enchanted Forest' },
-  { id: 'space',   emoji: '🚀', name: 'Outer Space' },
-  { id: 'ocean',   emoji: '🐠', name: 'Ocean Deep' },
-  { id: 'clouds',  emoji: '☁️', name: 'Cloud Kingdom' },
-  { id: 'jungle',  emoji: '🦁', name: 'Magical Safari' },
-]
-
-const VIBES = [
-  { id: 'cozy',    emoji: '🌙', name: 'Sleepy & Cozy' },
-  { id: 'brave',   emoji: '💪', name: 'Be Brave' },
-  { id: 'kind',    emoji: '🤝', name: 'Be Kind' },
-  { id: 'wonder',  emoji: '🌟', name: 'Full of Wonder' },
-  { id: 'friends', emoji: '🐾', name: 'Make a Friend' },
-]
 
 export default function StoryConfigScreen() {
   const { colors } = useThemeColors()

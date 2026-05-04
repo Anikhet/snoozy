@@ -27,28 +27,12 @@ import {
   Spacing,
 } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
+import { WORLDS, VIBES } from '@/config/storyOptions'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 // TILE_WIDTH: screen minus card horizontal margins (lg each side) + card paddings (md each side) + gap
 const TILE_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md * 2 - 10) / 2
-
-const WORLDS = [
-  { id: 'kingdom', emoji: '🏰', name: 'Magical Kingdom', subtitle: 'Castles & gentle quests' },
-  { id: 'forest',  emoji: '🌲', name: 'Enchanted Forest', subtitle: 'Animals & cozy cottages' },
-  { id: 'space',   emoji: '🚀', name: 'Outer Space',      subtitle: 'Planets & singing stars' },
-  { id: 'ocean',   emoji: '🐠', name: 'Ocean Deep',       subtitle: 'Warm seas & sea creatures' },
-  { id: 'clouds',  emoji: '☁️', name: 'Cloud Kingdom',    subtitle: 'Sky islands & soft winds' },
-  { id: 'jungle',  emoji: '🦁', name: 'Magical Safari',   subtitle: 'Golden plains & gentle giants' },
-]
-
-const VIBES = [
-  { id: 'cozy',    emoji: '🌙', name: 'Sleepy & Cozy' },
-  { id: 'brave',   emoji: '💪', name: 'Be Brave' },
-  { id: 'kind',    emoji: '🤝', name: 'Be Kind' },
-  { id: 'wonder',  emoji: '🌟', name: 'Full of Wonder' },
-  { id: 'friends', emoji: '🐾', name: 'Make a Friend' },
-]
 
 interface WorldTileProps {
   world: (typeof WORLDS)[number]
@@ -142,6 +126,9 @@ export default function WorldPickerScreen() {
           >
             <Ionicons name="chevron-back" size={22} color={colors.ink} />
           </Pressable>
+          <View style={[styles.stepPill, { backgroundColor: colors.primarySoft }]}>
+            <Text style={[Fonts.caption, { color: colors.primary }]}>Step 1 of 2</Text>
+          </View>
         </View>
 
         {/* Hero text */}
@@ -311,9 +298,17 @@ const styles = StyleSheet.create({
     paddingBottom: Sizing.buttonHeight + Spacing.xxl,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
+  },
+  stepPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 50,
   },
   backBtn: {
     width: 40,

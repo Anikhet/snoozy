@@ -316,7 +316,7 @@ function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple,
       {/* Header */}
       <Animated.View entering={FadeInDown.duration(500)} style={styles.brandBlock}>
         <Text style={styles.brandTitle}>Snoozy</Text>
-        <Text style={styles.brandSub}>AI Bedtime Stories</Text>
+        <Text style={styles.brandSub}>Bedtime stories, made magical</Text>
       </Animated.View>
 
       {/* Mascot */}

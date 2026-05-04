@@ -10,5 +10,5 @@ export const DEV_MODE = false
 export const AppConfig = {
   backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || 'http://192.168.1.10:3001',
   maxStoryLength: 5000,
-  ageRange: Array.from({ length: 10 }, (_, i) => i + 1),
+  ageRange: Array.from({ length: 8 }, (_, i) => i + 3),
 } as const

@@ -244,20 +244,19 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: Spacing.xl,
-    gap: 6,
+    paddingTop: Spacing.lg,
+    gap: 2,
   },
   brandTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 42,
+    fontSize: 54,
     color: '#2D1F6E',
     letterSpacing: -1,
   },
   brandSubtitle: {
     fontFamily: 'Nunito_500Medium',
-    fontSize: 15,
+    fontSize: 14,
     color: '#7B6B9E',
-    letterSpacing: 0.1,
   },
   mascotWrapper: {
     flex: 1,
