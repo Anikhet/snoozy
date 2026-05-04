@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Dimensions,
   Image,
@@ -14,7 +14,17 @@ import {
 } from 'react-native'
 import { useSignIn, useSignUp, useSSO } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'
-import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated'
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Radii, Sizing, Spacing } from '@/config/tokens'
@@ -460,7 +470,7 @@ const styles = StyleSheet.create({
 
   // Brand
   brandBlock: { alignItems: 'center', paddingTop: Spacing.lg, gap: 2 },
-  brandTitle: { fontFamily: 'Nunito_700Bold', fontSize: 44, color: '#2D1F6E', letterSpacing: -1 },
+  brandTitle: { fontFamily: 'Nunito_700Bold', fontSize: 54, color: '#2D1F6E', letterSpacing: -1 },
   brandSub: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#7B6B9E' },
 
   // Mascot

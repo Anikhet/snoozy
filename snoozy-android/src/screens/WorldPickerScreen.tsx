@@ -216,43 +216,53 @@ export default function WorldPickerScreen() {
           <Text style={[Fonts.eyebrow, { color: colors.inkMute, marginBottom: Spacing.sm }]}>
             TONIGHT'S VIBE
           </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.vibeRow}
-          >
-            {VIBES.map((vibe) => {
-              const isSelected = selectedVibeId === vibe.id
-              return (
-                <Pressable
-                  key={vibe.id}
-                  onPress={() => setSelectedVibeId(vibe.id)}
-                  style={[
-                    styles.vibePill,
-                    {
-                      backgroundColor: isSelected ? colors.vibeSelected : colors.surface,
-                      borderWidth: 1.5,
-                      borderColor: isSelected ? colors.vibeSelected : colors.primary,
-                    },
-                  ]}
-                >
-                  <Text style={styles.vibeEmoji}>{vibe.emoji}</Text>
-                  <Text
+          <View style={styles.vibeScrollWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.vibeRow}
+            >
+              {VIBES.map((vibe) => {
+                const isSelected = selectedVibeId === vibe.id
+                return (
+                  <Pressable
+                    key={vibe.id}
+                    onPress={() => setSelectedVibeId(vibe.id)}
                     style={[
-                      styles.vibeName,
+                      styles.vibePill,
                       {
-                        color: isSelected
-                          ? (colors.vibeSelectedText as string)
-                          : colors.primary,
+                        backgroundColor: isSelected ? colors.vibeSelected : colors.surface,
+                        borderWidth: 1.5,
+                        borderColor: isSelected ? colors.vibeSelected : colors.primary,
                       },
                     ]}
                   >
-                    {vibe.name}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </ScrollView>
+                    <Text style={styles.vibeEmoji}>{vibe.emoji}</Text>
+                    <Text
+                      style={[
+                        styles.vibeName,
+                        {
+                          color: isSelected
+                            ? (colors.vibeSelectedText as string)
+                            : colors.primary,
+                        },
+                      ]}
+                    >
+                      {vibe.name}
+                    </Text>
+                  </Pressable>
+                )
+              })}
+            </ScrollView>
+            {/* Gradient fade — signals more content to the right */}
+            <LinearGradient
+              colors={['transparent', colors.surface as string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.vibeGradientEdge}
+              pointerEvents="none"
+            />
+          </View>
         </Animated.View>
 
         {/* Bottom spacer for sticky CTA */}
@@ -363,10 +373,20 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.md,
     marginHorizontal: Spacing.md,
   },
+  vibeScrollWrapper: {
+    position: 'relative',
+  },
   vibeRow: {
     flexDirection: 'row',
     gap: 8,
-    paddingRight: Spacing.md,
+    paddingRight: 56, // 48px gradient + 8px breathing room so last pill clears the fade on scroll
+  },
+  vibeGradientEdge: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 48,
   },
   vibePill: {
     flexDirection: 'row',
