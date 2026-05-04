@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
   Dimensions,
-  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -22,7 +21,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -300,6 +298,19 @@ export function AuthScreen() {
 // ─── Sign In View ──────────────────────────────────────────────────────────────
 
 function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple, onGoogle, onSignUp, isLoading, error }: any) {
+  const floatY = useSharedValue(0)
+  const mascotFloatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatY.value }],
+  }))
+
+  useEffect(() => {
+    floatY.value = withRepeat(
+      withTiming(-10, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true,
+    )
+  }, [])
+
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.page}>
       {/* Header */}
@@ -310,9 +321,9 @@ function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple,
 
       {/* Mascot */}
       <Animated.View entering={FadeIn.delay(100).duration(700)} style={styles.mascotBlock}>
-        <Image
+        <Animated.Image
           source={require('../../assets/images/mascot-happy.png')}
-          style={styles.mascot}
+          style={[styles.mascot, mascotFloatStyle]}
           resizeMode="contain"
         />
       </Animated.View>
