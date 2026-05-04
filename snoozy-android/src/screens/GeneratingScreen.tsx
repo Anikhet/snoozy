@@ -27,7 +27,13 @@ import { StoryStatus } from '@/types/story'
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 const BAR_WIDTH = SCREEN_WIDTH - Spacing.xl * 2
-const PROGRESS_DURATION = 14000 // ~15s to reach 90%
+
+// Phase 1: quick jump to 30% in 3s — shows immediate response
+const PROGRESS_PHASE1_TARGET = BAR_WIDTH * 0.30
+const PROGRESS_PHASE1_DURATION = 3000
+// Phase 2: slow linear crawl from 30% → 85% over 45s — always visibly moving
+const PROGRESS_PHASE2_TARGET = BAR_WIDTH * 0.85
+const PROGRESS_PHASE2_DURATION = 45000
 
 const LOADING_LINES = [
   (name: string) => `Crafting ${name}'s magical story…`,
@@ -40,7 +46,7 @@ const LOADING_LINES = [
 
 const SUB_LINES = [
   'Stories are better when dreams come to life…',
-  'This usually takes about 15 seconds',
+  'Usually takes about 20–30 seconds',
   'Good things take a little magic…',
   'Almost there, hold tight…',
 ]
@@ -77,12 +83,18 @@ export default function GeneratingScreen() {
     )
   }, [])
 
-  // Progress bar: ease to ~90% over PROGRESS_DURATION
+  // Progress bar: quick jump to 30%, then slow linear crawl to 85%
   useEffect(() => {
-    progressWidth.value = withTiming(BAR_WIDTH * 0.9, {
-      duration: PROGRESS_DURATION,
-      easing: Easing.out(Easing.cubic),
-    })
+    progressWidth.value = withSequence(
+      withTiming(PROGRESS_PHASE1_TARGET, {
+        duration: PROGRESS_PHASE1_DURATION,
+        easing: Easing.out(Easing.quad),
+      }),
+      withTiming(PROGRESS_PHASE2_TARGET, {
+        duration: PROGRESS_PHASE2_DURATION,
+        easing: Easing.linear,
+      }),
+    )
   }, [])
 
   // Rotate loading copy every 3s
