@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Dimensions,
   Pressable,
@@ -10,14 +10,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, {
-  Easing,
-  FadeIn,
   FadeInDown,
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
@@ -93,16 +89,6 @@ export default function WorldPickerScreen() {
 
   const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null)
 
-  const floatY = useSharedValue(0)
-  const mascotStyle = useAnimatedStyle(() => ({ transform: [{ translateY: floatY.value }] }))
-
-  useEffect(() => {
-    floatY.value = withRepeat(
-      withTiming(-8, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    )
-  }, [])
 
   const displayName = childDetails.name || onboardingDefaults?.name
   const displayAge = childDetails.age || onboardingDefaults?.age
@@ -123,14 +109,7 @@ export default function WorldPickerScreen() {
           </Pressable>
         </View>
 
-        {/* Mascot */}
-        <Animated.View entering={FadeIn.delay(50).duration(600)} style={styles.mascotWrapper}>
-          <Animated.Image
-            source={require('../../assets/images/mascot-happy.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
-        </Animated.View>
+
 
         {/* Title block */}
         <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.titleBlock}>
@@ -231,14 +210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mascotWrapper: {
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  mascot: {
-    width: SCREEN_WIDTH * 0.38,
-    height: SCREEN_WIDTH * 0.38,
-  },
+
   titleBlock: {
     alignItems: 'center',
     marginTop: Spacing.md,
