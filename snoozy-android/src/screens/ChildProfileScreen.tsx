@@ -95,7 +95,7 @@ export function ChildProfileScreen({ onFinish }: Props) {
         pointerEvents="none"
       />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -48,7 +48,7 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
   }
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Background gradient */}
       <LinearGradient
         colors={[colors.primarySoft, colors.background]}

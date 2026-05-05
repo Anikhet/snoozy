@@ -154,7 +154,7 @@ export default function GeneratingScreen() {
         resizeMode="cover"
       />
 
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         {/* Brand title */}
         <Animated.View
           entering={FadeInDown.duration(600)}

@@ -11,7 +11,7 @@ interface StoryResult {
  * Returns the story title and text.
  */
 export async function generateStory(
-  templateId: string,
+  worldId: string,
   vibeId: string,
   childDetails: ChildDetails,
   token: string,
@@ -27,7 +27,7 @@ export async function generateStory(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      templateId,
+      worldId,
       vibeId,
       childDetails: {
         name: childDetails.name,

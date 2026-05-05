@@ -187,7 +187,7 @@ export function InsightsScreen() {
       style={styles.root}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}

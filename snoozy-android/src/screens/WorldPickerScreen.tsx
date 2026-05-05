@@ -108,7 +108,7 @@ export default function WorldPickerScreen() {
   const displayAge = childDetails.age || onboardingDefaults?.age
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Header */}

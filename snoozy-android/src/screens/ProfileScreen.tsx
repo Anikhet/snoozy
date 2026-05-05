@@ -92,7 +92,7 @@ export function ProfileScreen() {
   }, [signOut])
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + Spacing.xxl }}

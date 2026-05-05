@@ -253,7 +253,7 @@ export function AuthScreen() {
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.kav}

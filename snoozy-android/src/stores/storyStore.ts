@@ -18,14 +18,6 @@ import { generateUUID } from '@/utils/uuid'
  */
 const generationTasks = new Map<string, AbortController>()
 
-const WORLD_TO_TEMPLATE_ID: Record<string, string> = {
-  kingdom: 'dreamland',
-  forest:  'fairy-garden',
-  space:   'space-explorer',
-  ocean:   'underwater-journey',
-  clouds:  'under-the-stars',
-  jungle:  'animal-friends',
-}
 
 interface StoryStore {
   currentScreen: Screen
@@ -165,7 +157,6 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     generateStory: (vibeId, token) => {
       const { selectedWorldId, childDetails } = get()
       if (!selectedWorldId) return
-      const apiTemplateId = WORLD_TO_TEMPLATE_ID[selectedWorldId] ?? selectedWorldId
 
       const storyId = generateUUID()
       const placeholder = createPlaceholderStory(storyId, selectedWorldId, childDetails.name)
@@ -185,7 +176,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const details = { ...childDetails }
       const voiceId = details.voiceId
 
-      runGeneration(storyId, selectedWorldId, apiTemplateId, vibeId, details, voiceId, token, abortController.signal)
+      runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, token, abortController.signal)
     },
 
     playStory: (story) => {
@@ -301,7 +292,6 @@ function freshChildDetails(
 async function runGeneration(
   storyId: string,
   worldId: string,
-  apiTemplateId: string,
   vibeId: string,
   childDetails: ChildDetails,
   voiceId: string,
@@ -310,7 +300,7 @@ async function runGeneration(
 ): Promise<void> {
   try {
     const { title, storyText } = await apiService.generateStory(
-      apiTemplateId,
+      worldId,
       vibeId,
       childDetails,
       token,
