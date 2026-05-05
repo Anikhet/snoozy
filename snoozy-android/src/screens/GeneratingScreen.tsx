@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -20,11 +21,12 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useThemeColors } from '@/hooks/useThemeColors'
 import { Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { StoryStatus } from '@/types/story'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 const BAR_WIDTH = SCREEN_WIDTH - Spacing.xl * 2
 
@@ -52,6 +54,7 @@ const SUB_LINES = [
 ]
 
 export default function GeneratingScreen() {
+  const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const generatingStoryId = useStoryStore((s) => s.generatingStoryId)
   const playStory = useStoryStore((s) => s.playStory)
@@ -150,9 +153,15 @@ export default function GeneratingScreen() {
     <View style={styles.root}>
       <ImageBackground
         source={require('../../assets/images/bg-loading.png')}
-        style={StyleSheet.absoluteFill}
+        style={styles.bgImage}
         resizeMode="cover"
-      />
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.background}22`, `${colors.background}99`]}
+          locations={[0, 0, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </ImageBackground>
 
       <SafeAreaView style={styles.safe} edges={['bottom']}>
         {/* Brand title */}
@@ -235,7 +244,13 @@ export default function GeneratingScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#E8E2F8',
+  },
+  bgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
   },
   safe: {
     flex: 1,
@@ -262,10 +277,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: -40,
+    marginBottom: -60,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.72,
-    height: SCREEN_WIDTH * 0.72,
+    width: SCREEN_WIDTH * 0.8,
+    height: SCREEN_WIDTH * 0.8,
   },
   barTrack: {
     width: BAR_WIDTH,
