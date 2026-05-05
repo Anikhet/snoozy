@@ -13,6 +13,7 @@ type AudioStateListener = (state: {
 }) => void
 
 type SleepTimerListener = (remaining: number | null) => void
+type CompletionListener = () => void
 
 /**
  * Module-level audio service managing playback, progress, and sleep timer.
@@ -21,6 +22,8 @@ type SleepTimerListener = (remaining: number | null) => void
 let currentPlayer: AudioPlayer | null = null
 let stateListener: AudioStateListener | null = null
 let sleepTimerListener: SleepTimerListener | null = null
+let completionListener: CompletionListener | null = null
+let lastKnownPlaying = false
 let sleepTimerInterval: ReturnType<typeof setInterval> | null = null
 let sleepTimerRemaining: number | null = null
 let volumeBeforeFade = 1.0
@@ -46,21 +49,36 @@ export function setSleepTimerListener(listener: SleepTimerListener): void {
   sleepTimerListener = listener
 }
 
+export function setCompletionListener(listener: CompletionListener): void {
+  completionListener = listener
+}
+
 /**
  * Loads an audio file and begins playback.
  */
 export function loadAndPlay(uri: string): void {
   stop()
+  lastKnownPlaying = false
 
   currentPlayer = createAudioPlayer({ uri })
 
   currentPlayer.addListener('playbackStatusUpdate', (status: AudioStatus) => {
-    if (!stateListener) return
-    stateListener({
+    stateListener?.({
       isPlaying: status.playing,
       currentTime: status.currentTime,
       duration: status.duration,
     })
+
+    // Detect natural playback completion: was playing, now stopped, at end
+    if (
+      lastKnownPlaying &&
+      !status.playing &&
+      status.duration > 0 &&
+      status.currentTime >= status.duration - 0.5
+    ) {
+      completionListener?.()
+    }
+    lastKnownPlaying = status.playing
   })
 
   currentPlayer.play()

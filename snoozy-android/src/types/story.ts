@@ -15,11 +15,16 @@ export interface Story {
   createdAt: string
   audioFileName: string
   status: StoryStatus
+  isFavorite?: boolean
+  rating?: number
 }
+
+export type Pronouns = 'he/him' | 'she/her' | 'they/them'
 
 export interface ChildDetails {
   name: string
   age: number
+  pronouns: Pronouns
   favoriteColor?: string
   favoriteAnimal?: string
   favoriteThing?: string
@@ -28,7 +33,8 @@ export interface ChildDetails {
 
 export const DEFAULT_CHILD_DETAILS: ChildDetails = {
   name: '',
-  age: 3,
+  age: 5,
+  pronouns: 'they/them',
   voiceId: 'shimmer',
 }
 

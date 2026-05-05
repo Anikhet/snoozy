@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native'
 
 /**
  * Snoozy premium palette — editorial, warm, storybook-leaning.
- * Serif (Fraunces) for emotional beats; rounded sans (Nunito) for UI.
+ * Nunito (rounded sans) throughout for UI.
  */
 export const Colors = {
   light: {
@@ -17,7 +17,7 @@ export const Colors = {
 
     primary: '#5B5BD6',
     primarySoft: '#E6E5FF',
-    primaryInk: '#3A3AA8',
+    primaryInk: '#493cd4ff',
     accent: '#E9A97A',
     gold: '#C9A56B',
     error: '#D96C6C',
@@ -40,6 +40,11 @@ export const Colors = {
     cardRain: '#D4DEE8',
     cardRainDeep: '#A8BBCE',
 
+    starGold: '#F5C842',
+    worldCardBg: '#F0EBFF',
+    vibeSelected: '#7B5EA7',
+    vibeSelectedText: '#FFFFFF',
+
     // Legacy aliases so existing code still resolves while migrating
     textPrimary: '#2B2130',
     textSecondary: '#6E5F69',
@@ -58,7 +63,7 @@ export const Colors = {
 
     primary: '#9BA0FF',
     primarySoft: '#2A2F5E',
-    primaryInk: '#CBCDFF',
+    primaryInk: '#493cd4ff',
     accent: '#E9A97A',
     gold: '#D8B87A',
     error: '#FF8A8A',
@@ -80,6 +85,11 @@ export const Colors = {
     cardRain: '#202838',
     cardRainDeep: '#30394A',
 
+    starGold: '#F5C842',
+    worldCardBg: '#2A2545',
+    vibeSelected: '#7B5EA7',
+    vibeSelectedText: '#FFFFFF',
+
     textPrimary: '#F2EDE3',
     textSecondary: 'rgba(242,237,227,0.62)',
     secondary: '#E9A97A',
@@ -100,7 +110,7 @@ export const Night = {
   glass: 'rgba(242,237,227,0.06)',
 } as const
 
-export type ThemeColors = (typeof Colors)['light'] & (typeof Colors)['dark']
+export type ThemeColors = (typeof Colors)['light'] | (typeof Colors)['dark']
 
 export const Spacing = {
   xs: 4,
@@ -125,16 +135,15 @@ export const Sizing = {
 } as const
 
 /**
- * Typography — Fraunces (serif) for editorial beats, Nunito (rounded sans) for UI,
- * system monospace for timers/metadata.
+ * Typography — Nunito (rounded sans) throughout, system monospace for timers/metadata.
  */
 export const Fonts = StyleSheet.create({
-  // Serif — emotional beats
-  serifDisplay: { fontSize: 38, fontFamily: 'Fraunces_400Regular', letterSpacing: -0.8 },
-  serifTitle: { fontSize: 30, fontFamily: 'Fraunces_400Regular', letterSpacing: -0.6 },
-  serifHeadline: { fontSize: 22, fontFamily: 'Fraunces_500Medium', letterSpacing: -0.2 },
-  serifBody: { fontSize: 17, fontFamily: 'Fraunces_400Regular' },
-  serifItalic: { fontSize: 20, fontFamily: 'Fraunces_500Medium_Italic' },
+  // Display — large editorial sizes
+  serifDisplay: { fontSize: 38, fontFamily: 'Nunito_700Bold', letterSpacing: -0.8 },
+  serifTitle: { fontSize: 30, fontFamily: 'Nunito_700Bold', letterSpacing: -0.6 },
+  serifHeadline: { fontSize: 22, fontFamily: 'Nunito_700Bold', letterSpacing: -0.2 },
+  serifBody: { fontSize: 17, fontFamily: 'Nunito_400Regular' },
+  serifItalic: { fontSize: 20, fontFamily: 'Nunito_600SemiBold' },
 
   // Sans (rounded) — UI
   body: { fontSize: 15, fontFamily: 'Nunito_400Regular' },
@@ -153,29 +162,3 @@ export const Fonts = StyleSheet.create({
   headline: { fontSize: 17, fontFamily: 'Nunito_500Medium' },
   caption2: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
 })
-
-/**
- * Soft lifted-card shadow — deeper in light mode, gentler glow in dark.
- */
-export function getCardShadow(isDark: boolean) {
-  return {
-    shadowColor: isDark ? '#FFFFFF' : '#000000',
-    shadowOpacity: isDark ? 0.04 : 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
-  } as const
-}
-
-/**
- * Heavier shadow for primary CTAs and floating elements.
- */
-export function getLiftShadow(isDark: boolean) {
-  return {
-    shadowColor: isDark ? '#000000' : '#2B2130',
-    shadowOpacity: isDark ? 0.4 : 0.22,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
-  } as const
-}

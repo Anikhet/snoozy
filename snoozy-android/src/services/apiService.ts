@@ -11,7 +11,8 @@ interface StoryResult {
  * Returns the story title and text.
  */
 export async function generateStory(
-  templateId: string,
+  worldId: string,
+  vibeId: string,
   childDetails: ChildDetails,
   token: string,
   signal?: AbortSignal
@@ -19,7 +20,6 @@ export async function generateStory(
   const controller = signal ? undefined : new AbortController()
   const timeoutId = setTimeout(() => controller?.abort(), 60_000)
 
-  console.log('[API] Calling:', `${AppConfig.backendUrl}/api/generate-story`)
   const response = await fetch(`${AppConfig.backendUrl}/api/generate-story`, {
     method: 'POST',
     headers: {
@@ -27,13 +27,12 @@ export async function generateStory(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      templateId,
+      worldId,
+      vibeId,
       childDetails: {
         name: childDetails.name,
         age: childDetails.age,
-        favoriteColor: childDetails.favoriteColor,
-        favoriteAnimal: childDetails.favoriteAnimal,
-        favoriteThing: childDetails.favoriteThing,
+        pronouns: childDetails.pronouns,
       },
     }),
     signal: signal ?? controller!.signal,
@@ -41,6 +40,8 @@ export async function generateStory(
   clearTimeout(timeoutId)
 
   if (!response.ok) {
+    const body = await response.text().catch(() => '')
+    console.error('[API] generate-story error body:', body)
     throw new Error(`Server error: ${response.status}`)
   }
 

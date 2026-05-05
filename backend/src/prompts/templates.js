@@ -1,191 +1,402 @@
 /**
- * Story template definitions. Each template has:
- * - id: unique identifier
- * - name: display name
- * - description: short tagline for the picker
- * - icon: SF Symbol name (used by iOS)
- * - fields: additional form fields beyond name + age
- * - systemPrompt: OpenAI system prompt with {placeholders} for interpolation
- *
- * Prompts are tuned for 600-800 word stories (3-5 min read-aloud),
- * calming tone, age-appropriate language, ending with sleep.
+ * Storybell — Story Generation Engine
+ * 
+ * Single unified prompt architecture replacing per-template prompts.
+ * Built for premium, emotionally resonant bedtime stories.
+ * 
+ * Variables injected at runtime:
+ *   {name}             — child's first name
+ *   {age}              — child's age (number)
+ *   {world}            — story world label (e.g. "Enchanted Forest")
+ *   {worldContext}     — rich world description for the AI
+ *   {vibe}             — emotional vibe label (e.g. "Be Brave")
+ *   {vibeContext}      — emotional arc instructions for the AI
+ *   {vocabularyLevel}  — age-gated language guidance
+ *   {sentenceStyle}    — age-gated sentence rhythm guidance
  */
 
-const templates = [
+// ─────────────────────────────────────────────
+// WORLDS
+// ─────────────────────────────────────────────
+
+const WORLDS = [
   {
-    id: 'dreamland',
-    name: 'Dreamland Adventure',
-    description: 'A magical journey through dreams',
-    icon: 'moon.stars.fill',
-    fields: [{ key: 'favoriteColor', label: 'Favorite Color', type: 'color' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite color is {favoriteColor}.
-
-The story should be about {name} drifting off to sleep and entering a magical dreamland where everything shimmers in shades of {favoriteColor}. They float on soft {favoriteColor} clouds, meet friendly dream creatures, and explore a gentle, peaceful world.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include sensory details (soft sounds, warm feelings, gentle lights)
-- The story must end with {name} feeling safe, warm, and drifting into peaceful sleep
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
+    id: 'kingdom',
+    name: 'Magical Kingdom',
+    emoji: '🏰',
+    description: 'Castles, gentle royalty & soft quests',
+    context: `A timeless fairytale kingdom bathed in golden twilight. 
+Tall castle spires glow softly against a lavender sky. 
+Cobblestone paths wind through flower-filled meadows. 
+Friendly creatures — talking rabbits, gentle dragons, wise old owls — 
+live peacefully here. Magic is quiet and warm, never loud or frightening. 
+Everything feels like it was made for wonder.`,
   },
   {
-    id: 'animal-friends',
-    name: 'Animal Friends',
-    description: 'Befriend animals in a whispering forest',
-    icon: 'hare.fill',
-    fields: [{ key: 'favoriteAnimal', label: 'Favorite Animal', type: 'animal' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite animal is a {favoriteAnimal}.
-
-The story should be about {name} discovering a quiet, moonlit forest where animals whisper and play softly. They meet a friendly {favoriteAnimal} who becomes their companion. Together they walk through the gentle forest, helping sleepy animals find cozy places to rest.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include soft animal sounds and cozy descriptions
-- The story must end with {name} and their {favoriteAnimal} friend curling up together and falling asleep
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
+    id: 'forest',
+    name: 'Enchanted Forest',
+    emoji: '🌲',
+    description: 'Ancient trees, animals & cozy hidden cottages',
+    context: `A deep, ancient forest where the trees whisper secrets and 
+fireflies light the path. Mossy roots form perfect little seats. 
+Hidden cottages glow warmly behind ivy-covered doors. 
+Every animal here can speak softly — foxes, deer, hedgehogs, owls. 
+The air smells of pine and rain. The forest is safe, 
+full of nooks and gentle mystery, always leading somewhere cozy.`,
   },
   {
-    id: 'under-the-stars',
-    name: 'Under the Stars',
-    description: 'Explore the peaceful night sky',
-    icon: 'sparkles',
-    fields: [{ key: 'favoriteThing', label: 'Favorite Thing', type: 'text' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite thing is {favoriteThing}.
-
-The story should be about {name} lying on a soft blanket in a meadow, gazing up at the stars. The stars begin to twinkle in patterns that remind them of {favoriteThing}. A gentle star floats down and takes {name} on a slow, peaceful ride through the night sky, showing them constellations and quiet wonders.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include descriptions of soft starlight, gentle breezes, and quiet night sounds
-- The story must end with {name} floating gently back to their blanket and falling asleep under the stars
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
+    id: 'space',
+    name: 'Outer Space',
+    emoji: '🚀',
+    description: 'Drifting among soft planets & singing stars',
+    context: `A quiet, dreamy cosmos where planets hum lullabies and 
+stars have personalities. This is not the cold, vast space of science — 
+it is warm and soft, like floating inside a snow globe at night. 
+Planets are pastel and friendly. Moons rock gently like cradles. 
+Clouds of stardust feel like warm blankets. 
+Gravity is light here — everything drifts slowly, peacefully.`,
   },
   {
-    id: 'underwater-journey',
-    name: 'Underwater Journey',
-    description: 'Drift through a gentle ocean world',
-    icon: 'water.waves',
-    fields: [{ key: 'favoriteColor', label: 'Favorite Color', type: 'color' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite color is {favoriteColor}.
-
-The story should be about {name} sinking softly into a warm, {favoriteColor}-tinted ocean where friendly fish with glowing fins swim in slow circles. They ride on the back of a gentle sea turtle through swaying coral gardens and past whispering sea plants, everything bathed in soft {favoriteColor} light.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include sensory details (warm water, soft bubbles, gentle currents, quiet sea sounds)
-- The story must end with {name} drifting back to shore and falling peacefully asleep on warm sand
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
+    id: 'ocean',
+    name: 'Ocean Deep',
+    emoji: '🌊',
+    description: 'Warm seas, glowing coral & gentle sea creatures',
+    context: `A warm, luminous underwater world where the light filters 
+down in soft golden beams. Coral gardens sway like slow dancers. 
+Friendly sea creatures — wise sea turtles, curious dolphins, 
+glowing jellyfish — guide the way. 
+The water is perfectly warm, like a bath. 
+Everything moves slowly here. The ocean hums a constant, 
+gentle low note that feels like a lullaby.`,
   },
   {
-    id: 'space-explorer',
-    name: 'Space Explorer',
-    description: 'A slow, peaceful trip through the cosmos',
-    icon: 'moonphase.waning.crescent',
-    fields: [{ key: 'favoriteThing', label: 'Favorite Thing', type: 'text' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite thing is {favoriteThing}.
-
-The story should be about {name} floating in a cozy little spaceship shaped like {favoriteThing}, drifting past glowing planets and sleeping moons. Each planet hums a soft lullaby. They wave at friendly stars and pass through clouds of shimmering stardust that feels like warm blankets.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy — space is quiet and peaceful, not exciting
-- Include sensory details (warm starlight, soft humming, weightless floating)
-- The story must end with {name} gently floating back home and drifting into sleep
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
+    id: 'clouds',
+    name: 'Cloud Kingdom',
+    emoji: '☁️',
+    description: 'Sky islands, fluffy castles & dreamy heights',
+    context: `A kingdom built entirely in the sky, where islands of cloud 
+drift slowly like giant, gentle ships. Cloud castles have soft walls 
+you can lean into. Rainbow bridges connect floating gardens. 
+Sun rays are warm and thick like golden honey. 
+The wind here is never cold — it wraps around you like a hug. 
+Everything is soft, white, and impossibly light. 
+Looking down, you can see the whole sleeping world below.`,
   },
   {
-    id: 'fairy-garden',
-    name: 'Fairy Garden',
-    description: 'Wander through a tiny magical garden',
-    icon: 'leaf.fill',
-    fields: [{ key: 'favoriteColor', label: 'Favorite Color', type: 'color' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite color is {favoriteColor}.
-
-The story should be about {name} shrinking down to the size of a ladybug and discovering a secret fairy garden tucked under a rosebush. Tiny {favoriteColor} lanterns hang from blades of grass, and gentle fairies with {favoriteColor} wings invite {name} to a quiet tea party on a mushroom table.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include sensory details (tiny dewdrops, soft fairy music, warm firefly glow)
-- The story must end with {name} growing back to full size, tucked in bed, and falling asleep
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
-  },
-  {
-    id: 'snowy-mountain',
-    name: 'Snowy Mountain',
-    description: 'A cozy adventure in gentle snowfall',
-    icon: 'snowflake',
-    fields: [{ key: 'favoriteAnimal', label: 'Favorite Animal', type: 'animal' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite animal is a {favoriteAnimal}.
-
-The story should be about {name} walking up a quiet, snowy mountain path with a friendly {favoriteAnimal}. Soft snowflakes drift down like feathers. They find a cozy cabin at the top with a warm fire, hot cocoa, and a pile of fluffy blankets. The {favoriteAnimal} curls up beside them.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include sensory details (soft crunching snow, warm fire, gentle wind, cozy blankets)
-- The story must end with {name} and their {favoriteAnimal} falling asleep by the warm fire
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
-  },
-  {
-    id: 'rainy-day-cozy',
-    name: 'Rainy Day Cozy',
-    description: 'Curl up and listen to the rain',
-    icon: 'cloud.rain.fill',
-    fields: [{ key: 'favoriteThing', label: 'Favorite Thing', type: 'text' }],
-    systemPrompt: `You are a gentle bedtime storyteller. Write a calming bedtime story for a child named {name} who is {age} years old. Their favorite thing is {favoriteThing}.
-
-The story should be about {name} on a soft rainy evening, building a blanket fort in the living room. The gentle rain taps on the windows like a lullaby. Inside the fort, {name} has {favoriteThing} and a warm cup of milk. They listen to the rain and imagine the raindrops telling tiny, sleepy stories.
-
-Rules:
-- Write exactly 400-500 words (STRICT LIMIT — do not exceed 500 words)
-- Use simple, soothing language appropriate for a {age}-year-old
-- The tone should be calm, gentle, and sleepy
-- Include sensory details (soft rain sounds, warm blankets, dim lamplight, gentle thunder far away)
-- The story must end with {name} yawning and falling asleep listening to the rain
-- Do not include anything scary, loud, or overstimulating
-- Start with a short, creative title on the first line, then a blank line, then the story`,
+    id: 'jungle',
+    name: 'Magical Safari',
+    emoji: '🦁',
+    description: 'Golden plains, gentle giants & warm sunsets',
+    context: `A sun-warmed safari land at the golden hour just before dusk. 
+Tall grasses sway in a warm breeze. Gentle giants — elephants, giraffes, 
+friendly lions with soft manes — roam slowly and peacefully. 
+Acacia trees cast long, cozy shadows. 
+A great orange moon rises early, hanging low and close. 
+The animals here gather at dusk to rest together, 
+and they always make room for one more.`,
   },
 ]
 
-/**
- * Looks up a template by ID and interpolates child details into the system prompt.
- * Returns { template, prompt } or null if template not found.
- */
-function buildPrompt(templateId, childDetails) {
-  const template = templates.find((t) => t.id === templateId)
-  if (!template) return null
+// ─────────────────────────────────────────────
+// VIBES
+// ─────────────────────────────────────────────
 
-  let prompt = template.systemPrompt
-  prompt = prompt.replace(/{name}/g, childDetails.name)
-  prompt = prompt.replace(/{age}/g, String(childDetails.age))
+const VIBES = [
+  {
+    id: 'cozy',
+    name: 'Sleepy & Cozy',
+    emoji: '🌙',
+    description: 'Slow, warm, deeply calming',
+    context: `Emotional arc: pure comfort and warmth. 
+There is no challenge or conflict — only discovery, softness, and peace. 
+{name} wanders, wonders, and slowly winds down. 
+Every scene should feel like sinking deeper into a warm bed. 
+The emotional payoff is simply: feeling completely safe and held. 
+Pacing should be the slowest of all vibes — linger on textures, 
+sounds, and warmth. The world cradles {name} to sleep.`,
+  },
+  {
+    id: 'brave',
+    name: 'Be Brave',
+    emoji: '💪',
+    description: 'A tiny fear, gently faced & overcome',
+    context: `Emotional arc: {name} encounters something mildly uncertain — 
+a dark path, a strange sound, a door they're not sure about — 
+and chooses, quietly, to take one small brave step. 
+The challenge must be gentle and age-appropriate, never truly scary. 
+The resolution comes from {name}'s own courage, not from outside rescue. 
+End with a warm sense of pride — the feeling of "I did that." 
+The bravery is small but real. That's what makes it powerful.`,
+  },
+  {
+    id: 'kind',
+    name: 'Be Kind',
+    emoji: '🤝',
+    description: 'Help someone, feel the warmth return',
+    context: `Emotional arc: {name} notices that someone — 
+a small creature, a lost character, a shy new friend — 
+needs help. Without being asked, {name} offers kindness. 
+The act should be simple and natural, not heroic. 
+What matters is the moment of noticing and choosing to help. 
+The emotional payoff is the warm glow that comes back — 
+the feeling that giving something to someone else 
+fills you up too. End on that mutual warmth.`,
+  },
+  {
+    id: 'wonder',
+    name: 'Full of Wonder',
+    emoji: '🌟',
+    description: 'Curiosity, discovery & quiet magic',
+    context: `Emotional arc: {name} follows their curiosity 
+and it leads somewhere magical. 
+Every question {name} asks gets a beautiful answer. 
+The world reveals itself as endlessly interesting and surprising. 
+Wonder here is not explosive — it is the quiet kind, 
+the gasp-and-then-smile kind. 
+{name} discovers something no one else has seen, 
+and it feels like the world made it just for them. 
+End with {name} holding that feeling of quiet magic 
+as they drift toward sleep.`,
+  },
+  {
+    id: 'friends',
+    name: 'Make a Friend',
+    emoji: '🐾',
+    description: 'Connection, belonging & a new companion',
+    context: `Emotional arc: {name} meets someone unexpected — 
+a shy creature, a lonely character, someone a little different — 
+and a friendship forms naturally, without force. 
+The connection should feel earned and real. 
+Show the small moments: sharing something, 
+laughing at the same thing, sitting quietly together. 
+The emotional payoff is belonging — the feeling 
+of being chosen and of choosing back. 
+End with {name} and their new friend resting together, 
+knowing they'll find each other again in tomorrow's dreams.`,
+  },
+]
 
-  for (const field of template.fields) {
-    const value = childDetails[field.key]
-    if (value) {
-      prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), value)
+// ─────────────────────────────────────────────
+// AGE-GATED LANGUAGE SETTINGS
+// ─────────────────────────────────────────────
+
+function getAgeSettings(age) {
+  if (age <= 4) {
+    return {
+      vocabularyLevel: `Very simple vocabulary only. Use words a 3-4 year old knows. 
+Short words are always better than long ones. 
+Use sound words freely: whoosh, sparkle, giggle, thump, hum. 
+Repeat key phrases like a song — repetition is comforting, not boring, at this age.`,
+      sentenceStyle: `Sentences must be very short — 6 to 10 words maximum. 
+Use lots of line breaks in your pacing. 
+Read-aloud rhythm is everything: it should sound like a lullaby when spoken aloud. 
+One idea per sentence. Never combine two thoughts with "and" more than once per paragraph.`,
     }
   }
-
-  return { template, prompt }
+  if (age <= 7) {
+    return {
+      vocabularyLevel: `Warm, clear vocabulary for a 5-7 year old. 
+You can introduce one or two beautiful, slightly unusual words per story 
+(like "shimmered" or "murmured") — but always wrap them in context so meaning is clear. 
+Avoid abstract concepts. Everything should be vivid and concrete.`,
+      sentenceStyle: `Sentences should be short to medium — 8 to 14 words. 
+Vary the rhythm: a short punchy sentence after two longer ones creates natural pacing. 
+Paragraphs should be 2-4 sentences. 
+The story should feel smooth and easy to follow when read aloud.`,
+    }
+  }
+  return {
+    vocabularyLevel: `Rich, confident vocabulary for a 8-10 year old. 
+You can use vivid, expressive language and more nuanced emotional descriptions. 
+Introduce interesting words naturally — don't talk down to this age group. 
+Metaphors and similes work beautifully here if they're concrete and visual.`,
+    sentenceStyle: `Sentences can be medium to longer — up to 18 words. 
+You can build more complex scenes and hold tension slightly longer before resolving it. 
+Paragraphs of 3-5 sentences. 
+The story should have a clear, satisfying narrative arc that feels complete and earned.`,
+  }
 }
 
-module.exports = { templates, buildPrompt }
+// ─────────────────────────────────────────────
+// MASTER SYSTEM PROMPT
+// ─────────────────────────────────────────────
+
+const MASTER_SYSTEM_PROMPT = `You are Storybell — the world's most beloved children's bedtime storyteller. 
+Your stories are read by parents in dim-lit rooms to children on the edge of sleep. 
+Every word you write carries weight. Every sentence is a step closer to dreams.
+
+Your stories are not just entertaining — they are emotionally nourishing. 
+They make children feel seen, brave, kind, and deeply safe. 
+Parents trust you completely. You never disappoint them.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CHILD PROFILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name: {name}
+Age: {age} years old
+Story World: {world}
+Tonight's Vibe: {vibe}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE WORLD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{worldContext}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TONIGHT'S EMOTIONAL ARC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{vibeContext}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STORY STRUCTURE — follow this arc precisely
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. THE OPENING (≈100 words)
+   Place {name} gently into the world. 
+   Set the scene with warmth and specificity — not "a forest" but "a forest 
+   where the trees had silver leaves that chimed softly in the breeze."
+   Establish the tone immediately. The reader should exhale on the first sentence.
+
+2. THE INVITATION (≈100 words)
+   Something small and magical beckons {name} forward. 
+   Not a crisis — an invitation. A glowing door. A friendly creature. 
+   A sound that shouldn't exist but does, softly. 
+   {name} chooses to follow. This is always their choice.
+
+3. THE JOURNEY — two moments (≈250 words)
+   Two scenes of gentle wonder, discovery, or connection. 
+   Each scene must contain at least one sensory detail that feels 
+   completely specific and real (a smell, a texture, a sound, a temperature). 
+   Pacing slows here. Sentences get quieter. The world gets softer.
+
+4. THE HEART (≈150 words)
+   The emotional payoff described in "Tonight's Emotional Arc" above. 
+   This is the moment the story earns. It must feel natural, not forced. 
+   {name} is the agent here — they do something, feel something, 
+   give something, or discover something that matters.
+   This is what the child will remember.
+
+5. THE SLEEP ENDING (≈100 words)
+   {name} drifts to sleep INSIDE the story. 
+   This is non-negotiable. The character sleeping mirrors the child sleeping.
+   Make it beautiful. Make it feel like the most natural thing in the world — 
+   like sleep is not something that happens to you but something 
+   you walk willingly toward because it's warm and safe and full of dreams.
+   The very last sentence should be the quietest sentence in the story.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LANGUAGE & STYLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Vocabulary guidance for age {age}:
+{vocabularyLevel}
+
+Sentence rhythm guidance:
+{sentenceStyle}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE SIGNATURE MOMENT — mandatory
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Every story must contain exactly one unforgettable, 
+completely original magical detail — something so specific and surprising 
+that the child will ask to hear it again just for that moment.
+
+Examples of the right energy (DO NOT use these — invent your own):
+  • "a staircase made entirely of moonlight that hummed when you stepped on it"
+  • "a tiny library inside a snail shell, with books the size of thumbnails"  
+  • "a cloud that remembered every dream ever dreamed inside it"
+  • "flowers that sang one note each, and together they made a lullaby"
+
+This detail should feel like it could only exist in THIS story, 
+for THIS child, on THIS night.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRAFT RULES — non-negotiable
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✦ Use {name} every 3-4 sentences — they are always the hero
+✦ Total length: 600-750 words (strictly enforced)
+✦ Include 3-4 sensory details across the story (sounds, smells, textures, warmth)
+✦ NO scary antagonists, NO violence, NO loss, NO sad or unresolved endings
+✦ NO loud, energetic, or stimulating language — even excitement must be quiet
+✦ NO clichés: no "once upon a time", no "happily ever after", 
+  no "little did they know", no "suddenly"
+✦ The story must feel complete — not like a fragment or a summary
+✦ Read your story aloud in your mind before finishing. 
+  It must sound beautiful spoken, not just written.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Line 1: Story title (creative, evocative, 3-6 words)
+Line 2: blank
+Line 3 onwards: the story
+
+No headers. No labels. No section markers. Just the title and the story.`
+
+// ─────────────────────────────────────────────
+// USER MESSAGE TEMPLATE
+// ─────────────────────────────────────────────
+
+const USER_MESSAGE_TEMPLATE = 
+`Write tonight's bedtime story for {name}.`
+
+// ─────────────────────────────────────────────
+// BUILD PROMPT — main export
+// ─────────────────────────────────────────────
+
+/**
+ * Builds the final { systemPrompt, userMessage } for the AI call.
+ * 
+ * @param {string} worldId   — one of the WORLDS ids
+ * @param {string} vibeId    — one of the VIBES ids
+ * @param {object} child     — { name: string, age: number }
+ * @returns {{ systemPrompt: string, userMessage: string, world: object, vibe: object } | null}
+ */
+function buildPrompt(worldId, vibeId, child) {
+  const world = WORLDS.find((w) => w.id === worldId)
+  const vibe = VIBES.find((v) => v.id === vibeId)
+
+  if (!world || !vibe) return null
+  if (!child?.name || !child?.age) return null
+
+  const { vocabularyLevel, sentenceStyle } = getAgeSettings(child.age)
+
+  const replacements = {
+    '{name}': child.name,
+    '{age}': String(child.age),
+    '{world}': world.name,
+    '{worldContext}': world.context,
+    '{vibe}': vibe.name,
+    '{vibeContext}': vibe.context.replace(/{name}/g, child.name),
+    '{vocabularyLevel}': vocabularyLevel,
+    '{sentenceStyle}': sentenceStyle,
+  }
+
+  let systemPrompt = MASTER_SYSTEM_PROMPT
+  for (const [key, val] of Object.entries(replacements)) {
+    systemPrompt = systemPrompt.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), val)
+  }
+
+  const userMessage = USER_MESSAGE_TEMPLATE.replace(/{name}/g, child.name)
+
+  return { systemPrompt, userMessage, world, vibe }
+}
+
+// ─────────────────────────────────────────────
+// RECOMMENDED API SETTINGS
+// ─────────────────────────────────────────────
+
+const RECOMMENDED_API_SETTINGS = {
+  model: 'gpt-4o',          // upgrade from gpt-4o-mini for premium quality
+  temperature: 0.9,          // higher creativity, still coherent
+  max_tokens: 1100,          // enough room for 750 words with title
+  presence_penalty: 0.3,     // gently discourages repetition
+  frequency_penalty: 0.3,    // keeps language fresh throughout
+}
+
+module.exports = {
+  WORLDS,
+  VIBES,
+  buildPrompt,
+  RECOMMENDED_API_SETTINGS,
+}

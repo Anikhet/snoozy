@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { Screen } from '@/types/navigation'
-import { Template } from '@/types/template'
 import {
   Story,
   ChildDetails,
@@ -8,7 +7,6 @@ import {
   DEFAULT_CHILD_DETAILS,
   createPlaceholderStory,
 } from '@/types/story'
-import { TEMPLATES } from '@/config/templates'
 import * as apiService from '@/services/apiService'
 import * as storageService from '@/services/storageService'
 import * as audioService from '@/services/audioService'
@@ -20,13 +18,15 @@ import { generateUUID } from '@/utils/uuid'
  */
 const generationTasks = new Map<string, AbortController>()
 
+
 interface StoryStore {
   currentScreen: Screen
-  selectedTemplate: Template | null
+  selectedWorldId: string | null
+  selectedVibeId: string | null
+  generatingStoryId: string | null
   childDetails: ChildDetails
-  /** Name/age declared during onboarding. Seeds every story form so the
-   *  parent doesn't retype the same details every night. */
-  onboardingDefaults: { name: string; age: number } | null
+  /** Child profile set once post-signup. Seeds every story. */
+  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -35,11 +35,16 @@ interface StoryStore {
   sleepTimerRemaining: number | null
 
   navigateTo: (screen: Screen) => void
+  navigateToWorldPicker: () => void
+  navigateToVibePicker: (worldId: string) => void
+  navigateToGenerating: () => void
+  navigateToStoryEnd: () => void
+  navigateToLibrary: () => void
+  navigateToInsights: () => void
   goHome: () => void
-  selectTemplate: (template: Template) => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  setOnboardingDefaults: (defaults: { name: string; age: number }) => void
-  generateStory: (token: string) => void
+  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns }) => void
+  generateStory: (vibeId: string, token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
   retryStory: (story: Story) => void
@@ -49,6 +54,12 @@ interface StoryStore {
   startSleepTimer: (seconds: number | null) => void
   cancelSleepTimer: () => void
   stopPlayback: () => void
+  editingProfile: boolean
+  openProfileEdit: () => void
+  closeProfileEdit: () => void
+  toggleFavorite: (storyId: string) => void
+  rateStory: (storyId: string, stars: number) => void
+  cancelGeneration: () => void
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => {
@@ -61,9 +72,16 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     set({ sleepTimerRemaining: remaining })
   })
 
+  // Navigate to StoryEnd when audio finishes naturally
+  audioService.setCompletionListener(() => {
+    set({ currentScreen: Screen.StoryEnd })
+  })
+
   return {
     currentScreen: Screen.Home,
-    selectedTemplate: null,
+    selectedWorldId: null,
+    selectedVibeId: null,
+    generatingStoryId: null,
     childDetails: { ...DEFAULT_CHILD_DETAILS },
     onboardingDefaults: null,
     currentStory: null,
@@ -72,22 +90,55 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     currentTime: 0,
     duration: 0,
     sleepTimerRemaining: null,
+    editingProfile: false,
 
     navigateTo: (screen) => set({ currentScreen: screen }),
+
+    openProfileEdit: () => set({ editingProfile: true }),
+
+    closeProfileEdit: () => set({ editingProfile: false, currentScreen: Screen.WorldPicker }),
+
+    navigateToWorldPicker: () => set({ currentScreen: Screen.WorldPicker }),
+
+    navigateToVibePicker: (worldId: string) =>
+      set({ selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
+
+    navigateToGenerating: () => set({ currentScreen: Screen.Generating }),
+
+    navigateToStoryEnd: () => set({ currentScreen: Screen.StoryEnd }),
+
+    navigateToLibrary: () => set({ currentScreen: Screen.Library }),
+
+    navigateToInsights: () => set({ currentScreen: Screen.Insights }),
+
+    toggleFavorite: (storyId) => {
+      const story = get().savedStories.find((s) => s.id === storyId)
+      if (!story) return
+      const updated = { ...story, isFavorite: !story.isFavorite }
+      set((s) => ({
+        savedStories: s.savedStories.map((st) => (st.id === storyId ? updated : st)),
+      }))
+      storageService.saveStory(updated).catch(() => {})
+    },
+
+    rateStory: (storyId, stars) => {
+      const story = get().savedStories.find((s) => s.id === storyId)
+      if (!story) return
+      const updated = { ...story, rating: stars }
+      set((s) => ({
+        savedStories: s.savedStories.map((st) => (st.id === storyId ? updated : st)),
+      }))
+      storageService.saveStory(updated).catch(() => {})
+    },
 
     goHome: () =>
       set((s) => ({
         currentScreen: Screen.Home,
-        selectedTemplate: null,
+        generatingStoryId: null,
+        selectedWorldId: null,
+        selectedVibeId: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
-      })),
-
-    selectTemplate: (template) =>
-      set((s) => ({
-        selectedTemplate: template,
-        childDetails: freshChildDetails(s.onboardingDefaults),
-        currentScreen: Screen.StoryForm,
       })),
 
     updateChildDetails: (partial) =>
@@ -98,31 +149,23 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     setOnboardingDefaults: (defaults) =>
       set((s) => ({
         onboardingDefaults: defaults,
-        // Seed the current form too if it's empty
         childDetails: s.childDetails.name
           ? s.childDetails
-          : { ...s.childDetails, name: defaults.name, age: defaults.age },
+          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns },
       })),
 
-    /**
-     * Creates a placeholder story, navigates home immediately,
-     * and kicks off generation in the background.
-     */
-    generateStory: (token) => {
-      const { selectedTemplate, childDetails } = get()
-      if (!selectedTemplate) return
+    generateStory: (vibeId, token) => {
+      const { selectedWorldId, childDetails } = get()
+      if (!selectedWorldId) return
 
       const storyId = generateUUID()
-      const placeholder = createPlaceholderStory(
-        storyId,
-        selectedTemplate.id,
-        childDetails.name
-      )
+      const placeholder = createPlaceholderStory(storyId, selectedWorldId, childDetails.name)
 
       set((s) => ({
         savedStories: [placeholder, ...s.savedStories],
-        currentScreen: Screen.Home,
-        selectedTemplate: null,
+        currentScreen: Screen.Generating,
+        generatingStoryId: storyId,
+        selectedVibeId: vibeId,
         childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
       }))
@@ -131,10 +174,9 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       generationTasks.set(storyId, abortController)
 
       const details = { ...childDetails }
-      const templateId = selectedTemplate.id
       const voiceId = details.voiceId
 
-      runGeneration(storyId, templateId, details, voiceId, token, abortController.signal)
+      runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, token, abortController.signal)
     },
 
     playStory: (story) => {
@@ -166,16 +208,13 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     },
 
     retryStory: (story) => {
-      const template = TEMPLATES.find((t) => t.id === story.templateId) ?? null
-
       set((state) => ({
         savedStories: state.savedStories.filter((item) => item.id !== story.id),
-        selectedTemplate: template,
         childDetails: {
           ...freshChildDetails(state.onboardingDefaults),
           name: story.childName,
         },
-        currentScreen: Screen.StoryForm,
+        currentScreen: Screen.WorldPicker,
       }))
     },
 
@@ -207,8 +246,29 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       set((s) => ({
         currentScreen: Screen.Home,
         currentStory: null,
-        selectedTemplate: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
+      }))
+    },
+
+    cancelGeneration: () => {
+      const { generatingStoryId } = get()
+      if (generatingStoryId) {
+        const controller = generationTasks.get(generatingStoryId)
+        if (controller) {
+          controller.abort()
+          generationTasks.delete(generatingStoryId)
+        }
+      }
+      set((s) => ({
+        currentScreen: Screen.Home,
+        generatingStoryId: null,
+        selectedWorldId: null,
+        selectedVibeId: null,
+        childDetails: freshChildDetails(s.onboardingDefaults),
+        currentStory: null,
+        savedStories: generatingStoryId
+          ? s.savedStories.filter((st) => st.id !== generatingStoryId)
+          : s.savedStories,
       }))
     },
   }
@@ -219,10 +279,10 @@ export const useStoryStore = create<StoryStore>((set, get) => {
  * name/age (if any). Keeps the parent from having to retype every night.
  */
 function freshChildDetails(
-  defaults: { name: string; age: number } | null,
+  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null,
 ): ChildDetails {
   if (!defaults) return { ...DEFAULT_CHILD_DETAILS }
-  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age }
+  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns }
 }
 
 /**
@@ -231,7 +291,8 @@ function freshChildDetails(
  */
 async function runGeneration(
   storyId: string,
-  templateId: string,
+  worldId: string,
+  vibeId: string,
   childDetails: ChildDetails,
   voiceId: string,
   token: string,
@@ -239,7 +300,8 @@ async function runGeneration(
 ): Promise<void> {
   try {
     const { title, storyText } = await apiService.generateStory(
-      templateId,
+      worldId,
+      vibeId,
       childDetails,
       token,
       signal
@@ -252,7 +314,7 @@ async function runGeneration(
       id: storyId,
       title,
       storyText,
-      templateId,
+      templateId: worldId,
       childName: childDetails.name,
       createdAt: new Date().toISOString(),
       audioFileName,

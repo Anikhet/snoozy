@@ -47,7 +47,16 @@
           "enableBackgroundPlayback": true
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Snoozy needs access to your photos to set a profile picture."
+        }
+      ]
     ],
     "extra": {
       "eas": {

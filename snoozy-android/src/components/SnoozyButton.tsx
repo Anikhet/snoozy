@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Radii, Sizing, Spacing, getLiftShadow } from '@/config/tokens'
+import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 
 export type SnoozyButtonStyle = 'primary' | 'indigo' | 'subtle'
 
@@ -26,7 +26,7 @@ export function SnoozyButton({
   disabled,
   style = 'primary',
 }: SnoozyButtonProps) {
-  const { colors, isDark } = useThemeColors()
+  const { colors } = useThemeColors()
 
   const foreground = style === 'subtle' ? colors.ink : colors.background
   const content = (
@@ -40,12 +40,19 @@ export function SnoozyButton({
 
   if (style === 'indigo') {
     return (
-      <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        android_ripple={{ color: 'transparent' }}
+        shouldRasterizeIOS
+        renderToHardwareTextureAndroid
+        style={({ pressed }) => [styles.pressable, { opacity: pressed ? 0.82 : 1 }]}
+      >
         <LinearGradient
           colors={[colors.primary, '#7272D8']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.container, getLiftShadow(isDark)]}
+          style={styles.container}
         >
           {content}
         </LinearGradient>
@@ -58,12 +65,18 @@ export function SnoozyButton({
       ? colors.surface
       : colors.ink
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={styles.pressable}>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      android_ripple={{ color: 'transparent' }}
+      shouldRasterizeIOS
+      renderToHardwareTextureAndroid
+      style={({ pressed }) => [styles.pressable, { opacity: pressed ? 0.82 : 1 }]}
+    >
       <View
         style={[
           styles.container,
           { backgroundColor: bg },
-          style === 'primary' ? getLiftShadow(isDark) : null,
           style === 'subtle' ? { borderWidth: 1, borderColor: colors.hair } : null,
         ]}
       >
@@ -74,7 +87,7 @@ export function SnoozyButton({
 }
 
 const styles = StyleSheet.create({
-  pressable: { alignSelf: 'stretch' },
+  pressable: { alignSelf: 'stretch', borderRadius: Radii.button },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
