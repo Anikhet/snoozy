@@ -169,7 +169,7 @@ export function LibraryScreen() {
 
   return (
     <SafeAreaView
-      edges={['bottom']}
+      edges={['top', 'bottom']}
       style={[styles.root, { backgroundColor: colors.background }]}
     >
       <FlatList

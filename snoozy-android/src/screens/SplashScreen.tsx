@@ -81,7 +81,7 @@ export function SplashScreen({ onFinish }: Props) {
         resizeMode="cover"
       />
 
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         {/* Brand header */}
         <Animated.View
           entering={FadeInDown.duration(600)}

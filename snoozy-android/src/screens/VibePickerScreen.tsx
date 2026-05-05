@@ -45,7 +45,7 @@ export default function VibePickerScreen() {
   }
 
   return (
-    <SafeAreaView edges={['bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Header */}

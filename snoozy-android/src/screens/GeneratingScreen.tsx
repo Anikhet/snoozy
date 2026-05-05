@@ -163,7 +163,7 @@ export default function GeneratingScreen() {
         />
       </ImageBackground>
 
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         {/* Brand title */}
         <Animated.View
           entering={FadeInDown.duration(600)}
@@ -246,11 +246,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    ...StyleSheet.absoluteFillObject,
   },
   safe: {
     flex: 1,

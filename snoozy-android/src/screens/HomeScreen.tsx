@@ -152,7 +152,7 @@ export function HomeScreen() {
         /> */}
       </ImageBackground>
 
-      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
       <FlatList
         data={savedStories.slice(0, 3)}
         renderItem={renderItem}
@@ -319,11 +319,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    ...StyleSheet.absoluteFillObject,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,

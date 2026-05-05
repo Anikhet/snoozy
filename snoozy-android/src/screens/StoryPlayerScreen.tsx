@@ -18,7 +18,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Night, Fonts, Spacing, Radii } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TIMER_OPTIONS } from '@/services/audioService'
@@ -47,6 +47,7 @@ export function StoryPlayerScreen() {
   const cancelSleepTimer = useStoryStore((s) => s.cancelSleepTimer)
   const stopPlayback = useStoryStore((s) => s.stopPlayback)
 
+  const insets = useSafeAreaInsets()
   const [showTimerPicker, setShowTimerPicker] = useState(false)
   const [showText, setShowText] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
@@ -129,7 +130,7 @@ export function StoryPlayerScreen() {
       {/* Top controls (absolute, over cover) */}
       <Animated.View
         entering={FadeInDown.delay(200).duration(400)}
-        style={styles.topControls}
+        style={[styles.topControls, { paddingTop: Math.max(insets.top, 16) }]}
         pointerEvents="box-none"
       >
         <Pressable
@@ -165,7 +166,7 @@ export function StoryPlayerScreen() {
       </Animated.View>
 
       {/* Scrollable player content (starts ~50% down) */}
-      <SafeAreaView edges={['bottom']} style={styles.flex}>
+      <SafeAreaView edges={['top', 'bottom']} style={styles.flex}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: 56, // safe area approximation; real edge handled by SafeAreaView below
+    paddingTop: 16,
   },
   topRight: {
     flexDirection: 'row',

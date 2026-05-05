@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Image,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -92,7 +93,20 @@ export function ProfileScreen() {
   }, [signOut])
 
   return (
-    <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={styles.root}>
+      <ImageBackground
+        source={require('../../assets/images/bg-loading.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.background}22`, `${colors.background}99`]}
+          locations={[0, 0, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </ImageBackground>
+
+      <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + Spacing.xxl }}
@@ -100,12 +114,7 @@ export function ProfileScreen() {
       >
         {/* ── Hero ───────────────────────────────────────── */}
         <Animated.View entering={FadeIn.duration(600)}>
-          <LinearGradient
-            colors={[colors.primary, '#9B8EC4']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.hero}
-          >
+          <View style={styles.hero}>
             <Pressable
               onPress={handlePickAvatar}
               accessibilityRole="button"
@@ -128,9 +137,11 @@ export function ProfileScreen() {
                 <Ionicons name="camera" size={12} color="#FFFFFF" />
               </View>
             </Pressable>
-            <Text style={[Fonts.serifTitle, styles.heroName]}>{childName}</Text>
-            <Text style={[Fonts.body, styles.heroTagline]}>Story Dreamer ✦</Text>
-          </LinearGradient>
+            <View style={styles.heroText}>
+              <Text style={[Fonts.serifTitle, styles.heroName]}>{childName}</Text>
+              <Text style={[Fonts.body, styles.heroTagline]}>Story Dreamer ✦</Text>
+            </View>
+          </View>
         </Animated.View>
 
         <View style={styles.content}>
@@ -313,6 +324,7 @@ export function ProfileScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </View>
   )
 }
 
@@ -332,11 +344,23 @@ function RowDivider({ color }: { color: string }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bgImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  safe: {
+    flex: 1,
+  },
   hero: {
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.lg,
+  },
+  heroText: {
+    flex: 1,
+    gap: 2,
   },
   avatarRing: {
     width: 88,
@@ -377,11 +401,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.6)',
   },
   heroName: {
-    color: '#FFFFFF',
+    color: '#2D1F4D',
     marginTop: Spacing.sm,
   },
   heroTagline: {
-    color: 'rgba(255,255,255,0.75)',
+    color: '#7B6B9E',
   },
   content: {
     paddingHorizontal: Spacing.lg,

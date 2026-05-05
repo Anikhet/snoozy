@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Animated, {
   FadeIn,
   FadeOut,
@@ -142,7 +142,7 @@ export default function App() {
         <SafeAreaProvider>
           <View style={[styles.flex, { backgroundColor: colors.background }]}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
-            <SafeAreaView style={styles.flex}>
+            <View style={styles.flex}>
               {showSplash ? (
                 <SplashScreen onFinish={() => setShowSplash(false)} />
               ) : (
@@ -175,7 +175,7 @@ export default function App() {
                   ) : appScreens}
                 </>
               )}
-            </SafeAreaView>
+            </View>
           </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
