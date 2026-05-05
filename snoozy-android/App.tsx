@@ -50,7 +50,7 @@ export default function App() {
   })
 
   const scheme = useColorScheme()
-  const isDark = scheme === 'dark'
+  const isDark = false // Forced to false to disable dark mode per user request: scheme === 'dark'
   const colors = isDark ? Colors.dark : Colors.light
   const currentScreen = useStoryStore((s) => s.currentScreen)
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
