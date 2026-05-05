@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated'
 import * as ImagePicker from 'expo-image-picker'
 import { copyAsync, documentDirectory } from 'expo-file-system/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -115,10 +115,11 @@ export function ProfileScreen() {
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Profile</Text>
               <Text style={styles.headerSubtitle}>
-                Manage your details &{'\n'}your little one's preferences.
+                Manage your details & your little one's preferences.
               </Text>
             </View>
-            <Image 
+            <Animated.Image 
+              entering={FadeIn.delay(200).duration(800)}
               source={require('../../assets/images/mascot-heart.png')} 
               style={styles.headerMascot}
               resizeMode="contain"
@@ -283,18 +284,19 @@ const styles = StyleSheet.create({
   headerTextContainer: {
     flex: 1,
     paddingTop: 12,
+    paddingRight: 120,
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 32,
+    fontSize: SCREEN_WIDTH < 380 ? 28 : 32,
     color: '#4B367C',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontFamily: 'Nunito_500Medium',
-    fontSize: 15,
+    fontSize: SCREEN_WIDTH < 380 ? 13 : 15,
     color: '#7B6B9E',
-    lineHeight: 20,
+    lineHeight: SCREEN_WIDTH < 380 ? 18 : 22,
   },
   headerMascot: {
     width: 180,
