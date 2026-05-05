@@ -3,6 +3,7 @@ import { StyleSheet, View, useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { Asset } from 'expo-asset'
 import Animated, {
   FadeIn,
   FadeOut,
@@ -58,6 +59,7 @@ export default function App() {
   const editingProfile = useStoryStore((s) => s.editingProfile)
   const closeProfileEdit = useStoryStore((s) => s.closeProfileEdit)
 
+  const [assetsLoaded, setAssetsLoaded] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [childProfileState, setChildProfileState] = useState<
     'loading' | 'needed' | 'complete'
@@ -69,6 +71,13 @@ export default function App() {
 
     ;(async () => {
       try {
+        // Preload background assets
+        await Asset.loadAsync([
+          require('./assets/images/bg-loading.png'),
+          require('./assets/images/bg-home.png'),
+        ])
+        setAssetsLoaded(true)
+
         const raw = await AsyncStorage.getItem(CHILD_PROFILE_KEY)
         if (raw) {
           const profile = JSON.parse(raw)
@@ -79,11 +88,14 @@ export default function App() {
         }
       } catch {
         setChildProfileState('needed')
+        setAssetsLoaded(true)
       }
     })()
   }, [loadSavedStories, setOnboardingDefaults])
 
   if (!fontsLoaded || childProfileState === 'loading') return null
+
+  const isReady = assetsLoaded && childProfileState !== 'loading'
 
   const appScreens = (
     <>
@@ -144,7 +156,18 @@ export default function App() {
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <View style={styles.flex}>
               {showSplash ? (
-                <SplashScreen onFinish={() => setShowSplash(false)} />
+                <SplashScreen onFinish={() => {
+                  if (isReady) setShowSplash(false)
+                  else {
+                    // If not ready, wait a bit and try again
+                    const check = setInterval(() => {
+                      if (isReady) {
+                        setShowSplash(false)
+                        clearInterval(check)
+                      }
+                    }, 100)
+                  }
+                }} />
               ) : (
                 <>
                   {!DEV_MODE && <SignedOut><AuthScreen /></SignedOut>}
