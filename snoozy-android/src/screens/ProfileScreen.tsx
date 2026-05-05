@@ -191,7 +191,7 @@ export function ProfileScreen() {
 
             {/* ── Account Section ────────────────────────────── */}
             <Text style={styles.sectionTitle}>Account</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <View style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
               <SettingsRow title="Account details" icon="person-outline" />
               <View style={styles.settingsDivider} />
               <SettingsRow title="Password & security" icon="lock-closed-outline" />
@@ -201,7 +201,7 @@ export function ProfileScreen() {
 
             {/* ── Preferences Section ────────────────────────── */}
             <Text style={styles.sectionTitle}>Preferences</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <View style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
               <SettingsRow title="Bedtime reminder" icon="alarm-outline" rightText="8:30 PM" />
               <View style={styles.settingsDivider} />
               <SettingsRow title="Story preferences" icon="sparkles-outline" />
@@ -211,7 +211,7 @@ export function ProfileScreen() {
 
             {/* ── Support Section ────────────────────────────── */}
             <Text style={styles.sectionTitle}>Support</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <View style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
               <SettingsRow title="Help center" icon="help-circle-outline" />
               <View style={styles.settingsDivider} />
               <SettingsRow title="Contact us" icon="mail-outline" />
@@ -238,7 +238,15 @@ export function ProfileScreen() {
   )
 }
 
-function SettingsRow({ title, icon, rightText }: { title: string; icon: any; rightText?: string }) {
+function SettingsRow({ 
+  title, 
+  icon, 
+  rightText 
+}: { 
+  title: string; 
+  icon: keyof typeof Ionicons.glyphMap; 
+  rightText?: string 
+}) {
   return (
     <Pressable 
       style={({ pressed }) => [
@@ -260,7 +268,6 @@ const styles = StyleSheet.create({
   },
   bgImage: {
     ...StyleSheet.absoluteFillObject,
-    height: SCREEN_WIDTH * 0.8,
   },
   safe: {
     flex: 1,
@@ -290,8 +297,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   headerMascot: {
-    width: 150,
-    height: 150,
+    width: 180,
+    height: 180,
     position: 'absolute',
     right: -10,
     top: 10,
@@ -320,9 +327,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-  },
-  avatarImage: {
-    borderRadius: 36,
   },
   avatarInitial: {
     color: '#7B5EA7',
@@ -473,5 +477,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#E57373',
   },
-})
+  versionText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: '#9A8A92',
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xl,
+    opacity: 0.8,
+  },
+});
 
