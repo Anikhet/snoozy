@@ -1,7 +1,7 @@
 export enum Screen {
   Home = 'home',
   WorldPicker = 'worldPicker',
-  StoryConfig = 'storyConfig',
+  VibePicker = 'vibePicker',
   Generating = 'generating',
   Player = 'player',
   StoryEnd = 'storyEnd',

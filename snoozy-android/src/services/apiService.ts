@@ -12,6 +12,7 @@ interface StoryResult {
  */
 export async function generateStory(
   templateId: string,
+  vibeId: string,
   childDetails: ChildDetails,
   token: string,
   signal?: AbortSignal
@@ -19,8 +20,6 @@ export async function generateStory(
   const controller = signal ? undefined : new AbortController()
   const timeoutId = setTimeout(() => controller?.abort(), 60_000)
 
-  const requestBody = { templateId, childDetails: { name: childDetails.name, age: childDetails.age } }
-  console.log('[API] Calling:', `${AppConfig.backendUrl}/api/generate-story`, JSON.stringify(requestBody))
   const response = await fetch(`${AppConfig.backendUrl}/api/generate-story`, {
     method: 'POST',
     headers: {
@@ -29,9 +28,11 @@ export async function generateStory(
     },
     body: JSON.stringify({
       templateId,
+      vibeId,
       childDetails: {
         name: childDetails.name,
         age: childDetails.age,
+        pronouns: childDetails.pronouns,
       },
     }),
     signal: signal ?? controller!.signal,

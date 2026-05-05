@@ -44,7 +44,7 @@ interface StoryStore {
 
   navigateTo: (screen: Screen) => void
   navigateToWorldPicker: () => void
-  navigateToStoryConfig: (worldId: string, vibeId: string) => void
+  navigateToVibePicker: (worldId: string) => void
   navigateToGenerating: () => void
   navigateToStoryEnd: () => void
   navigateToLibrary: () => void
@@ -52,7 +52,7 @@ interface StoryStore {
   goHome: () => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
   setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns }) => void
-  generateStory: (token: string) => void
+  generateStory: (vibeId: string, token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
   retryStory: (story: Story) => void
@@ -100,8 +100,8 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     navigateToWorldPicker: () => set({ currentScreen: Screen.WorldPicker }),
 
-    navigateToStoryConfig: (worldId, vibeId) =>
-      set({ selectedWorldId: worldId, selectedVibeId: vibeId, currentScreen: Screen.StoryConfig }),
+    navigateToVibePicker: (worldId: string) =>
+      set({ selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
 
     navigateToGenerating: () => set({ currentScreen: Screen.Generating }),
 
@@ -154,7 +154,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
           : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns },
       })),
 
-    generateStory: (token) => {
+    generateStory: (vibeId, token) => {
       const { selectedWorldId, childDetails } = get()
       if (!selectedWorldId) return
       const apiTemplateId = WORLD_TO_TEMPLATE_ID[selectedWorldId] ?? selectedWorldId
@@ -166,6 +166,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         savedStories: [placeholder, ...s.savedStories],
         currentScreen: Screen.Generating,
         generatingStoryId: storyId,
+        selectedVibeId: vibeId,
         childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
       }))
@@ -176,7 +177,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const details = { ...childDetails }
       const voiceId = details.voiceId
 
-      runGeneration(storyId, selectedWorldId, apiTemplateId, details, voiceId, token, abortController.signal)
+      runGeneration(storyId, selectedWorldId, apiTemplateId, vibeId, details, voiceId, token, abortController.signal)
     },
 
     playStory: (story) => {
@@ -293,6 +294,7 @@ async function runGeneration(
   storyId: string,
   worldId: string,
   apiTemplateId: string,
+  vibeId: string,
   childDetails: ChildDetails,
   voiceId: string,
   token: string,
@@ -301,6 +303,7 @@ async function runGeneration(
   try {
     const { title, storyText } = await apiService.generateStory(
       apiTemplateId,
+      vibeId,
       childDetails,
       token,
       signal

@@ -25,7 +25,7 @@ import { tokenCache } from '@/utils/tokenCache'
 import { HomeScreen } from '@/screens/HomeScreen'
 import { StoryPlayerScreen } from '@/screens/StoryPlayerScreen'
 import WorldPickerScreen from './src/screens/WorldPickerScreen'
-import StoryConfigScreen from './src/screens/StoryConfigScreen'
+import VibePickerScreen from './src/screens/VibePickerScreen'
 import GeneratingScreen from './src/screens/GeneratingScreen'
 import StoryEndScreen from './src/screens/StoryEndScreen'
 import { LibraryScreen } from '@/screens/LibraryScreen'
@@ -115,9 +115,9 @@ export default function App() {
           <WorldPickerScreen />
         </Animated.View>
       ) : null}
-      {currentScreen === Screen.StoryConfig ? (
-        <Animated.View key="storyConfig" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
-          <StoryConfigScreen />
+      {currentScreen === Screen.VibePicker ? (
+        <Animated.View key="vibePicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+          <VibePickerScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.Generating ? (

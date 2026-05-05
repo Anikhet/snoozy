@@ -20,18 +20,11 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import {
-  Fonts,
-  Radii,
-  Sizing,
-  Spacing,
-} from '@/config/tokens'
+import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
-import { WORLDS, VIBES } from '@/config/storyOptions'
+import { WORLDS } from '@/config/storyOptions'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
-
-// TILE_WIDTH: screen minus card horizontal margins (lg each side) + card paddings (md each side) + gap
 const TILE_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md * 2 - 10) / 2
 
 interface WorldTileProps {
@@ -43,57 +36,36 @@ interface WorldTileProps {
 
 function WorldTile({ world, selected, onSelect, colors }: WorldTileProps) {
   const scale = useSharedValue(1)
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }))
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
 
   return (
     <Animated.View style={[{ width: TILE_WIDTH }, animatedStyle]}>
       <Pressable
         onPress={() => onSelect(world.id)}
-        onPressIn={() => {
-          scale.value = withSpring(0.96, { damping: 15 })
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, { damping: 15 })
-        }}
+        onPressIn={() => { scale.value = withSpring(0.96, { damping: 15 }) }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 15 }) }}
         style={[
           styles.worldTile,
-          {
-            backgroundColor: selected ? colors.primary : colors.worldCardBg,
-          },
+          { backgroundColor: selected ? colors.primary : colors.worldCardBg },
         ]}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
       >
         <Text style={styles.worldEmoji}>{world.emoji}</Text>
         <Text
-          style={[
-            Fonts.bodyBold,
-            { color: selected ? '#FFFFFF' : colors.ink, marginTop: 6 },
-          ]}
+          style={[Fonts.bodyBold, { color: selected ? '#FFFFFF' : colors.ink, marginTop: 6 }]}
           numberOfLines={1}
         >
           {world.name}
         </Text>
         <Text
-          style={[
-            Fonts.caption,
-            {
-              color: selected ? 'rgba(255,255,255,0.8)' : colors.inkMute,
-              marginTop: 2,
-            },
-          ]}
+          style={[Fonts.caption, { color: selected ? 'rgba(255,255,255,0.8)' : colors.inkMute, marginTop: 2 }]}
           numberOfLines={2}
         >
           {world.subtitle}
         </Text>
         {selected ? (
-          <Ionicons
-            name="checkmark-circle"
-            size={16}
-            color="#FFFFFF"
-            style={styles.worldCheck}
-          />
+          <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" style={styles.worldCheck} />
         ) : null}
       </Pressable>
     </Animated.View>
@@ -103,19 +75,14 @@ function WorldTile({ world, selected, onSelect, colors }: WorldTileProps) {
 export default function WorldPickerScreen() {
   const { colors } = useThemeColors()
   const goHome = useStoryStore((s) => s.goHome)
-  const navigateToStoryConfig = useStoryStore((s) => s.navigateToStoryConfig)
+  const navigateToVibePicker = useStoryStore((s) => s.navigateToVibePicker)
 
   const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null)
-  const [selectedVibeId, setSelectedVibeId] = useState<string | null>(null)
-
-  const canProceed = selectedWorldId !== null && selectedVibeId !== null
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
-      style={[styles.root, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+
         {/* Header */}
         <View style={styles.header}>
           <Pressable
@@ -132,10 +99,7 @@ export default function WorldPickerScreen() {
         </View>
 
         {/* Hero text */}
-        <Animated.View
-          entering={FadeInDown.delay(100).duration(500)}
-          style={styles.heroText}
-        >
+        <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.heroText}>
           <Text style={[Fonts.serifTitle, { color: colors.ink, textAlign: 'center' }]}>
             Let's create
           </Text>
@@ -146,25 +110,14 @@ export default function WorldPickerScreen() {
             <Text style={[styles.starAccent, { color: colors.starGold }]}>✦</Text>
           </View>
           <Text
-            style={[
-              Fonts.body,
-              {
-                color: colors.inkSoft,
-                textAlign: 'center',
-                marginTop: Spacing.sm,
-                paddingHorizontal: Spacing.xl,
-              },
-            ]}
+            style={[Fonts.body, { color: colors.inkSoft, textAlign: 'center', marginTop: Spacing.sm, paddingHorizontal: Spacing.xl }]}
           >
-            Tell me what your little dreamer would love tonight.
+            Pick a world for tonight's adventure.
           </Text>
         </Animated.View>
 
-        {/* Mascot — overlaps card via negative margin */}
-        <Animated.View
-          entering={FadeIn.delay(200).duration(500)}
-          style={styles.mascotWrapper}
-        >
+        {/* Mascot */}
+        <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.mascotWrapper}>
           <Image
             source={require('../../assets/images/mascot-peeking.png')}
             style={styles.mascot}
@@ -172,15 +125,11 @@ export default function WorldPickerScreen() {
           />
         </Animated.View>
 
-        {/* Selection card */}
+        {/* World grid card */}
         <Animated.View
           entering={FadeInUp.delay(300).duration(500)}
-          style={[
-            styles.card,
-            { backgroundColor: colors.surface },
-          ]}
+          style={[styles.card, { backgroundColor: colors.surface }]}
         >
-          {/* World grid */}
           <Text style={[Fonts.eyebrow, { color: colors.inkMute, marginBottom: Spacing.sm }]}>
             PICK A WORLD
           </Text>
@@ -195,64 +144,8 @@ export default function WorldPickerScreen() {
               />
             ))}
           </View>
-
-          {/* Divider */}
-          <View style={[styles.divider, { backgroundColor: colors.hair }]} />
-
-          {/* Vibe selection */}
-          <Text style={[Fonts.eyebrow, { color: colors.inkMute, marginBottom: Spacing.sm }]}>
-            TONIGHT'S VIBE
-          </Text>
-          <View style={styles.vibeScrollWrapper}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.vibeRow}
-            >
-              {VIBES.map((vibe) => {
-                const isSelected = selectedVibeId === vibe.id
-                return (
-                  <Pressable
-                    key={vibe.id}
-                    onPress={() => setSelectedVibeId(vibe.id)}
-                    style={[
-                      styles.vibePill,
-                      {
-                        backgroundColor: isSelected ? colors.vibeSelected : colors.surface,
-                        borderWidth: 1.5,
-                        borderColor: isSelected ? colors.vibeSelected : colors.primary,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.vibeEmoji}>{vibe.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.vibeName,
-                        {
-                          color: isSelected
-                            ? (colors.vibeSelectedText as string)
-                            : colors.primary,
-                        },
-                      ]}
-                    >
-                      {vibe.name}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </ScrollView>
-            {/* Gradient fade — signals more content to the right */}
-            <LinearGradient
-              colors={['transparent', colors.surface as string]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.vibeGradientEdge}
-              pointerEvents="none"
-            />
-          </View>
         </Animated.View>
 
-        {/* Bottom spacer for sticky CTA */}
         <View style={styles.ctaSpacer} />
       </ScrollView>
 
@@ -265,14 +158,12 @@ export default function WorldPickerScreen() {
         />
         <View style={[styles.stickyContent, { backgroundColor: colors.background }]}>
           <Pressable
-            onPress={() =>
-              canProceed && navigateToStoryConfig(selectedWorldId!, selectedVibeId!)
-            }
-            disabled={!canProceed}
+            onPress={() => selectedWorldId && navigateToVibePicker(selectedWorldId)}
+            disabled={!selectedWorldId}
             android_ripple={{ color: 'transparent' }}
             shouldRasterizeIOS
             renderToHardwareTextureAndroid
-            style={({ pressed }) => ({ opacity: pressed ? 0.82 : canProceed ? 1 : 0.5, borderRadius: Radii.button })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.82 : selectedWorldId ? 1 : 0.5, borderRadius: Radii.button })}
             accessibilityRole="button"
           >
             <LinearGradient
@@ -281,7 +172,7 @@ export default function WorldPickerScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
             >
-              <Text style={[Fonts.buttonLabel, styles.ctaLabel]}>✦  Begin the Story</Text>
+              <Text style={[Fonts.buttonLabel, styles.ctaLabel]}>Choose a mood  →</Text>
             </LinearGradient>
           </Pressable>
         </View>
@@ -291,12 +182,8 @@ export default function WorldPickerScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  scroll: {
-    paddingBottom: Sizing.buttonHeight + Spacing.xxl,
-  },
+  root: { flex: 1 },
+  scroll: { paddingBottom: Sizing.buttonHeight + Spacing.xxl },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,39 +192,13 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-  stepPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 50,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroText: {
-    paddingTop: Spacing.lg,
-    alignItems: 'center',
-  },
-  heroLine2: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  starAccent: {
-    fontSize: 22,
-  },
-  mascotWrapper: {
-    alignItems: 'center',
-    marginBottom: -60,
-    zIndex: 1,
-  },
-  mascot: {
-    width: SCREEN_WIDTH * 0.32,
-    height: SCREEN_WIDTH * 0.32,
-  },
+  stepPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  heroText: { paddingTop: Spacing.lg, alignItems: 'center' },
+  heroLine2: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  starAccent: { fontSize: 22 },
+  mascotWrapper: { alignItems: 'center', marginBottom: -60, zIndex: 1 },
+  mascot: { width: SCREEN_WIDTH * 0.32, height: SCREEN_WIDTH * 0.32 },
   card: {
     marginHorizontal: Spacing.lg,
     borderRadius: Radii.cardLarge,
@@ -345,82 +206,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.lg,
   },
-  worldGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  worldTile: {
-    borderRadius: Radii.card,
-    padding: 14,
-    minHeight: 100,
-  },
-  worldEmoji: {
-    fontSize: 28,
-  },
-  worldCheck: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-  },
-  divider: {
-    height: 1,
-    marginVertical: Spacing.md,
-    marginHorizontal: Spacing.md,
-  },
-  vibeScrollWrapper: {
-    position: 'relative',
-  },
-  vibeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingRight: 56, // 48px gradient + 8px breathing room so last pill clears the fade on scroll
-  },
-  vibeGradientEdge: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 48,
-  },
-  vibePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 50,
-    gap: 6,
-  },
-  vibeEmoji: {
-    fontSize: 16,
-  },
-  vibeName: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 13,
-  },
-  ctaSpacer: {
-    height: Sizing.buttonHeight + Spacing.xxl,
-  },
-  stickyBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  stickyFade: {
-    height: 60,
-  },
-  stickyContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  ctaGradient: {
-    height: Sizing.buttonHeight,
-    borderRadius: Radii.button,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaLabel: {
-    color: '#FFFFFF',
-  },
+  worldGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  worldTile: { borderRadius: Radii.card, padding: 14, minHeight: 100 },
+  worldEmoji: { fontSize: 28 },
+  worldCheck: { position: 'absolute', bottom: 10, right: 10 },
+  ctaSpacer: { height: Sizing.buttonHeight + Spacing.xxl },
+  stickyBar: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  stickyFade: { height: 60 },
+  stickyContent: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
+  ctaGradient: { height: Sizing.buttonHeight, borderRadius: Radii.button, alignItems: 'center', justifyContent: 'center' },
+  ctaLabel: { color: '#FFFFFF' },
 })
