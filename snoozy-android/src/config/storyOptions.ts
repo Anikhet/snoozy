@@ -1,10 +1,10 @@
 export const WORLDS = [
-  { id: 'kingdom', emoji: '🏰', name: 'Magical Kingdom', subtitle: 'Castles & gentle quests' },
-  { id: 'forest',  emoji: '🌲', name: 'Enchanted Forest', subtitle: 'Animals & cozy cottages' },
-  { id: 'space',   emoji: '🚀', name: 'Outer Space',      subtitle: 'Planets & singing stars' },
-  { id: 'ocean',   emoji: '🐠', name: 'Ocean Deep',       subtitle: 'Warm seas & sea creatures' },
-  { id: 'clouds',  emoji: '☁️', name: 'Cloud Kingdom',    subtitle: 'Sky islands & soft winds' },
-  { id: 'jungle',  emoji: '🦁', name: 'Magical Safari',   subtitle: 'Golden plains & gentle giants' },
+  { id: 'kingdom', emoji: '🏰', name: 'Magical Kingdom',  subtitle: 'Castles, spells, and magical creatures.' },
+  { id: 'space',   emoji: '🚀', name: 'Outer Space',       subtitle: 'Planets, stars, and cosmic adventures.' },
+  { id: 'forest',  emoji: '🌲', name: 'Enchanted Forest',  subtitle: 'Hidden paths, talking animals, and wonders.' },
+  { id: 'ocean',   emoji: '🐠', name: 'Ocean Deep',        subtitle: 'Warm seas, treasure, and sea creatures.' },
+  { id: 'clouds',  emoji: '☁️', name: 'Cloud Kingdom',    subtitle: 'Floating islands and sky-high adventures.' },
+  { id: 'jungle',  emoji: '🦁', name: 'Magical Safari',    subtitle: 'Golden plains and gentle giant friends.' },
 ] as const
 
 export const VIBES = [

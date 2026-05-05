@@ -49,10 +49,11 @@ interface Props {
 
 export function ChildProfileScreen({ onFinish }: Props) {
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
+  const existing = useStoryStore((s) => s.onboardingDefaults)
 
-  const [name, setName] = useState('')
-  const [age, setAge] = useState(5)
-  const [pronouns, setPronouns] = useState<Pronouns | null>(null)
+  const [name, setName] = useState(existing?.name ?? '')
+  const [age, setAge] = useState(existing?.age ?? 5)
+  const [pronouns, setPronouns] = useState<Pronouns | null>(existing?.pronouns ?? null)
   const [nameFocused, setNameFocused] = useState(false)
   const [saving, setSaving] = useState(false)
 

@@ -62,6 +62,9 @@ interface StoryStore {
   startSleepTimer: (seconds: number | null) => void
   cancelSleepTimer: () => void
   stopPlayback: () => void
+  editingProfile: boolean
+  openProfileEdit: () => void
+  closeProfileEdit: () => void
   toggleFavorite: (storyId: string) => void
   rateStory: (storyId: string, stars: number) => void
   cancelGeneration: () => void
@@ -95,8 +98,13 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     currentTime: 0,
     duration: 0,
     sleepTimerRemaining: null,
+    editingProfile: false,
 
     navigateTo: (screen) => set({ currentScreen: screen }),
+
+    openProfileEdit: () => set({ editingProfile: true }),
+
+    closeProfileEdit: () => set({ editingProfile: false, currentScreen: Screen.WorldPicker }),
 
     navigateToWorldPicker: () => set({ currentScreen: Screen.WorldPicker }),
 
@@ -280,10 +288,10 @@ export const useStoryStore = create<StoryStore>((set, get) => {
  * name/age (if any). Keeps the parent from having to retype every night.
  */
 function freshChildDetails(
-  defaults: { name: string; age: number } | null,
+  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null,
 ): ChildDetails {
   if (!defaults) return { ...DEFAULT_CHILD_DETAILS }
-  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age }
+  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns }
 }
 
 /**

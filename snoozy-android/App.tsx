@@ -55,6 +55,8 @@ export default function App() {
   const currentScreen = useStoryStore((s) => s.currentScreen)
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
+  const editingProfile = useStoryStore((s) => s.editingProfile)
+  const closeProfileEdit = useStoryStore((s) => s.closeProfileEdit)
 
   const [showSplash, setShowSplash] = useState(true)
   const [childProfileState, setChildProfileState] = useState<
@@ -158,6 +160,15 @@ export default function App() {
                           <ChildProfileScreen
                             onFinish={() => setChildProfileState('complete')}
                           />
+                        </Animated.View>
+                      ) : editingProfile ? (
+                        <Animated.View
+                          key="editProfile"
+                          style={styles.flex}
+                          entering={FadeIn.duration(TRANSITION_DURATION)}
+                          exiting={FadeOut.duration(TRANSITION_DURATION)}
+                        >
+                          <ChildProfileScreen onFinish={closeProfileEdit} />
                         </Animated.View>
                       ) : appScreens}
                     </SignedIn>
