@@ -252,8 +252,8 @@ export function HomeScreen() {
               renderToHardwareTextureAndroid
             >
               {savedStories.length === 0 ? (
-                <Text style={[styles.ctaHint, { color: colors.inkMute }]}>
-                  Your next bedtime adventure is one tap away
+                <Text style={[styles.ctaHint, { color: colors.inkSoft }]}>
+                  Let's create your first magical story
                 </Text>
               ) : null}
               {ctaButton}
@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   mascotWrapperEmpty: {
-    marginTop: 20,
-    marginBottom: -80,
+    marginTop: 10,
+    marginBottom: -110,
   },
   mascot: {
     width: SCREEN_WIDTH * 1.1,
@@ -402,11 +402,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   inlineCtaEmpty: {
-    marginTop: Spacing.xxl,
+    marginTop: Spacing.sm,
   },
   ctaHint: {
     fontFamily: 'Nunito_600SemiBold',
-    fontSize: 14,
+    fontSize: 13,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
