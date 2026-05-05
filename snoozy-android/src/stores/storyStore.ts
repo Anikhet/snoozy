@@ -33,9 +33,8 @@ interface StoryStore {
   selectedVibeId: string | null
   generatingStoryId: string | null
   childDetails: ChildDetails
-  /** Name/age declared during onboarding. Seeds every story form so the
-   *  parent doesn't retype the same details every night. */
-  onboardingDefaults: { name: string; age: number } | null
+  /** Child profile set once post-signup. Seeds every story. */
+  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -52,7 +51,7 @@ interface StoryStore {
   navigateToInsights: () => void
   goHome: () => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  setOnboardingDefaults: (defaults: { name: string; age: number }) => void
+  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns }) => void
   generateStory: (token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
@@ -150,10 +149,9 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     setOnboardingDefaults: (defaults) =>
       set((s) => ({
         onboardingDefaults: defaults,
-        // Seed the current form too if it's empty
         childDetails: s.childDetails.name
           ? s.childDetails
-          : { ...s.childDetails, name: defaults.name, age: defaults.age },
+          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns },
       })),
 
     generateStory: (token) => {

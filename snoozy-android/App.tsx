@@ -33,12 +33,7 @@ import { InsightsScreen } from '@/screens/InsightsScreen'
 import { ProfileScreen } from '@/screens/ProfileScreen'
 import { SplashScreen } from '@/screens/SplashScreen'
 import { AuthScreen } from '@/screens/AuthScreen'
-import {
-  OnboardingScreen,
-  ONBOARDING_KEY,
-  ONBOARDING_NAME_KEY,
-  ONBOARDING_AGE_KEY,
-} from '@/screens/OnboardingScreen'
+import { ChildProfileScreen, CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import { BottomTabBar } from '@/components/BottomTabBar'
 import { DEV_MODE } from '@/config/appConfig'
 
@@ -62,7 +57,7 @@ export default function App() {
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
 
   const [showSplash, setShowSplash] = useState(true)
-  const [onboardingState, setOnboardingState] = useState<
+  const [childProfileState, setChildProfileState] = useState<
     'loading' | 'needed' | 'complete'
   >('loading')
 
@@ -72,27 +67,21 @@ export default function App() {
 
     ;(async () => {
       try {
-        const complete = await AsyncStorage.getItem(ONBOARDING_KEY)
-        if (complete === 'true') {
-          const [name, ageStr] = await Promise.all([
-            AsyncStorage.getItem(ONBOARDING_NAME_KEY),
-            AsyncStorage.getItem(ONBOARDING_AGE_KEY),
-          ])
-          if (name) {
-            const age = ageStr ? parseInt(ageStr, 10) : 3
-            setOnboardingDefaults({ name, age: age > 0 ? age : 3 })
-          }
-          setOnboardingState('complete')
+        const raw = await AsyncStorage.getItem(CHILD_PROFILE_KEY)
+        if (raw) {
+          const profile = JSON.parse(raw)
+          setOnboardingDefaults(profile)
+          setChildProfileState('complete')
         } else {
-          setOnboardingState('needed')
+          setChildProfileState('needed')
         }
       } catch {
-        setOnboardingState('needed')
+        setChildProfileState('needed')
       }
     })()
   }, [loadSavedStories, setOnboardingDefaults])
 
-  if (!fontsLoaded || onboardingState === 'loading') return null
+  if (!fontsLoaded || childProfileState === 'loading') return null
 
   const appScreens = (
     <>
@@ -154,23 +143,25 @@ export default function App() {
             <SafeAreaView style={styles.flex}>
               {showSplash ? (
                 <SplashScreen onFinish={() => setShowSplash(false)} />
-              ) : onboardingState === 'needed' ? (
-                <Animated.View
-                  key="onboarding"
-                  style={styles.flex}
-                  entering={FadeIn.duration(TRANSITION_DURATION)}
-                  exiting={FadeOut.duration(TRANSITION_DURATION)}
-                >
-                  <OnboardingScreen
-                    onFinish={() => setOnboardingState('complete')}
-                  />
-                </Animated.View>
               ) : (
                 <>
                   {!DEV_MODE && <SignedOut><AuthScreen /></SignedOut>}
-                  {!DEV_MODE
-                    ? <SignedIn>{appScreens}</SignedIn>
-                    : appScreens}
+                  {!DEV_MODE ? (
+                    <SignedIn>
+                      {childProfileState === 'needed' ? (
+                        <Animated.View
+                          key="childProfile"
+                          style={styles.flex}
+                          entering={FadeIn.duration(TRANSITION_DURATION)}
+                          exiting={FadeOut.duration(TRANSITION_DURATION)}
+                        >
+                          <ChildProfileScreen
+                            onFinish={() => setChildProfileState('complete')}
+                          />
+                        </Animated.View>
+                      ) : appScreens}
+                    </SignedIn>
+                  ) : appScreens}
                 </>
               )}
             </SafeAreaView>
