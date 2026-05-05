@@ -335,9 +335,9 @@ const styles = StyleSheet.create({
   },
   headerName: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 24,
-    color: '#2D1F6E',
-    letterSpacing: -0.4,
+    fontSize: 32,
+    color: '#4B367C',
+    marginBottom: 4,
   },
   weekPill: {
     flexDirection: 'row',

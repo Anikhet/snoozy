@@ -198,11 +198,7 @@ export function LibraryScreen() {
           <View>
             {/* Header */}
             <View style={styles.header}>
-              <MaskedView maskElement={<Text style={styles.pageTitle}>Library</Text>}>
-                <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <Text style={[styles.pageTitle, { opacity: 0 }]}>Library</Text>
-                </LinearGradient>
-              </MaskedView>
+              <Text style={styles.pageTitle}>Library</Text>
               <Pressable
                 onPress={() => setSort((s) => (s === 'recent' ? 'az' : 'recent'))}
                 style={[styles.sortBtn, { backgroundColor: colors.surface }]}
@@ -312,9 +308,9 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 44,
-    letterSpacing: -1,
-    color: '#000',
+    fontSize: 32,
+    color: '#4B367C',
+    marginBottom: 4,
   },
   sortBtn: {
     flexDirection: 'row',

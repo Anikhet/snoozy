@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     letterSpacing: 0.1,
-    color: '#2D1F6E',
+    color: '#4B367C',
   },
   greetingSub: {
     fontFamily: 'Nunito_600SemiBold',
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 44,
     letterSpacing: -1,
-    color: '#2D1F6E',
+    color: '#4B367C',
   },
   mascotWrapper: {
     alignItems: 'center',

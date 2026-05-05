@@ -113,9 +113,9 @@ export function ProfileScreen() {
           {/* ── Header ───────────────────────────────────────── */}
           <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Profile ✨</Text>
+              <Text style={styles.headerTitle}>Profile</Text>
               <Text style={styles.headerSubtitle}>
-                Manage your details and{'\n'}your little one's preferences.
+                Manage your details &{'\n'}your little one's preferences.
               </Text>
             </View>
             <Image 
@@ -128,7 +128,7 @@ export function ProfileScreen() {
           <View style={styles.content}>
             {/* ── User Details Card ──────────────────────────── */}
             <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <View style={[styles.card, { backgroundColor: colors.surface, marginTop: Spacing.lg }]}>
                 <View style={styles.userCardContent}>
                   
                   <View style={styles.avatarContainer}>
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 32,
-    color: '#2D1F4D',
+    color: '#4B367C',
     marginBottom: 4,
   },
   headerSubtitle: {
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 24,
     padding: Spacing.md,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
     borderColor: '#F0EBFF',
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   userName: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
-    color: '#2D1F4D',
+    color: '#4B367C',
   },
   userMeta: {
     fontFamily: 'Nunito_600SemiBold',
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   plusTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 16,
-    color: '#2D1F4D',
+    color: '#4B367C',
   },
   plusBadge: {
     backgroundColor: '#DCD5F1',
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 16,
-    color: '#2D1F4D',
+    color: '#4B367C',
     marginBottom: Spacing.sm,
     paddingHorizontal: 4,
   },

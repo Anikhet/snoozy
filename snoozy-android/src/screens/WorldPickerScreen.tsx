@@ -113,7 +113,7 @@ export default function WorldPickerScreen() {
 
         {/* Title block */}
         <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.titleBlock}>
-          <Text style={[styles.title, { color: colors.ink }]}>Choose a world</Text>
+          <Text style={styles.title}>Choose a world</Text>
           <Text style={[Fonts.body, { color: colors.inkSoft, textAlign: 'center', marginTop: Spacing.sm }]}>
             Where does tonight's story take place?
           </Text>
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 32,
-    letterSpacing: -0.6,
+    color: '#4B367C',
     textAlign: 'center',
   },
   chipRow: {
