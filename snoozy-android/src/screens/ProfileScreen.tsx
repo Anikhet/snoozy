@@ -31,6 +31,7 @@ export function ProfileScreen() {
   const { signOut } = useAuth()
 
   const childDetails = useStoryStore((s) => s.childDetails)
+  const openProfileEdit = useStoryStore((s) => s.openProfileEdit)
   const childName = childDetails.name || 'Dreamer'
   const initial = childName.charAt(0).toUpperCase()
 
@@ -87,6 +88,8 @@ export function ProfileScreen() {
 
   const ageText = childDetails.age ? `Age ${childDetails.age}` : 'Age 6' // Fallback for UI matching
 
+  const AVATAR_SIZE = SCREEN_WIDTH < 380 ? 64 : 72
+
   return (
     <View style={styles.root}>
       <ImageBackground
@@ -128,53 +131,50 @@ export function ProfileScreen() {
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.userCardContent}>
                   
-                  {/* Avatar */}
                   <View style={styles.avatarContainer}>
-                    <View style={styles.avatarRing}>
-                      {avatarUri ? (
-                        <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-                      ) : (
-                        <Text style={[Fonts.serifTitle, styles.avatarInitial]}>{initial}</Text>
-                      )}
-                      {avatarLoading && (
-                        <View style={styles.avatarOverlay}>
-                          <ActivityIndicator color="#FFFFFF" size="small" />
-                        </View>
-                      )}
-                    </View>
+                    <Pressable onPress={handlePickAvatar}>
+                      <View style={[styles.avatarRing, { width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2 }]}>
+                        {avatarUri ? (
+                          <Image source={{ uri: avatarUri }} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2 }} />
+                        ) : (
+                          <Text style={[Fonts.serifTitle, styles.avatarInitial, { fontSize: AVATAR_SIZE * 0.45 }]}>{initial}</Text>
+                        )}
+                        {avatarLoading && (
+                          <View style={styles.avatarOverlay}>
+                            <ActivityIndicator color="#FFFFFF" size="small" />
+                          </View>
+                        )}
+                      </View>
+                    </Pressable>
                   </View>
 
                   {/* Details */}
                   <View style={styles.userDetails}>
                     <View style={styles.userNameRow}>
                       <Text style={styles.userName}>{childName}</Text>
-                      <Ionicons name="pencil-outline" size={16} color="#7B6B9E" style={{ marginLeft: 4 }} />
+                      <Pressable 
+                        onPress={openProfileEdit}
+                        style={({ pressed }) => [
+                          styles.editButton,
+                          { opacity: pressed ? 0.6 : 1 }
+                        ]}
+                      >
+                        <Ionicons name="create-outline" size={16} color="#7B5EA7" />
+                        <Text style={styles.editButtonText}>Edit</Text>
+                      </Pressable>
                     </View>
                     <Text style={styles.userMeta}>{ageText}  •  She/Her</Text>
-                    <Text style={styles.userBio} numberOfLines={2}>{bio}</Text>
+                    <Text style={styles.userBio}>{bio}</Text>
                   </View>
-
-                  {/* Edit Button */}
-                  <Pressable 
-                    onPress={handlePickAvatar}
-                    style={({ pressed }) => [
-                      styles.editButton,
-                      { opacity: pressed ? 0.6 : 1, backgroundColor: '#F0EBFF' }
-                    ]}
-                  >
-                    <Ionicons name="create-outline" size={16} color="#7B5EA7" />
-                    <Text style={styles.editButtonText}>Edit</Text>
-                  </Pressable>
-
                 </View>
               </View>
             </Animated.View>
 
             {/* ── Snoozy Plus Banner ─────────────────────────── */}
             <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-              <View style={[styles.card, styles.plusBanner, { backgroundColor: '#F9F4FF' }]}>
+              <Pressable style={[styles.card, styles.plusBanner, { backgroundColor: '#F9F4FF' }]}>
                 <View style={styles.plusIconContainer}>
-                  <Ionicons name="star" size={20} color="#F5C842" />
+                  <Ionicons name="star" size={24} color="#7B5EA7" />
                 </View>
                 <View style={styles.plusContent}>
                   <View style={styles.plusTitleRow}>
@@ -183,56 +183,53 @@ export function ProfileScreen() {
                       <Text style={styles.plusBadgeText}>Active</Text>
                     </View>
                   </View>
-                  <Text style={styles.plusSubtitle}>You're enjoying all premium features.</Text>
+                  <Text style={styles.plusSubtitle}>Magical stories, unlimited dreams.</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#7B6B9E" />
-              </View>
-            </Animated.View>
-
-            {/* ── Settings Sections ──────────────────────────── */}
-            
-            {/* Account */}
-            <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              <Text style={styles.sectionTitle}>Account</Text>
-              <View style={[styles.card, { backgroundColor: colors.surface, padding: 0 }]}>
-                <SettingsRow icon="person-outline" title="Account details" isFirst />
-                <SettingsRow icon="lock-closed-outline" title="Password & security" />
-                <SettingsRow icon="notifications-outline" title="Notifications" isLast />
-              </View>
-            </Animated.View>
-
-            {/* Preferences */}
-            <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-              <Text style={styles.sectionTitle}>Preferences</Text>
-              <View style={[styles.card, { backgroundColor: colors.surface, padding: 0 }]}>
-                <SettingsRow icon="moon-outline" title="Bedtime reminder" rightText="8:00 PM" isFirst />
-                <SettingsRow icon="book-outline" title="Story preferences" />
-                <SettingsRow icon="heart-outline" title="Favorite themes" isLast />
-              </View>
-            </Animated.View>
-
-            {/* Support */}
-            <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-              <Text style={styles.sectionTitle}>Support</Text>
-              <View style={[styles.card, { backgroundColor: colors.surface, padding: 0 }]}>
-                <SettingsRow icon="help-circle-outline" title="Help center" isFirst />
-                <SettingsRow icon="chatbubble-outline" title="Contact us" isLast />
-              </View>
-            </Animated.View>
-
-            {/* ── Log Out Button ─────────────────────────────── */}
-            <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-              <Pressable
-                onPress={handleLogout}
-                style={({ pressed }) => [
-                  styles.logoutButton,
-                  { opacity: pressed ? 0.7 : 1 }
-                ]}
-              >
-                <Ionicons name="log-out-outline" size={20} color="#E57373" />
-                <Text style={styles.logoutText}>Log out</Text>
+                <Ionicons name="chevron-forward" size={20} color="#C4B6D8" />
               </Pressable>
             </Animated.View>
+
+            {/* ── Account Section ────────────────────────────── */}
+            <Text style={styles.sectionTitle}>Account</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <SettingsRow title="Account details" icon="person-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Password & security" icon="lock-closed-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Notifications" icon="notifications-outline" rightText="On" />
+            </View>
+
+            {/* ── Preferences Section ────────────────────────── */}
+            <Text style={styles.sectionTitle}>Preferences</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <SettingsRow title="Bedtime reminder" icon="alarm-outline" rightText="8:30 PM" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Story preferences" icon="sparkles-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Favorite themes" icon="color-palette-outline" />
+            </View>
+
+            {/* ── Support Section ────────────────────────────── */}
+            <Text style={styles.sectionTitle}>Support</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <SettingsRow title="Help center" icon="help-circle-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Contact us" icon="mail-outline" />
+            </View>
+
+            {/* ── Footer ─────────────────────────────────────── */}
+            <Pressable 
+              onPress={handleLogout}
+              style={({ pressed }) => [
+                styles.logoutButton,
+                { opacity: pressed ? 0.7 : 1 }
+              ]}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#E57373" />
+              <Text style={styles.logoutText}>Log out</Text>
+            </Pressable>
+
+            <Text style={styles.versionText}>Version 1.0.0 (Build 42) ✨</Text>
 
           </View>
         </ScrollView>
@@ -241,39 +238,29 @@ export function ProfileScreen() {
   )
 }
 
-function SettingsRow({ 
-  icon, 
-  title, 
-  rightText, 
-  isFirst, 
-  isLast 
-}: { 
-  icon: keyof typeof Ionicons.glyphMap
-  title: string
-  rightText?: string
-  isFirst?: boolean
-  isLast?: boolean 
-}) {
+function SettingsRow({ title, icon, rightText }: { title: string; icon: any; rightText?: string }) {
   return (
-    <>
-      <Pressable style={({ pressed }) => [
+    <Pressable 
+      style={({ pressed }) => [
         styles.settingsRow,
-        { backgroundColor: pressed ? 'rgba(0,0,0,0.02)' : 'transparent' }
-      ]}>
-        <Ionicons name={icon} size={22} color="#7B6B9E" style={styles.settingsIcon} />
-        <Text style={styles.settingsTitle}>{title}</Text>
-        {rightText && <Text style={styles.settingsRightText}>{rightText}</Text>}
-        <Ionicons name="chevron-forward" size={18} color="#C4B8D8" />
-      </Pressable>
-      {!isLast && <View style={styles.settingsDivider} />}
-    </>
+        { backgroundColor: pressed ? '#F8F7FF' : 'transparent' }
+      ]}
+    >
+      <Ionicons name={icon} size={22} color="#7B5EA7" style={styles.settingsIcon} />
+      <Text style={styles.settingsTitle}>{title}</Text>
+      {rightText && <Text style={styles.settingsRightText}>{rightText}</Text>}
+      <Ionicons name="chevron-forward" size={18} color="#C4B6D8" />
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: {
+    flex: 1,
+  },
   bgImage: {
     ...StyleSheet.absoluteFillObject,
+    height: SCREEN_WIDTH * 0.8,
   },
   safe: {
     flex: 1,
@@ -283,73 +270,62 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    zIndex: 10,
+    paddingBottom: Spacing.md,
+    position: 'relative',
   },
   headerTextContainer: {
     flex: 1,
-    paddingTop: Spacing.md,
-    zIndex: 2,
+    paddingTop: 12,
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 34,
+    fontSize: 32,
     color: '#2D1F4D',
-    letterSpacing: -0.5,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontFamily: 'Nunito_500Medium',
     fontSize: 15,
     color: '#7B6B9E',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   headerMascot: {
-    width: 160,
-    height: 160,
+    width: 150,
+    height: 150,
     position: 'absolute',
     right: -10,
-    top: 0,
-    zIndex: 1,
+    top: 10,
   },
   content: {
     paddingHorizontal: Spacing.lg,
-    gap: Spacing.lg,
   },
   card: {
-    borderRadius: Radii.cardLarge,
-    padding: Spacing.lg,
-    shadowColor: '#2D1F4D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
+    borderRadius: 24,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: '#F0EBFF',
   },
   userCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
   },
   avatarContainer: {
-    alignSelf: 'flex-start',
+    marginRight: Spacing.md,
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   avatarRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
     backgroundColor: '#E8E5FF',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 72,
-    height: 72,
     borderRadius: 36,
   },
   avatarInitial: {
     color: '#7B5EA7',
-    fontSize: 32,
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -360,10 +336,12 @@ const styles = StyleSheet.create({
   userDetails: {
     flex: 1,
     justifyContent: 'center',
+    marginRight: Spacing.sm,
   },
   userNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 2,
   },
   userName: {
@@ -386,12 +364,11 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
     gap: 4,
-    alignSelf: 'flex-start',
-    marginTop: 4,
+    backgroundColor: '#F0EBFF',
   },
   editButtonText: {
     fontFamily: 'Nunito_700Bold',

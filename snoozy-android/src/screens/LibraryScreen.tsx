@@ -3,6 +3,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -168,10 +169,23 @@ export function LibraryScreen() {
   ]
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
-      style={[styles.root, { backgroundColor: colors.background }]}
-    >
+    <View style={styles.root}>
+      <ImageBackground
+        source={require('../../assets/images/bg-loading.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
+          locations={[0, 0.2, 0.4]}
+          style={StyleSheet.absoluteFill}
+        />
+      </ImageBackground>
+
+      <SafeAreaView
+        edges={['top', 'bottom']}
+        style={styles.safe}
+      >
       <FlatList
         data={filtered}
         renderItem={renderItem}
@@ -270,12 +284,19 @@ export function LibraryScreen() {
           </View>
         }
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
+  },
+  bgImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  safe: {
     flex: 1,
   },
   listContent: {
