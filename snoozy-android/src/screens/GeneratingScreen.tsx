@@ -178,15 +178,14 @@ export default function GeneratingScreen() {
 
         {/* Mascot */}
         <View style={styles.mascotWrapper}>
-          <Animated.View
-            entering={FadeIn.delay(200).duration(800)}
-            style={mascotStyle}
-          >
-            <Image
-              source={require('../../assets/images/mascot-sleeping.png')}
-              style={styles.mascot}
-              resizeMode="contain"
-            />
+          <Animated.View entering={FadeIn.delay(200).duration(800)}>
+            <Animated.View style={mascotStyle}>
+              <Image
+                source={require('../../assets/images/mascot-sleeping.png')}
+                style={styles.mascot}
+                resizeMode="contain"
+              />
+            </Animated.View>
           </Animated.View>
         </View>
 

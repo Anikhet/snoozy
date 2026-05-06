@@ -112,15 +112,14 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
             keyboardShouldPersistTaps="handled"
           >
             {/* Mascot */}
-            <Animated.View
-              entering={FadeIn.delay(100).duration(700)}
-              style={[styles.mascotWrapper, mascotStyle]}
-            >
-              <Animated.Image
-                source={require('../../assets/images/mascot-happy.png')}
-                style={styles.mascot}
-                resizeMode="contain"
-              />
+            <Animated.View entering={FadeIn.delay(100).duration(700)} style={styles.mascotWrapper}>
+              <Animated.View style={mascotStyle}>
+                <Animated.Image
+                  source={require('../../assets/images/mascot-happy.png')}
+                  style={styles.mascot}
+                  resizeMode="contain"
+                />
+              </Animated.View>
             </Animated.View>
 
             {/* Hero text */}

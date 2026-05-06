@@ -62,7 +62,7 @@ export async function generateStory(
 export async function generateAudio(
   text: string,
   token: string,
-  voice?: string,
+  voiceId?: string,
   signal?: AbortSignal,
   vibeId?: string,
 ): Promise<string> {
@@ -75,7 +75,7 @@ export async function generateAudio(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ text, voice, vibeId }),
+    body: JSON.stringify({ text, voiceId, vibeId }),
     signal: signal ?? controller!.signal,
   })
   clearTimeout(timeoutId)

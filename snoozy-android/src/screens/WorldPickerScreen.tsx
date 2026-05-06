@@ -42,8 +42,9 @@ function WorldCard({ world, selected, onSelect, colors, index }: WorldCardProps)
   return (
     <Animated.View
       entering={FadeInDown.delay(100 + index * 60).duration(400)}
-      style={[{ width: CARD_WIDTH }, scaleStyle]}
+      style={{ width: CARD_WIDTH }}
     >
+      <Animated.View style={scaleStyle}>
       <Pressable
         onPress={() => onSelect(world.id)}
         onPressIn={() => { scale.value = withSpring(0.96, { damping: 15 }) }}
@@ -77,6 +78,7 @@ function WorldCard({ world, selected, onSelect, colors, index }: WorldCardProps)
           {world.subtitle}
         </Text>
       </Pressable>
+      </Animated.View>
     </Animated.View>
   )
 }

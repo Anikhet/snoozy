@@ -58,7 +58,7 @@ export const generateStoryRequestSchema = z.object({
 
 export const generateAudioRequestSchema = z.object({
   text: z.string().min(1).max(5000),
-  voice: z.string().optional(),
+  voiceId: z.string().optional(),
 })
 
 /**

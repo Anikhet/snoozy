@@ -163,12 +163,14 @@ export default function StoryEndScreen() {
           </Animated.View>
 
           {/* Mascot */}
-          <Animated.View entering={FadeIn.delay(300).duration(700)} style={mascotStyle}>
-            <Image
-              source={require('../../assets/images/mascot-resting.png')}
-              style={styles.mascot}
-              resizeMode="contain"
-            />
+          <Animated.View entering={FadeIn.delay(300).duration(700)}>
+            <Animated.View style={mascotStyle}>
+              <Image
+                source={require('../../assets/images/mascot-resting.png')}
+                style={styles.mascot}
+                resizeMode="contain"
+              />
+            </Animated.View>
           </Animated.View>
 
           {/* Story title recap */}
