@@ -200,38 +200,57 @@ function getPronounSet(pronouns) {
 // ─────────────────────────────────────────────
 
 function getAgeSettings(age) {
-  if (age <= 4) {
+  if (age <= 3) {
     return {
-      vocabularyLevel: `Very simple vocabulary only. Use words a 3-4 year old knows. 
-Short words are always better than long ones. 
-Use sound words freely: whoosh, sparkle, giggle, thump, hum. 
-Repeat key phrases like a song — repetition is comforting, not boring, at this age.`,
-      sentenceStyle: `Sentences must be very short — 6 to 10 words maximum. 
-Use lots of line breaks in your pacing. 
-Read-aloud rhythm is everything: it should sound like a lullaby when spoken aloud. 
+      vocabularyLevel: `Toddler vocabulary only — words a 2-3 year old uses every day.
+Short, concrete words. No metaphors. No similes more complex than "soft as a pillow".
+Absolutely NO inner-body or anatomical metaphors ("warmth in their chest",
+"behind their ribs", "inside their heart"). Feelings must be shown through
+actions and sensations, not described through abstract reflection.
+Use sound words generously: whoosh, plink, hush, hum, puff, pop.
+Repeat key phrases like a song — repetition is deeply comforting at this age.`,
+      sentenceStyle: `Sentences must be very short — 4 to 8 words.
+One idea per sentence. Almost never use "and" to join two thoughts.
+Use lots of line breaks. The page should feel airy and open.
+Read-aloud rhythm IS the story. It should sound like a slow lullaby
+when spoken aloud, with most lines fitting in a single breath.
+The emotional payoff must be expressed through what {name} DOES
+(a smile, a hug, a step, a sigh) — never through what {name} REALIZES.`,
+    }
+  }
+  if (age <= 5) {
+    return {
+      vocabularyLevel: `Very simple vocabulary for a 4-5 year old.
+Short words are always better than long ones.
+Use sound words freely: whoosh, sparkle, giggle, thump, hum.
+Concrete images only. Avoid abstract reflection.
+Repeat key phrases — repetition is comforting, not boring, at this age.`,
+      sentenceStyle: `Sentences must be short — 6 to 10 words maximum.
+Use lots of line breaks in your pacing.
+Read-aloud rhythm is everything: it should sound like a lullaby when spoken aloud.
 One idea per sentence. Never combine two thoughts with "and" more than once per paragraph.`,
     }
   }
   if (age <= 7) {
     return {
-      vocabularyLevel: `Warm, clear vocabulary for a 5-7 year old. 
-You can introduce one or two beautiful, slightly unusual words per story 
-(like "shimmered" or "murmured") — but always wrap them in context so meaning is clear. 
+      vocabularyLevel: `Warm, clear vocabulary for a 6-7 year old.
+You can introduce one or two beautiful, slightly unusual words per story
+(like "shimmered" or "murmured") — but always wrap them in context so meaning is clear.
 Avoid abstract concepts. Everything should be vivid and concrete.`,
-      sentenceStyle: `Sentences should be short to medium — 8 to 14 words. 
-Vary the rhythm: a short punchy sentence after two longer ones creates natural pacing. 
-Paragraphs should be 2-4 sentences. 
+      sentenceStyle: `Sentences should be short to medium — 8 to 14 words.
+Vary the rhythm: a short punchy sentence after two longer ones creates natural pacing.
+Paragraphs should be 2-4 sentences.
 The story should feel smooth and easy to follow when read aloud.`,
     }
   }
   return {
-    vocabularyLevel: `Rich, confident vocabulary for a 8-10 year old. 
-You can use vivid, expressive language and more nuanced emotional descriptions. 
-Introduce interesting words naturally — don't talk down to this age group. 
+    vocabularyLevel: `Rich, confident vocabulary for an 8-10 year old.
+You can use vivid, expressive language and more nuanced emotional descriptions.
+Introduce interesting words naturally — don't talk down to this age group.
 Metaphors and similes work beautifully here if they're concrete and visual.`,
-    sentenceStyle: `Sentences can be medium to longer — up to 18 words. 
-You can build more complex scenes and hold tension slightly longer before resolving it. 
-Paragraphs of 3-5 sentences. 
+    sentenceStyle: `Sentences can be medium to longer — up to 18 words.
+You can build more complex scenes and hold tension slightly longer before resolving it.
+Paragraphs of 3-5 sentences.
 The story should have a clear, satisfying narrative arc that feels complete and earned.`,
   }
 }
@@ -247,8 +266,6 @@ Every word you write carries weight. Every sentence is a step closer to dreams.
 Your stories are not just entertaining — they are emotionally nourishing. 
 They make children feel seen, brave, kind, and deeply safe. 
 Parents trust you completely. You never disappoint them.
-
-The title should reference the signature moment, not the world's general aesthetic. 'Lanterns of Whispering Lake' is good. 'A Magical Forest Night' is bad." Also add: "Titles should not begin with 'The' more than 50% of the time across a child's library — vary structure.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CHILD PROFILE
@@ -331,6 +348,9 @@ Examples of the right energy (DO NOT use these — invent your own):
   • "a tiny library inside a snail shell, with books the size of thumbnails"  
   • "a cloud that remembered every dream ever dreamed inside it"
   • "flowers that sang one note each, and together they made a lullaby"
+  • Avoid signature moments that rely only on "glowing", "shimmering",
+    or "starlight". The detail must have a specific texture, mechanism,
+    or behavior — what does it DO, not just what does it look like.
 
 This detail should feel like it could only exist in THIS story, 
 for THIS child, on THIS night.
@@ -401,6 +421,14 @@ FORMAT
 Line 1: Story title (creative, evocative, 3-6 words)
 Line 2: blank
 Line 3 onwards: the story
+
+TITLE GUIDANCE:
+✦ The title should reference tonight's signature moment, not the
+  world's general aesthetic. "Lanterns of Whispering Lake" is good.
+  "A Magical Forest Night" is bad.
+✦ Vary your title structure. Do not always begin with "The".
+  Mix patterns: "{Name} and the X", "X of Y", "When the X Y'd",
+  bare noun phrases, etc.
 
 No headers. No labels. No section markers. Just the title and the story.`
 
