@@ -71,7 +71,7 @@ function StoryCard({
         <Ionicons
           name={story.isFavorite ? 'heart' : 'heart-outline'}
           size={16}
-          color={story.isFavorite ? '#E9A97A' : (colors.inkMute as string)}
+          color={story.isFavorite ? colors.primary : (colors.inkMute as string)}
         />
       </Pressable>
 
@@ -320,18 +320,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 6,
-    borderRadius: Radii.small,
+    borderRadius: 50,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
     borderWidth: 1,
-    borderRadius: Radii.field,
+    borderRadius: 50,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 7,
     marginBottom: Spacing.sm,
   },
   searchInput: {

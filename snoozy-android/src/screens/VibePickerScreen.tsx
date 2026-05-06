@@ -53,14 +53,6 @@ export default function VibePickerScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <Pressable
-            style={[styles.backBtn, { backgroundColor: colors.surface }]}
-            onPress={backToWorldPicker}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.ink} />
-          </Pressable>
           <View style={[styles.stepPill, { backgroundColor: colors.primarySoft }]}>
             <Text style={[Fonts.caption, { color: colors.primary }]}>Step 2 of 2</Text>
           </View>
@@ -189,14 +181,11 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingBottom: Sizing.buttonHeight + Spacing.xxl },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   stepPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50 },
   worldChipRow: {
     alignItems: 'center',

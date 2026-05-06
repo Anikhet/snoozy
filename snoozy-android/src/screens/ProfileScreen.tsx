@@ -191,7 +191,7 @@ export function ProfileScreen() {
             <Animated.View entering={FadeInDown.delay(200).duration(500)}>
               <Pressable style={[styles.card, styles.plusBanner, { backgroundColor: '#F9F4FF' }]}>
                 <View style={styles.plusIconContainer}>
-                  <Ionicons name="star" size={24} color="#7B5EA7" />
+                  <Ionicons name="star" size={24} color="#F5C518" />
                 </View>
                 <View style={styles.plusContent}>
                   <View style={styles.plusTitleRow}>

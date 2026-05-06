@@ -104,17 +104,6 @@ export default function WorldPickerScreen() {
       <BackSwipeZone onBack={goHome} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable
-            style={[styles.backBtn, { backgroundColor: colors.surface }]}
-            onPress={goHome}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.ink} />
-          </Pressable>
-        </View>
 
 
 
@@ -206,18 +195,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Sizing.buttonHeight + Spacing.xxl,
   },
-  header: {
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   titleBlock: {
     alignItems: 'center',
     marginTop: Spacing.md,
