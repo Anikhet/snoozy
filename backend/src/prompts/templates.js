@@ -497,9 +497,28 @@ const RECOMMENDED_API_SETTINGS = {
   frequency_penalty: 0.3,    // keeps language fresh throughout
 }
 
+// ─────────────────────────────────────────────
+// ELEVENLABS VIBE VOICE OVERRIDES
+// ─────────────────────────────────────────────
+
+/**
+ * Per-vibe ElevenLabs voice setting overrides.
+ * Merged with base settings at audio generation time.
+ * Only stability and style vary — similarity_boost, use_speaker_boost,
+ * and speed are held constant across vibes.
+ */
+const VIBE_VOICE_OVERRIDES = {
+  cozy:    { stability: 0.70, style: 0.10 },
+  brave:   { stability: 0.60, style: 0.20 },
+  kind:    { stability: 0.65, style: 0.15 },
+  wonder:  { stability: 0.60, style: 0.20 },
+  friends: { stability: 0.65, style: 0.15 },
+}
+
 module.exports = {
   WORLDS,
   VIBES,
   buildPrompt,
   RECOMMENDED_API_SETTINGS,
+  VIBE_VOICE_OVERRIDES,
 }

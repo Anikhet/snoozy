@@ -334,7 +334,7 @@ async function runGeneration(
       signal
     )
 
-    const audioBase64 = await apiService.generateAudio(storyText, token, voiceId, signal)
+    const audioBase64 = await apiService.generateAudio(storyText, token, voiceId, signal, vibeId)
     const audioFileName = await storageService.saveAudioFile(audioBase64)
 
     const finishedStory: Story = {

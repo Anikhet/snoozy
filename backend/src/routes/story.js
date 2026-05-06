@@ -4,7 +4,7 @@ const { z } = require('zod')
 const OpenAI = require('openai')
 const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
-const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS } = require('../prompts/templates')
+const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
 
 const router = express.Router()
 
@@ -123,6 +123,7 @@ const generateAudioSchema = z.object({
   voice:     z.string().min(1).max(50).optional(),   // OpenAI/Azure voice name (shimmer, nova…)
   userRegion: z.string().length(2).optional(),       // ISO 3166-1 alpha-2 from user profile
   gender:    z.enum(['female', 'male']).optional().default('female'),
+  vibeId:    z.enum(validVibeIds).optional(),        // drives per-vibe ElevenLabs voice settings
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -239,13 +240,13 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
 
   try {
     // FIX #5: voice/voiceId/region are now destructured and passed to every provider function
-    const { text, voiceId, voice, userRegion, gender } = req.validated
+    const { text, voiceId, voice, userRegion, gender, vibeId } = req.validated
 
     log('AUDIO', '--- New audio request ---')
-    log('AUDIO', `Text: ${text.length} chars | Provider: ${config.ttsProvider} | Region: ${userRegion || 'n/a'} | Gender: ${gender}`)
+    log('AUDIO', `Text: ${text.length} chars | Provider: ${config.ttsProvider} | Region: ${userRegion || 'n/a'} | Gender: ${gender} | Vibe: ${vibeId || 'n/a'}`)
 
     if (config.ttsProvider === 'elevenlabs') {
-      await generateWithElevenLabs(text, voiceId, userRegion, gender, config, res, startTime)
+      await generateWithElevenLabs(text, voiceId, userRegion, gender, vibeId, config, res, startTime)
     } else if (config.ttsProvider === 'azure') {
       await generateWithAzure(text, config, res, startTime, voice)
     } else {
@@ -277,7 +278,7 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
  *   speed: 0.88         — slightly slower than natural speech; sleep-inducing pace
  *   output_format       — mp3_44100_128: high quality, reasonable mobile file size
  */
-async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender, config, res, startTime) {
+async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender, vibeId, config, res, startTime) {
   // FIX #8: Resolve voice — explicit > region default > global fallback
   const voiceId = resolveElevenLabsVoice(requestedVoiceId, userRegion, gender)
   log('AUDIO', `ElevenLabs voice resolved: ${voiceId} (requested: ${requestedVoiceId || 'none'}, region: ${userRegion || 'none'})`)
@@ -308,10 +309,10 @@ async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender
       text,
       model_id: 'eleven_multilingual_v2',
       voice_settings: {
-        stability:        0.75,   // Consistent, never robotic
-        similarity_boost: 0.75,   // Faithful to voice character
-        style:            0.12,   // FIX #1: was 0.4 — low keeps bedtime tone, not theatre
-        use_speaker_boost: true,  // FIX #4: cleaner audio on mobile
+        ...{ stability: 0.75, style: 0.12 },
+        ...(VIBE_VOICE_OVERRIDES[vibeId] ?? {}),
+        similarity_boost:  0.75,
+        use_speaker_boost: true,
       },
       // FIX #2: speed — slightly slower than natural for sleep-inducing delivery
       // Note: speed is a top-level param for ElevenLabs v2, not inside voice_settings

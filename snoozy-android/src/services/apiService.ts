@@ -63,7 +63,8 @@ export async function generateAudio(
   text: string,
   token: string,
   voice?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  vibeId?: string,
 ): Promise<string> {
   const controller = signal ? undefined : new AbortController()
   const timeoutId = setTimeout(() => controller?.abort(), 120_000)
@@ -74,7 +75,7 @@ export async function generateAudio(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ text, voice }),
+    body: JSON.stringify({ text, voice, vibeId }),
     signal: signal ?? controller!.signal,
   })
   clearTimeout(timeoutId)
