@@ -1,4 +1,5 @@
 import { AppConfig } from '@/config/appConfig'
+import { VOICES } from '@/config/voices'
 import { ChildDetails, storyResponseSchema } from '@/types/story'
 
 interface StoryResult {
@@ -75,7 +76,7 @@ export async function generateAudio(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ text, voiceId, vibeId }),
+    body: JSON.stringify(buildVoicePayload(voiceId, text, vibeId)),
     signal: signal ?? controller!.signal,
   })
   clearTimeout(timeoutId)
@@ -87,6 +88,14 @@ export async function generateAudio(
   const blob = await response.blob()
   const base64 = await blobToBase64(blob)
   return base64
+}
+
+function buildVoicePayload(voiceId: string | undefined, text: string, vibeId: string | undefined) {
+  const voice = VOICES.find((v) => v.id === voiceId)
+  if (voice?.provider === 'elevenlabs') {
+    return { text, voiceId, vibeId }
+  }
+  return { text, voice: voiceId, vibeId }
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
