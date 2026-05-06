@@ -16,7 +16,9 @@
       "Bash(sips -g pixelWidth -g pixelHeight /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-kingdom.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-forest.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-clouds.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-space.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-ocean.png /Users/pkats-mac/snoozy/snoozy-android/assets/images/worlds/world-jungle.png)",
       "Bash(node -e \"const c = require\\('@clerk/clerk-expo'\\); console.log\\(Object.keys\\(c\\).filter\\(k => /[Oo][Aa][Uu][Tt][Hh]|[Ss]ocial|[Ee]xternal/.test\\(k\\)\\)\\)\")",
       "Bash(npm uninstall *)",
-      "Bash(git -C /Users/pkats-mac/snoozy diff --stat HEAD)"
+      "Bash(git -C /Users/pkats-mac/snoozy diff --stat HEAD)",
+      "Bash(lsof -ti:3001)",
+      "Bash(node tests/test-pronouns.js)"
     ]
   }
 }

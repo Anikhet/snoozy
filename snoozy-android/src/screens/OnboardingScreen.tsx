@@ -42,7 +42,7 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true')
     await AsyncStorage.setItem(ONBOARDING_NAME_KEY, trimmed)
     await AsyncStorage.setItem(ONBOARDING_AGE_KEY, String(age))
-    useStoryStore.getState().setOnboardingDefaults({ name: trimmed, age })
+    useStoryStore.getState().setOnboardingDefaults({ name: trimmed, age, pronouns: 'they/them' })
     setSaving(false)
     onFinish()
   }

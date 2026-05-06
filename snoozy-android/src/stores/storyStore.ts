@@ -28,7 +28,7 @@ interface StoryStore {
   generatingStoryId: string | null
   childDetails: ChildDetails
   /** Child profile set once post-signup. Seeds every story. */
-  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null
+  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string } | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -47,7 +47,8 @@ interface StoryStore {
   navigateToInsights: () => void
   goHome: () => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns }) => void
+  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string }) => void
+  updateSavedVoice: (voiceId: string) => void
   generateStory: (vibeId: string, token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
@@ -158,8 +159,16 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       set((s) => ({
         onboardingDefaults: defaults,
         childDetails: s.childDetails.name
-          ? s.childDetails
-          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns },
+          ? { ...s.childDetails, voiceId: defaults.voiceId ?? s.childDetails.voiceId }
+          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns, voiceId: defaults.voiceId ?? s.childDetails.voiceId },
+      })),
+
+    updateSavedVoice: (voiceId) =>
+      set((s) => ({
+        childDetails: { ...s.childDetails, voiceId },
+        onboardingDefaults: s.onboardingDefaults
+          ? { ...s.onboardingDefaults, voiceId }
+          : s.onboardingDefaults,
       })),
 
     generateStory: (vibeId, token) => {
@@ -291,10 +300,16 @@ export const useStoryStore = create<StoryStore>((set, get) => {
  * name/age (if any). Keeps the parent from having to retype every night.
  */
 function freshChildDetails(
-  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null,
+  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string } | null,
 ): ChildDetails {
   if (!defaults) return { ...DEFAULT_CHILD_DETAILS }
-  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns }
+  return {
+    ...DEFAULT_CHILD_DETAILS,
+    name: defaults.name,
+    age: defaults.age,
+    pronouns: defaults.pronouns,
+    voiceId: defaults.voiceId ?? DEFAULT_CHILD_DETAILS.voiceId,
+  }
 }
 
 /**

@@ -23,6 +23,8 @@ import { useBackHandler } from '@/hooks/useBackHandler'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
+import { VOICES } from '@/config/voices'
+import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AVATAR_STORAGE_KEY = 'snoozy_profile_avatar'
@@ -36,6 +38,7 @@ export function ProfileScreen() {
 
   const childDetails = useStoryStore((s) => s.childDetails)
   const openProfileEdit = useStoryStore((s) => s.openProfileEdit)
+  const updateSavedVoice = useStoryStore((s) => s.updateSavedVoice)
   const childName = childDetails.name || 'Dreamer'
   const initial = childName.charAt(0).toUpperCase()
 
@@ -71,6 +74,15 @@ export function ProfileScreen() {
       setAvatarLoading(false)
     }
   }, [])
+
+  const handleVoiceSelect = useCallback(async (voiceId: string) => {
+    updateSavedVoice(voiceId)
+    try {
+      const raw = await AsyncStorage.getItem(CHILD_PROFILE_KEY)
+      const profile = raw ? JSON.parse(raw) : {}
+      await AsyncStorage.setItem(CHILD_PROFILE_KEY, JSON.stringify({ ...profile, voiceId }))
+    } catch {}
+  }, [updateSavedVoice])
 
   const handleLogout = useCallback(async () => {
     await signOut()
@@ -213,6 +225,51 @@ export function ProfileScreen() {
               <View style={styles.settingsDivider} />
               <SettingsRow title="Favorite themes" icon="color-palette-outline" />
             </View>
+
+            {/* ── Narrator Voice ─────────────────────────────── */}
+            <Animated.View entering={FadeInDown.delay(250).duration(500)}>
+              <Text style={styles.sectionTitle}>Narrator Voice</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <View style={styles.voiceGrid}>
+                  {VOICES.map((v) => {
+                    const selected = childDetails.voiceId === v.id
+                    return (
+                      <Pressable
+                        key={v.id}
+                        onPress={() => handleVoiceSelect(v.id)}
+                        style={({ pressed }) => [
+                          styles.voiceCard,
+                          selected ? styles.voiceCardSelected : styles.voiceCardUnselected,
+                          { opacity: pressed ? 0.75 : 1 },
+                        ]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected }}
+                        accessibilityLabel={`${v.displayName}, ${v.description}`}
+                      >
+                        <View style={styles.voiceCardTop}>
+                          <Ionicons
+                            name={selected ? 'volume-high' : 'volume-medium-outline'}
+                            size={18}
+                            color={selected ? '#5B5BD6' : '#9B8EC4'}
+                          />
+                          {selected && (
+                            <View style={styles.voiceCheck}>
+                              <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[styles.voiceName, selected && styles.voiceNameSelected]}>
+                          {v.displayName}
+                        </Text>
+                        <Text style={[styles.voiceDesc, selected && styles.voiceDescSelected]}>
+                          {v.description}
+                        </Text>
+                      </Pressable>
+                    )
+                  })}
+                </View>
+              </View>
+            </Animated.View>
 
             {/* ── Support Section ────────────────────────────── */}
             <Text style={styles.sectionTitle}>Support</Text>
@@ -491,6 +548,56 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     marginBottom: Spacing.xl,
     opacity: 0.8,
+  },
+  voiceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  voiceCard: {
+    width: '47.5%',
+    borderRadius: 16,
+    padding: Spacing.md,
+    borderWidth: 1.5,
+  },
+  voiceCardSelected: {
+    backgroundColor: '#EDE9FF',
+    borderColor: '#5B5BD6',
+  },
+  voiceCardUnselected: {
+    backgroundColor: '#F9F7FF',
+    borderColor: '#E8E2F8',
+  },
+  voiceCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  voiceCheck: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#5B5BD6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  voiceName: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: '#4B367C',
+    marginBottom: 2,
+  },
+  voiceNameSelected: {
+    color: '#3730A3',
+  },
+  voiceDesc: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 12,
+    color: '#9B8EC4',
+  },
+  voiceDescSelected: {
+    color: '#5B5BD6',
   },
 });
 

@@ -177,6 +177,25 @@ knowing they'll find each other again in tomorrow's dreams.`,
 ]
 
 // ─────────────────────────────────────────────
+// PRONOUN HELPERS
+// ─────────────────────────────────────────────
+
+/**
+ * Maps a pronoun set string to subject / object / possessive forms.
+ * Defaults to they/them so the AI is never left to guess.
+ *
+ * @param {'he/him'|'she/her'|'they/them'|undefined} pronouns
+ * @returns {{ subject: string, object: string, possessive: string }}
+ */
+function getPronounSet(pronouns) {
+  switch (pronouns) {
+    case 'he/him':  return { subject: 'he',   object: 'him',  possessive: 'his'   }
+    case 'she/her': return { subject: 'she',  object: 'her',  possessive: 'her'   }
+    default:        return { subject: 'they', object: 'them', possessive: 'their' }
+  }
+}
+
+// ─────────────────────────────────────────────
 // AGE-GATED LANGUAGE SETTINGS
 // ─────────────────────────────────────────────
 
@@ -234,6 +253,7 @@ CHILD PROFILE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Name: {name}
 Age: {age} years old
+Pronouns: {subject}/{object}/{possessive}
 Story World: {world}
 Tonight's Vibe: {vibe}
 
@@ -314,6 +334,7 @@ for THIS child, on THIS night.
 CRAFT RULES — non-negotiable
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✦ Use {name} every 3-4 sentences — they are always the hero
+✦ Refer to {name} with {subject}/{object}/{possessive} pronouns throughout — never deviate
 ✦ Total length: 600-750 words (strictly enforced)
 ✦ Include 3-4 sensory details across the story (sounds, smells, textures, warmth)
 ✦ NO scary antagonists, NO violence, NO loss, NO sad or unresolved endings
@@ -349,7 +370,7 @@ const USER_MESSAGE_TEMPLATE =
  * 
  * @param {string} worldId   — one of the WORLDS ids
  * @param {string} vibeId    — one of the VIBES ids
- * @param {object} child     — { name: string, age: number }
+ * @param {object} child     — { name: string, age: number, pronouns?: string }
  * @returns {{ systemPrompt: string, userMessage: string, world: object, vibe: object } | null}
  */
 function buildPrompt(worldId, vibeId, child) {
@@ -360,10 +381,14 @@ function buildPrompt(worldId, vibeId, child) {
   if (!child?.name || !child?.age) return null
 
   const { vocabularyLevel, sentenceStyle } = getAgeSettings(child.age)
+  const { subject, object, possessive } = getPronounSet(child.pronouns)
 
   const replacements = {
     '{name}': child.name,
     '{age}': String(child.age),
+    '{subject}': subject,
+    '{object}': object,
+    '{possessive}': possessive,
     '{world}': world.name,
     '{worldContext}': world.context,
     '{vibe}': vibe.name,

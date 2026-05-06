@@ -107,8 +107,9 @@ const generateStorySchema = z.object({
   worldId: z.enum(validWorldIds).optional().default('forest'),
   vibeId:  z.enum(validVibeIds).optional().default('cozy'),
   childDetails: z.object({
-    name: z.string().min(1).max(50),
-    age:  z.number().int().min(1).max(10),
+    name:     z.string().min(1).max(50),
+    age:      z.number().int().min(1).max(10),
+    pronouns: z.enum(['he/him', 'she/her', 'they/them']).optional().default('they/them'),
   }),
 })
 
@@ -153,7 +154,7 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
     log('STORY', '--- New story request ---')
     log('STORY', `World: ${worldId}, Vibe: ${vibeId}, Child: ${childDetails.name}, Age: ${childDetails.age}`)
 
-    const result = buildPrompt(worldId, vibeId, { name: childDetails.name, age: childDetails.age })
+    const result = buildPrompt(worldId, vibeId, { name: childDetails.name, age: childDetails.age, pronouns: childDetails.pronouns })
     if (!result) {
       log('STORY', 'ERROR: Invalid world/vibe ID', { worldId, vibeId })
       return res.status(400).json({ success: false, error: 'Invalid world or vibe' })
