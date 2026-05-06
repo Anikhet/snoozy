@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
   settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   settingsIcon: {
     marginRight: Spacing.md,
@@ -521,8 +521,8 @@ const styles = StyleSheet.create({
   settingsDivider: {
     height: 1,
     backgroundColor: '#F3F0F8',
-    marginLeft: 56,
-    marginRight: Spacing.lg,
+    marginLeft: 54,
+    marginRight: 54,
   },
   logoutButton: {
     flexDirection: 'row',
