@@ -4,7 +4,7 @@ const { spawn, spawnSync } = require('child_process')
 
 const FFMPEG_BIN     = process.env.FFMPEG_PATH || 'ffmpeg'
 const LOUDNORM_AF    = 'loudnorm=I=-16:TP=-1.5:LRA=11'
-const TIMEOUT_MS     = 30_000
+const TIMEOUT_MS     = 10_000
 
 // ─── Check FFmpeg availability once at startup ────────────────────────────
 // Avoids paying the detection cost on every audio request.

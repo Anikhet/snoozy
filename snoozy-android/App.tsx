@@ -99,7 +99,7 @@ export default function App() {
 
   if (!fontsLoaded || childProfileState === 'loading') return null
 
-  const isReady = assetsLoaded && childProfileState !== 'loading'
+  const isReady = assetsLoaded
 
   const appScreens = (
     <>
