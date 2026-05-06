@@ -65,6 +65,9 @@ interface StoryStore {
   toggleFavorite: (storyId: string) => void
   rateStory: (storyId: string, stars: number) => void
   cancelGeneration: () => void
+  profilePanel: 'storyPrefs' | 'bedtimeReminder' | 'accountDetails' | 'favoriteThemes' | 'passwordSecurity' | null
+  openProfilePanel: (panel: NonNullable<StoryStore['profilePanel']>) => void
+  closeProfilePanel: () => void
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => {
@@ -97,12 +100,17 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     duration: 0,
     sleepTimerRemaining: null,
     editingProfile: false,
+    profilePanel: null,
 
     navigateTo: (screen) => set({ currentScreen: screen }),
 
     openProfileEdit: () => set({ editingProfile: true }),
 
     closeProfileEdit: () => set({ navDir: 'back' as const, editingProfile: false }),
+
+    openProfilePanel: (panel) => set({ profilePanel: panel }),
+
+    closeProfilePanel: () => set({ profilePanel: null }),
 
     navigateToWorldPicker: () => set({ navDir: 'forward' as const, currentScreen: Screen.WorldPicker }),
 

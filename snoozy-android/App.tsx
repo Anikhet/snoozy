@@ -40,6 +40,11 @@ import { AuthScreen } from '@/screens/AuthScreen'
 import { ChildProfileScreen, CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import { BottomTabBar } from '@/components/BottomTabBar'
 import { DEV_MODE } from '@/config/appConfig'
+import { StoryPreferencesScreen } from '@/screens/StoryPreferencesScreen'
+import { BedtimeReminderScreen } from '@/screens/BedtimeReminderScreen'
+import { AccountDetailsScreen } from '@/screens/AccountDetailsScreen'
+import { FavoriteThemesScreen } from '@/screens/FavoriteThemesScreen'
+import { PasswordSecurityScreen } from '@/screens/PasswordSecurityScreen'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || ''
 
@@ -62,6 +67,8 @@ export default function App() {
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
   const editingProfile = useStoryStore((s) => s.editingProfile)
   const closeProfileEdit = useStoryStore((s) => s.closeProfileEdit)
+  const profilePanel = useStoryStore((s) => s.profilePanel)
+  const closeProfilePanel = useStoryStore((s) => s.closeProfilePanel)
 
   const [assetsLoaded, setAssetsLoaded] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
@@ -200,6 +207,19 @@ export default function App() {
                           exiting={FadeOut.duration(TRANSITION_DURATION)}
                         >
                           <ChildProfileScreen onFinish={closeProfileEdit} onBack={closeProfileEdit} />
+                        </Animated.View>
+                      ) : profilePanel ? (
+                        <Animated.View
+                          key={profilePanel}
+                          style={styles.flex}
+                          entering={SlideInRight.duration(TRANSITION_DURATION)}
+                          exiting={SlideOutRight.duration(TRANSITION_DURATION)}
+                        >
+                          {profilePanel === 'storyPrefs' ? <StoryPreferencesScreen />
+                          : profilePanel === 'bedtimeReminder' ? <BedtimeReminderScreen />
+                          : profilePanel === 'accountDetails' ? <AccountDetailsScreen />
+                          : profilePanel === 'favoriteThemes' ? <FavoriteThemesScreen />
+                          : <PasswordSecurityScreen />}
                         </Animated.View>
                       ) : appScreens}
                     </SignedIn>
