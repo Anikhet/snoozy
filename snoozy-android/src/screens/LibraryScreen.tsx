@@ -3,6 +3,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import {
   Fonts,
   Radii,
@@ -106,6 +108,9 @@ function StoryCard({
 }
 
 export function LibraryScreen() {
+  const goHome = useStoryStore((s) => s.goHome)
+  useBackHandler(goHome)
+
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const playStory = useStoryStore((s) => s.playStory)
@@ -168,10 +173,23 @@ export function LibraryScreen() {
   ]
 
   return (
-    <SafeAreaView
-      edges={['bottom']}
-      style={[styles.root, { backgroundColor: colors.background }]}
-    >
+    <View style={styles.root}>
+      <ImageBackground
+        source={require('../../assets/images/bg-loading.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
+          locations={[0, 0.2, 0.4]}
+          style={StyleSheet.absoluteFill}
+        />
+      </ImageBackground>
+
+      <SafeAreaView
+        edges={['top', 'bottom']}
+        style={styles.safe}
+      >
       <FlatList
         data={filtered}
         renderItem={renderItem}
@@ -184,11 +202,7 @@ export function LibraryScreen() {
           <View>
             {/* Header */}
             <View style={styles.header}>
-              <MaskedView maskElement={<Text style={styles.pageTitle}>Library</Text>}>
-                <LinearGradient colors={[colors.primary, '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <Text style={[styles.pageTitle, { opacity: 0 }]}>Library</Text>
-                </LinearGradient>
-              </MaskedView>
+              <Text style={styles.pageTitle}>Library</Text>
               <Pressable
                 onPress={() => setSort((s) => (s === 'recent' ? 'az' : 'recent'))}
                 style={[styles.sortBtn, { backgroundColor: colors.surface }]}
@@ -270,12 +284,19 @@ export function LibraryScreen() {
           </View>
         }
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
+  },
+  bgImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  safe: {
     flex: 1,
   },
   listContent: {
@@ -291,9 +312,9 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 44,
-    letterSpacing: -1,
-    color: '#000',
+    fontSize: 32,
+    color: '#4B367C',
+    marginBottom: 4,
   },
   sortBtn: {
     flexDirection: 'row',

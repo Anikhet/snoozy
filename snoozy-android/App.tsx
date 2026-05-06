@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { Asset } from 'expo-asset'
 import Animated, {
   FadeIn,
   FadeOut,
   SlideInRight,
+  SlideInLeft,
   SlideOutLeft,
+  SlideOutRight,
   SlideInDown,
+  SlideOutDown,
 } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useFonts } from 'expo-font'
@@ -50,14 +54,16 @@ export default function App() {
   })
 
   const scheme = useColorScheme()
-  const isDark = scheme === 'dark'
+  const isDark = false // Forced to false to disable dark mode per user request: scheme === 'dark'
   const colors = isDark ? Colors.dark : Colors.light
   const currentScreen = useStoryStore((s) => s.currentScreen)
+  const navDir = useStoryStore((s) => s.navDir)
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
   const editingProfile = useStoryStore((s) => s.editingProfile)
   const closeProfileEdit = useStoryStore((s) => s.closeProfileEdit)
 
+  const [assetsLoaded, setAssetsLoaded] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [childProfileState, setChildProfileState] = useState<
     'loading' | 'needed' | 'complete'
@@ -69,6 +75,13 @@ export default function App() {
 
     ;(async () => {
       try {
+        // Preload background assets
+        await Asset.loadAsync([
+          require('./assets/images/bg-loading.png'),
+          require('./assets/images/bg-home.png'),
+        ])
+        setAssetsLoaded(true)
+
         const raw = await AsyncStorage.getItem(CHILD_PROFILE_KEY)
         if (raw) {
           const profile = JSON.parse(raw)
@@ -79,11 +92,14 @@ export default function App() {
         }
       } catch {
         setChildProfileState('needed')
+        setAssetsLoaded(true)
       }
     })()
   }, [loadSavedStories, setOnboardingDefaults])
 
   if (!fontsLoaded || childProfileState === 'loading') return null
+
+  const isReady = assetsLoaded
 
   const appScreens = (
     <>
@@ -108,17 +124,21 @@ export default function App() {
         </Animated.View>
       ) : null}
       {currentScreen === Screen.Player ? (
-        <Animated.View key="player" style={styles.flex} entering={SlideInDown.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+        <Animated.View key="player" style={styles.flex} entering={SlideInDown.duration(TRANSITION_DURATION)} exiting={SlideOutDown.duration(TRANSITION_DURATION)}>
           <StoryPlayerScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.WorldPicker ? (
-        <Animated.View key="worldPicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+        <Animated.View key="worldPicker" style={styles.flex}
+          entering={(navDir === 'back' ? SlideInLeft : SlideInRight).duration(TRANSITION_DURATION)}
+          exiting={(navDir === 'back' ? SlideOutRight : SlideOutLeft).duration(TRANSITION_DURATION)}>
           <WorldPickerScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.VibePicker ? (
-        <Animated.View key="vibePicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+        <Animated.View key="vibePicker" style={styles.flex}
+          entering={SlideInRight.duration(TRANSITION_DURATION)}
+          exiting={(navDir === 'back' ? SlideOutRight : SlideOutLeft).duration(TRANSITION_DURATION)}>
           <VibePickerScreen />
         </Animated.View>
       ) : null}
@@ -142,9 +162,20 @@ export default function App() {
         <SafeAreaProvider>
           <View style={[styles.flex, { backgroundColor: colors.background }]}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
-            <SafeAreaView style={styles.flex}>
+            <View style={styles.flex}>
               {showSplash ? (
-                <SplashScreen onFinish={() => setShowSplash(false)} />
+                <SplashScreen onFinish={() => {
+                  if (isReady) setShowSplash(false)
+                  else {
+                    // If not ready, wait a bit and try again
+                    const check = setInterval(() => {
+                      if (isReady) {
+                        setShowSplash(false)
+                        clearInterval(check)
+                      }
+                    }, 100)
+                  }
+                }} />
               ) : (
                 <>
                   {!DEV_MODE && <SignedOut><AuthScreen /></SignedOut>}
@@ -168,14 +199,14 @@ export default function App() {
                           entering={FadeIn.duration(TRANSITION_DURATION)}
                           exiting={FadeOut.duration(TRANSITION_DURATION)}
                         >
-                          <ChildProfileScreen onFinish={closeProfileEdit} />
+                          <ChildProfileScreen onFinish={closeProfileEdit} onBack={closeProfileEdit} />
                         </Animated.View>
                       ) : appScreens}
                     </SignedIn>
                   ) : appScreens}
                 </>
               )}
-            </SafeAreaView>
+            </View>
           </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>

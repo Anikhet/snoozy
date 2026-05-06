@@ -2,51 +2,48 @@ import React, { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Image,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
+  Dimensions,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated'
 import * as ImagePicker from 'expo-image-picker'
 import { copyAsync, documentDirectory } from 'expo-file-system/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useAuth, useUser } from '@clerk/clerk-expo'
-import { DEV_MODE } from '@/config/appConfig'
+import { useAuth } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { VOICES } from '@/config/voices'
+import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AVATAR_STORAGE_KEY = 'snoozy_profile_avatar'
 
-const AGES = Array.from({ length: 12 }, (_, i) => i + 1)
-
 export function ProfileScreen() {
+  const goHome = useStoryStore((s) => s.goHome)
+  useBackHandler(goHome)
+
   const { colors } = useThemeColors()
   const { signOut } = useAuth()
-  const { user } = useUser()
 
   const childDetails = useStoryStore((s) => s.childDetails)
-  const updateChildDetails = useStoryStore((s) => s.updateChildDetails)
-  const savedStories = useStoryStore((s) => s.savedStories)
-
+  const openProfileEdit = useStoryStore((s) => s.openProfileEdit)
+  const updateSavedVoice = useStoryStore((s) => s.updateSavedVoice)
   const childName = childDetails.name || 'Dreamer'
   const initial = childName.charAt(0).toUpperCase()
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null)
   const [avatarLoading, setAvatarLoading] = useState(false)
-
-  const [nameValue, setNameValue] = useState(childDetails.name)
-  const [colorValue, setColorValue] = useState(childDetails.favoriteColor ?? '')
-  const [animalValue, setAnimalValue] = useState(childDetails.favoriteAnimal ?? '')
-  const [thingValue, setThingValue] = useState(childDetails.favoriteThing ?? '')
 
   useEffect(() => {
     AsyncStorage.getItem(AVATAR_STORAGE_KEY).then((uri) => {
@@ -70,7 +67,6 @@ export function ProfileScreen() {
     try {
       const destUri = (documentDirectory ?? '') + 'profile-avatar.jpg'
       await copyAsync({ from: result.assets[0].uri, to: destUri })
-      // Cache-bust URI is stored so Image reloads fresh on every remount too
       const displayUri = destUri + `?t=${Date.now()}`
       await AsyncStorage.setItem(AVATAR_STORAGE_KEY, displayUri)
       setAvatarUri(displayUri)
@@ -79,283 +75,324 @@ export function ProfileScreen() {
     }
   }, [])
 
-  const totalStories = savedStories.length
-  const favoriteCount = savedStories.filter((s) => s.isFavorite).length
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-  const thisWeek = savedStories.filter((s) => new Date(s.createdAt).getTime() > weekAgo).length
-
-  const currentVoice = VOICES.find((v) => v.id === childDetails.voiceId) ?? VOICES[0]
-  const email = DEV_MODE ? 'dev@snoozy.app' : (user?.primaryEmailAddress?.emailAddress ?? '—')
+  const handleVoiceSelect = useCallback(async (voiceId: string) => {
+    updateSavedVoice(voiceId)
+    try {
+      const raw = await AsyncStorage.getItem(CHILD_PROFILE_KEY)
+      const profile = raw ? JSON.parse(raw) : {}
+      await AsyncStorage.setItem(CHILD_PROFILE_KEY, JSON.stringify({ ...profile, voiceId }))
+    } catch {}
+  }, [updateSavedVoice])
 
   const handleLogout = useCallback(async () => {
     await signOut()
   }, [signOut])
 
-  return (
-    <SafeAreaView edges={[]} style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + Spacing.xxl }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* ── Hero ───────────────────────────────────────── */}
-        <Animated.View entering={FadeIn.duration(600)}>
-          <LinearGradient
-            colors={[colors.primary, '#9B8EC4']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.hero}
-          >
-            <Pressable
-              onPress={handlePickAvatar}
-              accessibilityRole="button"
-              accessibilityLabel="Change profile picture"
-              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-            >
-              <View style={styles.avatarRing}>
-                {avatarUri ? (
-                  <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-                ) : (
-                  <Text style={[Fonts.serifTitle, styles.avatarInitial]}>{initial}</Text>
-                )}
-                {avatarLoading && (
-                  <View style={styles.avatarOverlay}>
-                    <ActivityIndicator color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-              <View style={styles.avatarEditBadge}>
-                <Ionicons name="camera" size={12} color="#FFFFFF" />
-              </View>
-            </Pressable>
-            <Text style={[Fonts.serifTitle, styles.heroName]}>{childName}</Text>
-            <Text style={[Fonts.body, styles.heroTagline]}>Story Dreamer ✦</Text>
-          </LinearGradient>
-        </Animated.View>
+  // Construct bio from preferences, or use default
+  const bioParts = []
+  if (childDetails.favoriteColor) bioParts.push(childDetails.favoriteColor)
+  if (childDetails.favoriteAnimal) bioParts.push(childDetails.favoriteAnimal)
+  if (childDetails.favoriteThing) bioParts.push(childDetails.favoriteThing)
+  
+  let bio = 'Loves magical adventures and bedtime stories 💜'
+  if (bioParts.length > 0) {
+    // Format list nicely: A, B and C
+    if (bioParts.length === 1) bio = `Loves ${bioParts[0]} and magical adventures 💜`
+    else if (bioParts.length === 2) bio = `Loves ${bioParts[0]} and ${bioParts[1]} 💜`
+    else bio = `Loves ${bioParts.slice(0, -1).join(', ')} and ${bioParts[bioParts.length - 1]} 💜`
+  }
 
-        <View style={styles.content}>
-          {/* ── Stats Row ──────────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.statsRow}>
-            {[
-              { value: totalStories, label: 'STORIES' },
-              { value: favoriteCount, label: 'FAVORITES' },
-              { value: thisWeek, label: 'THIS WEEK' },
-            ].map(({ value, label }) => (
-              <View
-                key={label}
-                style={[styles.statTile, { backgroundColor: colors.surface }]}
-              >
-                <Text style={[Fonts.serifTitle, { color: colors.primary }]}>{value}</Text>
-                <Text style={[Fonts.eyebrow, { color: colors.inkMute, marginTop: 2 }]}>{label}</Text>
-              </View>
-            ))}
+  const ageText = childDetails.age ? `Age ${childDetails.age}` : 'Age 6' // Fallback for UI matching
+
+  const AVATAR_SIZE = SCREEN_WIDTH < 380 ? 64 : 72
+
+  return (
+    <View style={styles.root}>
+      <ImageBackground
+        source={require('../../assets/images/bg-loading.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
+          locations={[0, 0.2, 0.4]}
+          style={StyleSheet.absoluteFill}
+        />
+      </ImageBackground>
+
+      <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + Spacing.xxl }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* ── Header ───────────────────────────────────────── */}
+          <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Profile</Text>
+              <Text style={styles.headerSubtitle}>
+                Manage your details & your little one's preferences.
+              </Text>
+            </View>
+            <Animated.Image 
+              entering={FadeIn.delay(200).duration(800)}
+              source={require('../../assets/images/mascot-heart.png')} 
+              style={styles.headerMascot}
+              resizeMode="contain"
+            />
           </Animated.View>
 
-          {/* ── Story Preferences ──────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={[Fonts.eyebrow, styles.sectionLabel, { color: colors.inkMute }]}>
-                STORY PREFERENCES
-              </Text>
+          <View style={styles.content}>
+            {/* ── User Details Card ──────────────────────────── */}
+            <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+              <View style={[styles.card, { backgroundColor: colors.surface, marginTop: Spacing.lg }]}>
+                <View style={styles.userCardContent}>
+                  
+                  <View style={styles.avatarContainer}>
+                    <Pressable onPress={handlePickAvatar}>
+                      <View style={[styles.avatarRing, { width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2 }]}>
+                        {avatarUri ? (
+                          <Image source={{ uri: avatarUri }} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2 }} />
+                        ) : (
+                          <Text style={[Fonts.serifTitle, styles.avatarInitial, { fontSize: AVATAR_SIZE * 0.45 }]}>{initial}</Text>
+                        )}
+                        {avatarLoading && (
+                          <View style={styles.avatarOverlay}>
+                            <ActivityIndicator color="#FFFFFF" size="small" />
+                          </View>
+                        )}
+                      </View>
+                    </Pressable>
+                  </View>
 
-              <PrefRow label="NAME">
-                <TextInput
-                  value={nameValue}
-                  onChangeText={setNameValue}
-                  onBlur={() => updateChildDetails({ name: nameValue.trim() || childName })}
-                  style={[Fonts.body, styles.input, { color: colors.ink }]}
-                  placeholderTextColor={colors.inkMute}
-                  placeholder="Child's name"
-                  returnKeyType="done"
-                  autoCorrect={false}
-                />
-              </PrefRow>
-
-              <RowDivider color={colors.hair} />
-
-              {/* Age picker */}
-              <PrefRow label="AGE">
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.ageRow}
-                >
-                  {AGES.map((age) => (
-                    <Pressable
-                      key={age}
-                      onPress={() => updateChildDetails({ age })}
-                      style={({ pressed }) => [
-                        styles.agePill,
-                        {
-                          backgroundColor:
-                            childDetails.age === age ? colors.primary : colors.primarySoft,
-                          opacity: pressed ? 0.7 : 1,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          Fonts.caption,
-                          {
-                            color: childDetails.age === age ? '#FFFFFF' : colors.primary,
-                            fontFamily: 'Nunito_700Bold',
-                          },
+                  {/* Details */}
+                  <View style={styles.userDetails}>
+                    <View style={styles.userNameRow}>
+                      <Text style={styles.userName}>{childName}</Text>
+                      <Pressable 
+                        onPress={openProfileEdit}
+                        style={({ pressed }) => [
+                          styles.editButton,
+                          { opacity: pressed ? 0.6 : 1 }
                         ]}
                       >
-                        {age}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </PrefRow>
-
-              <RowDivider color={colors.hair} />
-
-              <PrefRow label="COLOR">
-                <TextInput
-                  value={colorValue}
-                  onChangeText={setColorValue}
-                  onBlur={() => updateChildDetails({ favoriteColor: colorValue.trim() })}
-                  style={[Fonts.body, styles.input, { color: colors.ink }]}
-                  placeholderTextColor={colors.inkMute}
-                  placeholder="e.g. purple"
-                  returnKeyType="done"
-                />
-              </PrefRow>
-
-              <RowDivider color={colors.hair} />
-
-              <PrefRow label="ANIMAL">
-                <TextInput
-                  value={animalValue}
-                  onChangeText={setAnimalValue}
-                  onBlur={() => updateChildDetails({ favoriteAnimal: animalValue.trim() })}
-                  style={[Fonts.body, styles.input, { color: colors.ink }]}
-                  placeholderTextColor={colors.inkMute}
-                  placeholder="e.g. dragon"
-                  returnKeyType="done"
-                />
-              </PrefRow>
-
-              <RowDivider color={colors.hair} />
-
-              <PrefRow label="FAVE THING">
-                <TextInput
-                  value={thingValue}
-                  onChangeText={setThingValue}
-                  onBlur={() => updateChildDetails({ favoriteThing: thingValue.trim() })}
-                  style={[Fonts.body, styles.input, { color: colors.ink }]}
-                  placeholderTextColor={colors.inkMute}
-                  placeholder="e.g. space rockets"
-                  returnKeyType="done"
-                />
-              </PrefRow>
-            </View>
-          </Animated.View>
-
-          {/* ── Narrator Voice ─────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={[Fonts.eyebrow, styles.sectionLabel, { color: colors.inkMute }]}>
-                NARRATOR VOICE
-              </Text>
-              <View style={styles.voiceRow}>
-                <View style={[styles.voiceIcon, { backgroundColor: colors.primarySoft }]}>
-                  <Ionicons name="mic" size={18} color={colors.primary as string} />
+                        <Ionicons name="create-outline" size={16} color="#7B5EA7" />
+                        <Text style={styles.editButtonText}>Edit</Text>
+                      </Pressable>
+                    </View>
+                    <Text style={styles.userMeta}>{ageText}  •  She/Her</Text>
+                    <Text style={styles.userBio}>{bio}</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[Fonts.bodyBold, { color: colors.ink }]}>
-                    {currentVoice.displayName}
-                  </Text>
-                  <Text style={[Fonts.caption, { color: colors.inkMute, marginTop: 2 }]}>
-                    {currentVoice.description}
-                  </Text>
+              </View>
+            </Animated.View>
+
+            {/* ── Snoozy Plus Banner ─────────────────────────── */}
+            <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+              <Pressable style={[styles.card, styles.plusBanner, { backgroundColor: '#F9F4FF' }]}>
+                <View style={styles.plusIconContainer}>
+                  <Ionicons name="star" size={24} color="#7B5EA7" />
                 </View>
-                <Text style={[Fonts.caption, { color: colors.inkMute, textAlign: 'right' }]}>
-                  Change in{'\n'}story setup
-                </Text>
-              </View>
-            </View>
-          </Animated.View>
-
-          {/* ── Account ────────────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={[Fonts.eyebrow, styles.sectionLabel, { color: colors.inkMute }]}>
-                ACCOUNT
-              </Text>
-
-              <View style={styles.accountRow}>
-                <Ionicons name="mail-outline" size={18} color={colors.inkMute as string} />
-                <Text
-                  style={[Fonts.body, { color: colors.inkSoft, flex: 1, marginLeft: Spacing.sm }]}
-                  numberOfLines={1}
-                >
-                  {email}
-                </Text>
-              </View>
-
-              <RowDivider color={colors.hair} />
-
-              <Pressable
-                onPress={handleLogout}
-                accessibilityRole="button"
-                accessibilityLabel="Log out"
-                style={({ pressed }) => [styles.accountRow, { opacity: pressed ? 0.6 : 1 }]}
-              >
-                <Ionicons name="log-out-outline" size={18} color={colors.error as string} />
-                <Text style={[Fonts.bodyBold, { color: colors.error, marginLeft: Spacing.sm }]}>
-                  Log Out
-                </Text>
+                <View style={styles.plusContent}>
+                  <View style={styles.plusTitleRow}>
+                    <Text style={styles.plusTitle}>Snoozy Plus</Text>
+                    <View style={styles.plusBadge}>
+                      <Text style={styles.plusBadgeText}>Active</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.plusSubtitle}>Magical stories, unlimited dreams.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#C4B6D8" />
               </Pressable>
-            </View>
-          </Animated.View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  )
-}
+            </Animated.View>
 
-function PrefRow({ label, children }: { label: string; children: React.ReactNode }) {
-  const { colors } = useThemeColors()
-  return (
-    <View style={styles.prefRow}>
-      <Text style={[Fonts.eyebrow, { color: colors.inkMute, width: 84 }]}>{label}</Text>
-      <View style={{ flex: 1 }}>{children}</View>
+            {/* ── Account Section ────────────────────────────── */}
+            <Text style={styles.sectionTitle}>Account</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
+              <SettingsRow title="Account details" icon="person-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Password & security" icon="lock-closed-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Notifications" icon="notifications-outline" rightText="On" />
+            </View>
+
+            {/* ── Preferences Section ────────────────────────── */}
+            <Text style={styles.sectionTitle}>Preferences</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
+              <SettingsRow title="Bedtime reminder" icon="alarm-outline" rightText="8:30 PM" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Story preferences" icon="sparkles-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Favorite themes" icon="color-palette-outline" />
+            </View>
+
+            {/* ── Narrator Voice ─────────────────────────────── */}
+            <Animated.View entering={FadeInDown.delay(250).duration(500)}>
+              <Text style={styles.sectionTitle}>Narrator Voice</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <View style={styles.voiceGrid}>
+                  {VOICES.map((v) => {
+                    const selected = childDetails.voiceId === v.id
+                    return (
+                      <Pressable
+                        key={v.id}
+                        onPress={() => handleVoiceSelect(v.id)}
+                        style={({ pressed }) => [
+                          styles.voiceCard,
+                          selected ? styles.voiceCardSelected : styles.voiceCardUnselected,
+                          { opacity: pressed ? 0.75 : 1 },
+                        ]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected }}
+                        accessibilityLabel={`${v.displayName}, ${v.description}`}
+                      >
+                        <View style={styles.voiceCardTop}>
+                          <Ionicons
+                            name={selected ? 'volume-high' : 'volume-medium-outline'}
+                            size={18}
+                            color={selected ? '#5B5BD6' : '#9B8EC4'}
+                          />
+                          {selected && (
+                            <View style={styles.voiceCheck}>
+                              <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[styles.voiceName, selected && styles.voiceNameSelected]}>
+                          {v.displayName}
+                        </Text>
+                        <Text style={[styles.voiceDesc, selected && styles.voiceDescSelected]}>
+                          {v.description}
+                        </Text>
+                      </Pressable>
+                    )
+                  })}
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* ── Support Section ────────────────────────────── */}
+            <Text style={styles.sectionTitle}>Support</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
+              <SettingsRow title="Help center" icon="help-circle-outline" />
+              <View style={styles.settingsDivider} />
+              <SettingsRow title="Contact us" icon="mail-outline" />
+            </View>
+
+            {/* ── Footer ─────────────────────────────────────── */}
+            <Pressable 
+              onPress={handleLogout}
+              style={({ pressed }) => [
+                styles.logoutButton,
+                { opacity: pressed ? 0.7 : 1 }
+              ]}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#E57373" />
+              <Text style={styles.logoutText}>Log out</Text>
+            </Pressable>
+
+            <Text style={styles.versionText}>Version 1.0.0 (Build 42) ✨</Text>
+
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   )
 }
 
-function RowDivider({ color }: { color: string }) {
-  return <View style={[styles.divider, { backgroundColor: color }]} />
+function SettingsRow({ 
+  title, 
+  icon, 
+  rightText 
+}: { 
+  title: string; 
+  icon: keyof typeof Ionicons.glyphMap; 
+  rightText?: string 
+}) {
+  return (
+    <Pressable 
+      style={({ pressed }) => [
+        styles.settingsRow,
+        { backgroundColor: pressed ? '#F8F7FF' : 'transparent' }
+      ]}
+    >
+      <Ionicons name={icon} size={22} color="#7B5EA7" style={styles.settingsIcon} />
+      <Text style={styles.settingsTitle}>{title}</Text>
+      {rightText && <Text style={styles.settingsRightText}>{rightText}</Text>}
+      <Ionicons name="chevron-forward" size={18} color="#C4B6D8" />
+    </Pressable>
+  )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  hero: {
+  root: {
+    flex: 1,
+  },
+  bgImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  safe: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.md,
+    position: 'relative',
+  },
+  headerTextContainer: {
+    flex: 1,
+    paddingTop: 12,
+    paddingRight: 120,
+  },
+  headerTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: SCREEN_WIDTH < 380 ? 28 : 32,
+    color: '#4B367C',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: SCREEN_WIDTH < 380 ? 13 : 15,
+    color: '#7B6B9E',
+    lineHeight: SCREEN_WIDTH < 380 ? 18 : 22,
+  },
+  headerMascot: {
+    width: 180,
+    height: 180,
+    position: 'absolute',
+    right: -10,
+    top: 10,
+  },
+  content: {
+    paddingHorizontal: Spacing.lg,
+  },
+  card: {
+    borderRadius: 24,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#F0EBFF',
+  },
+  userCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginRight: Spacing.md,
     alignItems: 'center',
     gap: Spacing.sm,
   },
   avatarRing: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.45)',
+    backgroundColor: '#E8E5FF',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  avatarImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-  },
   avatarInitial: {
-    color: '#FFFFFF',
+    color: '#7B5EA7',
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -363,91 +400,204 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEditBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
+  userDetails: {
+    flex: 1,
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  userNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  userName: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 18,
+    color: '#4B367C',
+  },
+  userMeta: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: '#7B6B9E',
+    marginBottom: 4,
+  },
+  userBio: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: '#7B6B9E',
+    lineHeight: 18,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.6)',
+    gap: 4,
+    backgroundColor: '#F0EBFF',
   },
-  heroName: {
-    color: '#FFFFFF',
-    marginTop: Spacing.sm,
+  editButtonText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 13,
+    color: '#7B5EA7',
   },
-  heroTagline: {
-    color: 'rgba(255,255,255,0.75)',
-  },
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
-  },
-  statsRow: {
+  plusBanner: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  statTile: {
-    flex: 1,
-    borderRadius: Radii.card,
-    paddingVertical: Spacing.md,
     alignItems: 'center',
-  },
-  card: {
-    borderRadius: Radii.cardLarge,
     padding: Spacing.md,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#F0EBFF',
   },
-  sectionLabel: {
-    marginBottom: Spacing.md,
-  },
-  prefRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  input: {
-    flex: 1,
-    textAlign: 'right',
-    paddingVertical: 0,
-  },
-  ageRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    justifyContent: 'flex-end',
-  },
-  agePill: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  plusIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E6DDF8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  voiceRow: {
+  plusContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  plusTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  plusTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: '#4B367C',
+  },
+  plusBadge: {
+    backgroundColor: '#DCD5F1',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  plusBadgeText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 10,
+    color: '#7B5EA7',
+    textTransform: 'uppercase',
+  },
+  plusSubtitle: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: '#7B6B9E',
+  },
+  sectionTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: '#4B367C',
+    marginBottom: Spacing.sm,
+    paddingHorizontal: 4,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 18,
+  },
+  settingsIcon: {
+    marginRight: Spacing.md,
+  },
+  settingsTitle: {
+    flex: 1,
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: '#5C4D7D',
+  },
+  settingsRightText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    color: '#9A8A92',
+    marginRight: Spacing.sm,
+  },
+  settingsDivider: {
+    height: 1,
+    backgroundColor: '#F3F0F8',
+    marginLeft: 56,
+    marginRight: Spacing.lg,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF0F0',
+    paddingVertical: 16,
+    borderRadius: Radii.button,
+    gap: 8,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  logoutText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: '#E57373',
+  },
+  versionText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: '#9A8A92',
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xl,
+    opacity: 0.8,
+  },
+  voiceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.sm,
   },
-  voiceIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  voiceCard: {
+    width: '47.5%',
+    borderRadius: 16,
+    padding: Spacing.md,
+    borderWidth: 1.5,
+  },
+  voiceCardSelected: {
+    backgroundColor: '#EDE9FF',
+    borderColor: '#5B5BD6',
+  },
+  voiceCardUnselected: {
+    backgroundColor: '#F9F7FF',
+    borderColor: '#E8E2F8',
+  },
+  voiceCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  voiceCheck: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#5B5BD6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  accountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    minHeight: 44,
+  voiceName: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: '#4B367C',
+    marginBottom: 2,
   },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginVertical: Spacing.xs,
+  voiceNameSelected: {
+    color: '#3730A3',
   },
-})
+  voiceDesc: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 12,
+    color: '#9B8EC4',
+  },
+  voiceDescSelected: {
+    color: '#5B5BD6',
+  },
+});
+

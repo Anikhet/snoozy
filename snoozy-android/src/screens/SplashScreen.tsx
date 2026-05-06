@@ -81,7 +81,7 @@ export function SplashScreen({ onFinish }: Props) {
         resizeMode="cover"
       />
 
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         {/* Brand header */}
         <Animated.View
           entering={FadeInDown.duration(600)}
@@ -149,10 +149,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: -40,
+    marginBottom: -60,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.72,
-    height: SCREEN_WIDTH * 0.72,
+    width: SCREEN_WIDTH * 0.8,
+    height: SCREEN_WIDTH * 0.8,
   },
   dotsRow: {
     flexDirection: 'row',

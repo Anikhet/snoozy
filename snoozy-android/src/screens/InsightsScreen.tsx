@@ -14,6 +14,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
@@ -129,6 +130,9 @@ const hlStyles = StyleSheet.create({
 // ─── InsightsScreen ────────────────────────────────────────────────────────────
 
 export function InsightsScreen() {
+  const goHome = useStoryStore((s) => s.goHome)
+  useBackHandler(goHome)
+
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const childDetails = useStoryStore((s) => s.childDetails)
@@ -187,7 +191,7 @@ export function InsightsScreen() {
       style={styles.root}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
@@ -335,9 +339,9 @@ const styles = StyleSheet.create({
   },
   headerName: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 24,
-    color: '#2D1F6E',
-    letterSpacing: -0.4,
+    fontSize: 32,
+    color: '#4B367C',
+    marginBottom: 4,
   },
   weekPill: {
     flexDirection: 'row',

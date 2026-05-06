@@ -21,12 +21,14 @@ const generationTasks = new Map<string, AbortController>()
 
 interface StoryStore {
   currentScreen: Screen
+  /** Direction of the last navigation — used by App.tsx to pick enter/exit animations. */
+  navDir: 'forward' | 'back'
   selectedWorldId: string | null
   selectedVibeId: string | null
   generatingStoryId: string | null
   childDetails: ChildDetails
   /** Child profile set once post-signup. Seeds every story. */
-  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null
+  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string } | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -36,6 +38,8 @@ interface StoryStore {
 
   navigateTo: (screen: Screen) => void
   navigateToWorldPicker: () => void
+  /** Navigate back to WorldPicker (from VibePicker). Sets navDir='back' for correct exit animation. */
+  backToWorldPicker: () => void
   navigateToVibePicker: (worldId: string) => void
   navigateToGenerating: () => void
   navigateToStoryEnd: () => void
@@ -43,7 +47,8 @@ interface StoryStore {
   navigateToInsights: () => void
   goHome: () => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns }) => void
+  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string }) => void
+  updateSavedVoice: (voiceId: string) => void
   generateStory: (vibeId: string, token: string) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
@@ -74,11 +79,12 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
   // Navigate to StoryEnd when audio finishes naturally
   audioService.setCompletionListener(() => {
-    set({ currentScreen: Screen.StoryEnd })
+    set({ navDir: 'forward', currentScreen: Screen.StoryEnd })
   })
 
   return {
     currentScreen: Screen.Home,
+    navDir: 'forward' as const,
     selectedWorldId: null,
     selectedVibeId: null,
     generatingStoryId: null,
@@ -96,16 +102,18 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     openProfileEdit: () => set({ editingProfile: true }),
 
-    closeProfileEdit: () => set({ editingProfile: false, currentScreen: Screen.WorldPicker }),
+    closeProfileEdit: () => set({ navDir: 'back' as const, editingProfile: false }),
 
-    navigateToWorldPicker: () => set({ currentScreen: Screen.WorldPicker }),
+    navigateToWorldPicker: () => set({ navDir: 'forward' as const, currentScreen: Screen.WorldPicker }),
+
+    backToWorldPicker: () => set({ navDir: 'back' as const, currentScreen: Screen.WorldPicker }),
 
     navigateToVibePicker: (worldId: string) =>
-      set({ selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
+      set({ navDir: 'forward' as const, selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
 
-    navigateToGenerating: () => set({ currentScreen: Screen.Generating }),
+    navigateToGenerating: () => set({ navDir: 'forward' as const, currentScreen: Screen.Generating }),
 
-    navigateToStoryEnd: () => set({ currentScreen: Screen.StoryEnd }),
+    navigateToStoryEnd: () => set({ navDir: 'forward' as const, currentScreen: Screen.StoryEnd }),
 
     navigateToLibrary: () => set({ currentScreen: Screen.Library }),
 
@@ -133,6 +141,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     goHome: () =>
       set((s) => ({
+        navDir: 'back' as const,
         currentScreen: Screen.Home,
         generatingStoryId: null,
         selectedWorldId: null,
@@ -150,8 +159,16 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       set((s) => ({
         onboardingDefaults: defaults,
         childDetails: s.childDetails.name
-          ? s.childDetails
-          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns },
+          ? { ...s.childDetails, voiceId: defaults.voiceId ?? s.childDetails.voiceId }
+          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns, voiceId: defaults.voiceId ?? s.childDetails.voiceId },
+      })),
+
+    updateSavedVoice: (voiceId) =>
+      set((s) => ({
+        childDetails: { ...s.childDetails, voiceId },
+        onboardingDefaults: s.onboardingDefaults
+          ? { ...s.onboardingDefaults, voiceId }
+          : s.onboardingDefaults,
       })),
 
     generateStory: (vibeId, token) => {
@@ -162,6 +179,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const placeholder = createPlaceholderStory(storyId, selectedWorldId, childDetails.name)
 
       set((s) => ({
+        navDir: 'forward' as const,
         savedStories: [placeholder, ...s.savedStories],
         currentScreen: Screen.Generating,
         generatingStoryId: storyId,
@@ -182,7 +200,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     playStory: (story) => {
       if (story.status !== StoryStatus.Ready || !story.audioFileName) return
       const uri = storageService.getAudioFileUri(story.audioFileName)
-      set({ currentStory: story, currentScreen: Screen.Player })
+      set({ navDir: 'forward', currentStory: story, currentScreen: Screen.Player })
       audioService.loadAndPlay(uri)
     },
 
@@ -209,6 +227,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     retryStory: (story) => {
       set((state) => ({
+        navDir: 'forward' as const,
         savedStories: state.savedStories.filter((item) => item.id !== story.id),
         childDetails: {
           ...freshChildDetails(state.onboardingDefaults),
@@ -244,6 +263,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     stopPlayback: () => {
       audioService.stop()
       set((s) => ({
+        navDir: 'back' as const,
         currentScreen: Screen.Home,
         currentStory: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
@@ -260,6 +280,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         }
       }
       set((s) => ({
+        navDir: 'back' as const,
         currentScreen: Screen.Home,
         generatingStoryId: null,
         selectedWorldId: null,
@@ -279,10 +300,16 @@ export const useStoryStore = create<StoryStore>((set, get) => {
  * name/age (if any). Keeps the parent from having to retype every night.
  */
 function freshChildDetails(
-  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns } | null,
+  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string } | null,
 ): ChildDetails {
   if (!defaults) return { ...DEFAULT_CHILD_DETAILS }
-  return { ...DEFAULT_CHILD_DETAILS, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns }
+  return {
+    ...DEFAULT_CHILD_DETAILS,
+    name: defaults.name,
+    age: defaults.age,
+    pronouns: defaults.pronouns,
+    voiceId: defaults.voiceId ?? DEFAULT_CHILD_DETAILS.voiceId,
+  }
 }
 
 /**
@@ -307,7 +334,7 @@ async function runGeneration(
       signal
     )
 
-    const audioBase64 = await apiService.generateAudio(storyText, token, voiceId, signal)
+    const audioBase64 = await apiService.generateAudio(storyText, token, voiceId, signal, vibeId)
     const audioFileName = await storageService.saveAudioFile(audioBase64)
 
     const finishedStory: Story = {

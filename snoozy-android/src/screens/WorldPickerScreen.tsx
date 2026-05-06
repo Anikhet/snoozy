@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Dimensions,
   Pressable,
@@ -10,17 +10,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, {
-  Easing,
-  FadeIn,
   FadeInDown,
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
+import { BackSwipeZone } from '@/components/BackSwipeZone'
 import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { WORLDS } from '@/config/storyOptions'
@@ -91,24 +89,17 @@ export default function WorldPickerScreen() {
   const childDetails = useStoryStore((s) => s.childDetails)
   const onboardingDefaults = useStoryStore((s) => s.onboardingDefaults)
 
+  useBackHandler(goHome)
+
   const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null)
 
-  const floatY = useSharedValue(0)
-  const mascotStyle = useAnimatedStyle(() => ({ transform: [{ translateY: floatY.value }] }))
-
-  useEffect(() => {
-    floatY.value = withRepeat(
-      withTiming(-8, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    )
-  }, [])
 
   const displayName = childDetails.name || onboardingDefaults?.name
   const displayAge = childDetails.age || onboardingDefaults?.age
 
   return (
-    <SafeAreaView edges={['bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+      <BackSwipeZone onBack={goHome} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Header */}
@@ -123,18 +114,11 @@ export default function WorldPickerScreen() {
           </Pressable>
         </View>
 
-        {/* Mascot */}
-        <Animated.View entering={FadeIn.delay(50).duration(600)} style={styles.mascotWrapper}>
-          <Animated.Image
-            source={require('../../assets/images/mascot-happy.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
-        </Animated.View>
+
 
         {/* Title block */}
         <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.titleBlock}>
-          <Text style={[styles.title, { color: colors.ink }]}>Choose a world</Text>
+          <Text style={styles.title}>Choose a world</Text>
           <Text style={[Fonts.body, { color: colors.inkSoft, textAlign: 'center', marginTop: Spacing.sm }]}>
             Where does tonight's story take place?
           </Text>
@@ -231,14 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mascotWrapper: {
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  mascot: {
-    width: SCREEN_WIDTH * 0.38,
-    height: SCREEN_WIDTH * 0.38,
-  },
+
   titleBlock: {
     alignItems: 'center',
     marginTop: Spacing.md,
@@ -247,7 +224,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 32,
-    letterSpacing: -0.6,
+    color: '#4B367C',
     textAlign: 'center',
   },
   chipRow: {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
+  BackHandler,
   Dimensions,
   ImageBackground,
   KeyboardAvoidingView,
@@ -186,6 +187,15 @@ export function AuthScreen() {
     setMode(next)
   }
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (mode === 'signUp') { switchMode('signIn'); return true }
+      if (mode === 'verifyEmail') { switchMode('signUp'); return true }
+      return false  // signIn: let OS handle it (exits app)
+    })
+    return () => sub.remove()
+  }, [mode])
+
   const onSignIn = async () => {
     if (!isSignInLoaded) return
     setIsLoading(true); setError(null)
@@ -253,7 +263,7 @@ export function AuthScreen() {
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.kav}

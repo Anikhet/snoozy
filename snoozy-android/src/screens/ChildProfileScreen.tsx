@@ -29,6 +29,7 @@ import { Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Pronouns } from '@/types/story'
 import { useEffect } from 'react'
+import { useBackHandler } from '@/hooks/useBackHandler'
 
 export const CHILD_PROFILE_KEY = 'snoozy_child_profile'
 
@@ -45,11 +46,15 @@ const PRONOUN_OPTIONS: { label: string; value: Pronouns }[] = [
 
 interface Props {
   onFinish: () => void
+  /** If provided, Android back button calls this. Omit to block back during onboarding. */
+  onBack?: () => void
 }
 
-export function ChildProfileScreen({ onFinish }: Props) {
+export function ChildProfileScreen({ onFinish, onBack }: Props) {
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
   const existing = useStoryStore((s) => s.onboardingDefaults)
+
+  useBackHandler(onBack ?? (() => {}))
 
   const [name, setName] = useState(existing?.name ?? '')
   const [age, setAge] = useState(existing?.age ?? 5)
@@ -95,7 +100,7 @@ export function ChildProfileScreen({ onFinish }: Props) {
         pointerEvents="none"
       />
 
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import {
+  BackHandler,
   Dimensions,
   FlatList,
   Image,
@@ -9,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
@@ -37,6 +39,8 @@ function getGreetingLead(): string {
 }
 
 export function HomeScreen() {
+  useBackHandler(BackHandler.exitApp)
+
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)
@@ -152,7 +156,7 @@ export function HomeScreen() {
         /> */}
       </ImageBackground>
 
-      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
       <FlatList
         data={savedStories.slice(0, 3)}
         renderItem={renderItem}
@@ -252,8 +256,8 @@ export function HomeScreen() {
               renderToHardwareTextureAndroid
             >
               {savedStories.length === 0 ? (
-                <Text style={[styles.ctaHint, { color: colors.inkMute }]}>
-                  Your next bedtime adventure is one tap away
+                <Text style={[styles.ctaHint, { color: colors.inkSoft }]}>
+                  Let's create your first magical story
                 </Text>
               ) : null}
               {ctaButton}
@@ -319,11 +323,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bgImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    ...StyleSheet.absoluteFillObject,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     letterSpacing: 0.1,
-    color: '#2D1F6E',
+    color: '#4B367C',
   },
   greetingSub: {
     fontFamily: 'Nunito_600SemiBold',
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 44,
     letterSpacing: -1,
-    color: '#2D1F6E',
+    color: '#4B367C',
   },
   mascotWrapper: {
     alignItems: 'center',
@@ -365,8 +365,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   mascotWrapperEmpty: {
-    marginTop: 20,
-    marginBottom: -80,
+    marginTop: 10,
+    marginBottom: -110,
   },
   mascot: {
     width: SCREEN_WIDTH * 1.1,
@@ -406,11 +406,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   inlineCtaEmpty: {
-    marginTop: Spacing.xxl,
+    marginTop: Spacing.sm,
   },
   ctaHint: {
     fontFamily: 'Nunito_600SemiBold',
-    fontSize: 14,
+    fontSize: 13,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
