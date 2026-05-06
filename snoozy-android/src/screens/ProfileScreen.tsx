@@ -19,6 +19,7 @@ import { copyAsync, documentDirectory } from 'expo-file-system/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuth } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
@@ -27,6 +28,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AVATAR_STORAGE_KEY = 'snoozy_profile_avatar'
 
 export function ProfileScreen() {
+  const goHome = useStoryStore((s) => s.goHome)
+  useBackHandler(goHome)
+
   const { colors } = useThemeColors()
   const { signOut } = useAuth()
 

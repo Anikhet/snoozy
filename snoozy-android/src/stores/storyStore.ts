@@ -21,6 +21,8 @@ const generationTasks = new Map<string, AbortController>()
 
 interface StoryStore {
   currentScreen: Screen
+  /** Direction of the last navigation — used by App.tsx to pick enter/exit animations. */
+  navDir: 'forward' | 'back'
   selectedWorldId: string | null
   selectedVibeId: string | null
   generatingStoryId: string | null
@@ -36,6 +38,8 @@ interface StoryStore {
 
   navigateTo: (screen: Screen) => void
   navigateToWorldPicker: () => void
+  /** Navigate back to WorldPicker (from VibePicker). Sets navDir='back' for correct exit animation. */
+  backToWorldPicker: () => void
   navigateToVibePicker: (worldId: string) => void
   navigateToGenerating: () => void
   navigateToStoryEnd: () => void
@@ -74,11 +78,12 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
   // Navigate to StoryEnd when audio finishes naturally
   audioService.setCompletionListener(() => {
-    set({ currentScreen: Screen.StoryEnd })
+    set({ navDir: 'forward', currentScreen: Screen.StoryEnd })
   })
 
   return {
     currentScreen: Screen.Home,
+    navDir: 'forward' as const,
     selectedWorldId: null,
     selectedVibeId: null,
     generatingStoryId: null,
@@ -96,16 +101,18 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     openProfileEdit: () => set({ editingProfile: true }),
 
-    closeProfileEdit: () => set({ editingProfile: false, currentScreen: Screen.WorldPicker }),
+    closeProfileEdit: () => set({ navDir: 'back' as const, editingProfile: false }),
 
-    navigateToWorldPicker: () => set({ currentScreen: Screen.WorldPicker }),
+    navigateToWorldPicker: () => set({ navDir: 'forward' as const, currentScreen: Screen.WorldPicker }),
+
+    backToWorldPicker: () => set({ navDir: 'back' as const, currentScreen: Screen.WorldPicker }),
 
     navigateToVibePicker: (worldId: string) =>
-      set({ selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
+      set({ navDir: 'forward' as const, selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
 
-    navigateToGenerating: () => set({ currentScreen: Screen.Generating }),
+    navigateToGenerating: () => set({ navDir: 'forward' as const, currentScreen: Screen.Generating }),
 
-    navigateToStoryEnd: () => set({ currentScreen: Screen.StoryEnd }),
+    navigateToStoryEnd: () => set({ navDir: 'forward' as const, currentScreen: Screen.StoryEnd }),
 
     navigateToLibrary: () => set({ currentScreen: Screen.Library }),
 
@@ -133,6 +140,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     goHome: () =>
       set((s) => ({
+        navDir: 'back' as const,
         currentScreen: Screen.Home,
         generatingStoryId: null,
         selectedWorldId: null,
@@ -162,6 +170,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const placeholder = createPlaceholderStory(storyId, selectedWorldId, childDetails.name)
 
       set((s) => ({
+        navDir: 'forward' as const,
         savedStories: [placeholder, ...s.savedStories],
         currentScreen: Screen.Generating,
         generatingStoryId: storyId,
@@ -182,7 +191,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     playStory: (story) => {
       if (story.status !== StoryStatus.Ready || !story.audioFileName) return
       const uri = storageService.getAudioFileUri(story.audioFileName)
-      set({ currentStory: story, currentScreen: Screen.Player })
+      set({ navDir: 'forward', currentStory: story, currentScreen: Screen.Player })
       audioService.loadAndPlay(uri)
     },
 
@@ -209,6 +218,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     retryStory: (story) => {
       set((state) => ({
+        navDir: 'forward' as const,
         savedStories: state.savedStories.filter((item) => item.id !== story.id),
         childDetails: {
           ...freshChildDetails(state.onboardingDefaults),
@@ -244,6 +254,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     stopPlayback: () => {
       audioService.stop()
       set((s) => ({
+        navDir: 'back' as const,
         currentScreen: Screen.Home,
         currentStory: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
@@ -260,6 +271,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         }
       }
       set((s) => ({
+        navDir: 'back' as const,
         currentScreen: Screen.Home,
         generatingStoryId: null,
         selectedWorldId: null,

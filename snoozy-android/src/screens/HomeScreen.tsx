@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import {
+  BackHandler,
   Dimensions,
   FlatList,
   Image,
@@ -9,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
@@ -37,6 +39,8 @@ function getGreetingLead(): string {
 }
 
 export function HomeScreen() {
+  useBackHandler(BackHandler.exitApp)
+
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)

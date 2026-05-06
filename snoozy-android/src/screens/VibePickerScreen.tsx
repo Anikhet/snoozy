@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import {
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,19 +12,22 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
+import { BackSwipeZone } from '@/components/BackSwipeZone'
 import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { VIBES, WORLDS } from '@/config/storyOptions'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 export default function VibePickerScreen() {
   const { colors } = useThemeColors()
   const { getToken } = useAuth()
-  const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)
+  const backToWorldPicker = useStoryStore((s) => s.backToWorldPicker)
   const generateStory = useStoryStore((s) => s.generateStory)
   const selectedWorldId = useStoryStore((s) => s.selectedWorldId)
   const childDetails = useStoryStore((s) => s.childDetails)
+
+  useBackHandler(backToWorldPicker)
 
   const [selectedVibeId, setSelectedVibeId] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -46,13 +48,14 @@ export default function VibePickerScreen() {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+      <BackSwipeZone onBack={backToWorldPicker} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Header */}
         <View style={styles.header}>
           <Pressable
             style={[styles.backBtn, { backgroundColor: colors.surface }]}
-            onPress={navigateToWorldPicker}
+            onPress={backToWorldPicker}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
@@ -67,7 +70,7 @@ export default function VibePickerScreen() {
         {selectedWorld ? (
           <Animated.View entering={FadeInDown.delay(50).duration(400)} style={styles.worldChipRow}>
             <Pressable
-              onPress={navigateToWorldPicker}
+              onPress={backToWorldPicker}
               style={[styles.worldChip, { backgroundColor: colors.primarySoft }]}
               accessibilityRole="button"
               accessibilityLabel="Edit world selection"

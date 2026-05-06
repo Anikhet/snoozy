@@ -17,6 +17,8 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
+import { BackSwipeZone } from '@/components/BackSwipeZone'
 import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { WORLDS } from '@/config/storyOptions'
@@ -87,6 +89,8 @@ export default function WorldPickerScreen() {
   const childDetails = useStoryStore((s) => s.childDetails)
   const onboardingDefaults = useStoryStore((s) => s.onboardingDefaults)
 
+  useBackHandler(goHome)
+
   const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null)
 
 
@@ -95,6 +99,7 @@ export default function WorldPickerScreen() {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+      <BackSwipeZone onBack={goHome} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Header */}

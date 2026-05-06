@@ -22,6 +22,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { useStoryStore } from '@/stores/storyStore'
 import { StoryCoverTile } from '@/components/StoryCoverTile'
 
@@ -98,6 +99,8 @@ export default function StoryEndScreen() {
   const playStory = useStoryStore((s) => s.playStory)
   const rateStory = useStoryStore((s) => s.rateStory)
   const childDetails = useStoryStore((s) => s.childDetails)
+
+  useBackHandler(goHome)
 
   const [rating, setRating] = useState<number | null>(null)
   const childName = childDetails.name || 'Dreamer'

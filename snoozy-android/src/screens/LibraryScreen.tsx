@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import {
   Fonts,
   Radii,
@@ -107,6 +108,9 @@ function StoryCard({
 }
 
 export function LibraryScreen() {
+  const goHome = useStoryStore((s) => s.goHome)
+  useBackHandler(goHome)
+
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const playStory = useStoryStore((s) => s.playStory)

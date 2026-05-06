@@ -14,6 +14,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
@@ -129,6 +130,9 @@ const hlStyles = StyleSheet.create({
 // ─── InsightsScreen ────────────────────────────────────────────────────────────
 
 export function InsightsScreen() {
+  const goHome = useStoryStore((s) => s.goHome)
+  useBackHandler(goHome)
+
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const childDetails = useStoryStore((s) => s.childDetails)

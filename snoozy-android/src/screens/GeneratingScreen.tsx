@@ -22,6 +22,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useBackHandler } from '@/hooks/useBackHandler'
 import { Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { StoryStatus } from '@/types/story'
@@ -61,6 +62,8 @@ export default function GeneratingScreen() {
   const goHome = useStoryStore((s) => s.goHome)
   const cancelGeneration = useStoryStore((s) => s.cancelGeneration)
   const childDetails = useStoryStore((s) => s.childDetails)
+
+  useBackHandler(cancelGeneration)
 
   const childName = childDetails.name || 'your dreamer'
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
+  BackHandler,
   Dimensions,
   ImageBackground,
   KeyboardAvoidingView,
@@ -185,6 +186,15 @@ export function AuthScreen() {
     resetFields()
     setMode(next)
   }
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (mode === 'signUp') { switchMode('signIn'); return true }
+      if (mode === 'verifyEmail') { switchMode('signUp'); return true }
+      return false  // signIn: let OS handle it (exits app)
+    })
+    return () => sub.remove()
+  }, [mode])
 
   const onSignIn = async () => {
     if (!isSignInLoaded) return

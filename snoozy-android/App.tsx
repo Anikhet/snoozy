@@ -8,8 +8,11 @@ import Animated, {
   FadeIn,
   FadeOut,
   SlideInRight,
+  SlideInLeft,
   SlideOutLeft,
+  SlideOutRight,
   SlideInDown,
+  SlideOutDown,
 } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useFonts } from 'expo-font'
@@ -54,6 +57,7 @@ export default function App() {
   const isDark = false // Forced to false to disable dark mode per user request: scheme === 'dark'
   const colors = isDark ? Colors.dark : Colors.light
   const currentScreen = useStoryStore((s) => s.currentScreen)
+  const navDir = useStoryStore((s) => s.navDir)
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
   const editingProfile = useStoryStore((s) => s.editingProfile)
@@ -120,17 +124,21 @@ export default function App() {
         </Animated.View>
       ) : null}
       {currentScreen === Screen.Player ? (
-        <Animated.View key="player" style={styles.flex} entering={SlideInDown.duration(TRANSITION_DURATION)} exiting={FadeOut.duration(TRANSITION_DURATION)}>
+        <Animated.View key="player" style={styles.flex} entering={SlideInDown.duration(TRANSITION_DURATION)} exiting={SlideOutDown.duration(TRANSITION_DURATION)}>
           <StoryPlayerScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.WorldPicker ? (
-        <Animated.View key="worldPicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+        <Animated.View key="worldPicker" style={styles.flex}
+          entering={(navDir === 'back' ? SlideInLeft : SlideInRight).duration(TRANSITION_DURATION)}
+          exiting={(navDir === 'back' ? SlideOutRight : SlideOutLeft).duration(TRANSITION_DURATION)}>
           <WorldPickerScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.VibePicker ? (
-        <Animated.View key="vibePicker" style={styles.flex} entering={SlideInRight.duration(TRANSITION_DURATION)} exiting={SlideOutLeft.duration(TRANSITION_DURATION)}>
+        <Animated.View key="vibePicker" style={styles.flex}
+          entering={SlideInRight.duration(TRANSITION_DURATION)}
+          exiting={(navDir === 'back' ? SlideOutRight : SlideOutLeft).duration(TRANSITION_DURATION)}>
           <VibePickerScreen />
         </Animated.View>
       ) : null}
@@ -191,7 +199,7 @@ export default function App() {
                           entering={FadeIn.duration(TRANSITION_DURATION)}
                           exiting={FadeOut.duration(TRANSITION_DURATION)}
                         >
-                          <ChildProfileScreen onFinish={closeProfileEdit} />
+                          <ChildProfileScreen onFinish={closeProfileEdit} onBack={closeProfileEdit} />
                         </Animated.View>
                       ) : appScreens}
                     </SignedIn>
