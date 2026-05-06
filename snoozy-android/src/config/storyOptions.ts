@@ -8,11 +8,12 @@ export const WORLDS = [
 ] as const
 
 export const VIBES = [
-  { id: 'happy',    emoji: '🌟', name: 'Happy',    description: 'Feel joy, smiles, and light in your heart.',    emojiBg: '#FFF8E0' },
-  { id: 'calm',     emoji: '☁️', name: 'Calm',     description: 'Feel peaceful, relaxed, and ready for sleep.',  emojiBg: '#EAF0FF' },
-  { id: 'loved',    emoji: '💖', name: 'Loved',    description: 'Feel safe, cared for, and surrounded by love.', emojiBg: '#FFE8F0' },
-  { id: 'brave',    emoji: '🌙', name: 'Brave',    description: 'Feel courageous and ready to try new things.',  emojiBg: '#F0E8FF' },
+  { id: 'wonder',  emoji: '🌟', name: 'Happy',    description: 'Feel joy, smiles, and light in your heart.',    emojiBg: '#FFF8E0' },
+  { id: 'cozy',    emoji: '☁️', name: 'Calm',     description: 'Feel peaceful, relaxed, and ready for sleep.',  emojiBg: '#EAF0FF' },
+  { id: 'kind',    emoji: '💖', name: 'Loved',    description: 'Feel safe, cared for, and surrounded by love.', emojiBg: '#FFE8F0' },
+  { id: 'brave',   emoji: '🌙', name: 'Brave',    description: 'Feel courageous and ready to try new things.',  emojiBg: '#F0E8FF' },
   { id: 'inspired', emoji: '🌈', name: 'Inspired', description: 'Feel curious, creative, and full of wonder.',   emojiBg: '#E8FFF4' },
+  { id: 'friends',  emoji: '🐾', name: 'Friends',  description: 'Feel the joy of belonging and making a friend.', emojiBg: '#FFF0E8' },
 ] as const
 
 export type WorldId = (typeof WORLDS)[number]['id']

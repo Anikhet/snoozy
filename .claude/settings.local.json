@@ -21,7 +21,8 @@
       "Bash(node tests/test-pronouns.js)",
       "Bash(node tests/test-tts-preprocessor.js)",
       "Bash(node tests/test-tts-elevenlabs.js cozy)",
-      "Bash(ffmpeg -version)"
+      "Bash(ffmpeg -version)",
+      "Bash(node -e ' *)"
     ]
   }
 }
