@@ -5,6 +5,7 @@ const OpenAI = require('openai')
 const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
+const { prepareTextForTTS } = require('../utils/ttsPreprocessor')
 
 const router = express.Router()
 
@@ -279,12 +280,14 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
  *   output_format       — mp3_44100_128: high quality, reasonable mobile file size
  */
 async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender, vibeId, config, res, startTime) {
-  // FIX #8: Resolve voice — explicit > region default > global fallback
   const voiceId = resolveElevenLabsVoice(requestedVoiceId, userRegion, gender)
   log('AUDIO', `ElevenLabs voice resolved: ${voiceId} (requested: ${requestedVoiceId || 'none'}, region: ${userRegion || 'none'})`)
 
-  // FIX #7: Check cache before hitting the API
-  const cacheKey    = getCacheKey(text, voiceId)
+  const processedText = prepareTextForTTS(text, vibeId)
+  log('AUDIO', `TTS pre-processor: ${text.length} chars → ${processedText.length} chars`)
+
+  // Cache key uses processed text so vibe-specific break timings are part of the key
+  const cacheKey    = getCacheKey(processedText, voiceId)
   const cachedAudio = getFromCache(cacheKey)
   if (cachedAudio) {
     log('AUDIO', `Cache HIT (${cacheKey.slice(0, 8)}…) — serving ${(cachedAudio.length / 1024).toFixed(1)}KB from cache`)
@@ -306,8 +309,9 @@ async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender
       Accept:         'audio/mpeg',
     },
     body: JSON.stringify({
-      text,
+      text: processedText,
       model_id: 'eleven_multilingual_v2',
+      enable_ssml_parsing: true,
       voice_settings: {
         ...{ stability: 0.75, style: 0.12 },
         ...(VIBE_VOICE_OVERRIDES[vibeId] ?? {}),

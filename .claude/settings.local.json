@@ -18,7 +18,9 @@
       "Bash(npm uninstall *)",
       "Bash(git -C /Users/pkats-mac/snoozy diff --stat HEAD)",
       "Bash(lsof -ti:3001)",
-      "Bash(node tests/test-pronouns.js)"
+      "Bash(node tests/test-pronouns.js)",
+      "Bash(node tests/test-tts-preprocessor.js)",
+      "Bash(node tests/test-tts-elevenlabs.js cozy)"
     ]
   }
 }
