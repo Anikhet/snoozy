@@ -6,6 +6,7 @@ const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
 const { prepareTextForTTS } = require('../utils/ttsPreprocessor')
+const { normalizeLoudness } = require('../utils/audioNormalizer')
 
 const router = express.Router()
 
@@ -350,9 +351,15 @@ async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender
   // Trade-off: slightly higher memory vs being able to cache.
   // For a 700-word story, the MP3 is ~200–400KB — well within safe limits.
   const arrayBuffer = await ttsResponse.arrayBuffer()
-  const buffer      = Buffer.from(arrayBuffer)
+  const rawBuffer   = Buffer.from(arrayBuffer)
 
-  // Store in cache before sending
+  const { buffer, normalized, reason } = await normalizeLoudness(rawBuffer)
+  if (normalized) {
+    log('AUDIO', `Loudness normalized: ${(rawBuffer.length / 1024).toFixed(1)}KB → ${(buffer.length / 1024).toFixed(1)}KB`)
+  } else {
+    log('AUDIO', `Loudness normalization skipped (${reason}) — serving raw audio`)
+  }
+
   setInCache(cacheKey, buffer)
 
   res.setHeader('Content-Type', 'audio/mpeg')

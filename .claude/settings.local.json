@@ -20,7 +20,8 @@
       "Bash(lsof -ti:3001)",
       "Bash(node tests/test-pronouns.js)",
       "Bash(node tests/test-tts-preprocessor.js)",
-      "Bash(node tests/test-tts-elevenlabs.js cozy)"
+      "Bash(node tests/test-tts-elevenlabs.js cozy)",
+      "Bash(ffmpeg -version)"
     ]
   }
 }
