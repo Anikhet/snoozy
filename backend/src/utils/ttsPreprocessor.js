@@ -27,6 +27,7 @@ const VIBE_BREAK_MS = {
   kind:    700,
   wonder:  700,
   friends: 700,
+  inspired: 700,
 }
 const DEFAULT_BREAK_MS = 700
 

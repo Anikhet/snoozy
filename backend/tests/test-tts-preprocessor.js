@@ -148,7 +148,7 @@ assertNotContains(
 
 console.log('\n[7] VIBE_BREAK_MS completeness')
 
-const knownVibes = ['cozy', 'brave', 'kind', 'wonder', 'friends']
+const knownVibes = ['cozy', 'brave', 'kind', 'wonder', 'friends', 'inspired']
 for (const vibe of knownVibes) {
   assert(typeof VIBE_BREAK_MS[vibe] === 'number', `${vibe} has a numeric break time`)
   assert(VIBE_BREAK_MS[vibe] >= 500 && VIBE_BREAK_MS[vibe] <= 1200, `${vibe} break time is in sane range`)
@@ -184,10 +184,8 @@ assert(result.trim().length > 0, 'output is non-empty')
 console.log('\n[9] Pipeline ordering — sleep breaks not clobbered by paragraph injection')
 
 const ordered = prepareTextForTTS(sampleStory, 'brave')
-// Sleep ending has 1200ms breaks — paragraph breaks are 600ms for brave
-// Both should co-exist
 assertContains(ordered, '<break time="1200ms"/>', '1200ms sleep breaks present')
-assertContains(ordered, '<break time="600ms"/>',  '600ms paragraph breaks present')
+assertContains(ordered, '<break time="600ms"/>',  '600ms brave paragraph breaks present')
 
 // ─── 10. enable_ssml_parsing safety — no literal tag text leaked ─────────
 

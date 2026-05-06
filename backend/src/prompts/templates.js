@@ -174,6 +174,22 @@ of being chosen and of choosing back.
 End with {name} and their new friend resting together, 
 knowing they'll find each other again in tomorrow's dreams.`,
   },
+  {
+    id: 'inspired',
+    name: 'Inspired',
+    emoji: '🌈',
+    description: 'Curious, creative, and full of ideas',
+    context: `Emotional arc: {name} follows a thread of curiosity
+and it leads somewhere that sparks something inside them.
+Not just wonder at the world — but the feeling of
+"I could make something. I could try something. I have an idea."
+The world hands {name} a gift: a new way of seeing,
+a skill half-discovered, a tiny creative act that feels enormous.
+The emotional payoff is creative aliveness —
+the particular joy of a mind that has been lit up.
+End with {name} drifting to sleep already half-dreaming
+of what they will imagine, build, or become.`,
+  },
 ]
 
 // ─────────────────────────────────────────────
@@ -508,11 +524,12 @@ const RECOMMENDED_API_SETTINGS = {
  * and speed are held constant across vibes.
  */
 const VIBE_VOICE_OVERRIDES = {
-  cozy:    { stability: 0.70, style: 0.10 },
-  brave:   { stability: 0.60, style: 0.20 },
-  kind:    { stability: 0.65, style: 0.15 },
-  wonder:  { stability: 0.60, style: 0.20 },
-  friends: { stability: 0.65, style: 0.15 },
+  cozy:     { stability: 0.70, style: 0.10 },
+  brave:    { stability: 0.60, style: 0.20 },
+  kind:     { stability: 0.65, style: 0.15 },
+  wonder:   { stability: 0.60, style: 0.20 },
+  friends:  { stability: 0.65, style: 0.15 },
+  inspired: { stability: 0.60, style: 0.18 },
 }
 
 module.exports = {
