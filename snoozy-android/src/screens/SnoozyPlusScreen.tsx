@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -19,13 +19,13 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated'
 import { useAuth } from '@clerk/clerk-expo'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
+import { useRegion } from '@/hooks/useRegion'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
-import { Fonts, Radii, Spacing } from '@/config/tokens'
+import { Radii, Spacing } from '@/config/tokens'
 import {
   SUBSCRIPTION_PLANS,
   PLUS_FEATURES,
@@ -114,12 +114,17 @@ function FeatureRow({ item, index }: { item: (typeof PLUS_FEATURES)[0]; index: n
 function PlanCard({
   plan,
   selected,
+  isIndia,
   onPress,
 }: {
   plan: PlanConfig
   selected: boolean
+  isIndia: boolean
   onPress: () => void
 }) {
+  const display = isIndia ? plan.displayInr : plan.displayUsd
+  const perMonth = isIndia ? plan.perMonthInr : plan.perMonthUsd
+
   return (
     <Pressable
       onPress={onPress}
@@ -131,7 +136,6 @@ function PlanCard({
       accessibilityRole="radio"
       accessibilityState={{ selected }}
     >
-      {/* Selection indicator */}
       <View style={[styles.planRadio, selected && styles.planRadioSelected]}>
         {selected && <View style={styles.planRadioDot} />}
       </View>
@@ -148,13 +152,13 @@ function PlanCard({
           ) : null}
         </View>
         <Text style={[styles.planPerMonth, selected && styles.planPerMonthSelected]}>
-          {plan.perMonthInr}
+          {perMonth}
         </Text>
       </View>
 
       <View style={styles.planPriceCol}>
         <Text style={[styles.planPrice, selected && styles.planPriceSelected]}>
-          {plan.displayInr}
+          {display}
         </Text>
         <Text style={[styles.planPricePeriod, selected && styles.planPricePeriodSelected]}>
           /{plan.id === 'monthly' ? 'mo' : 'yr'}
@@ -244,13 +248,15 @@ function PaywallView({ onClose }: { onClose: () => void }) {
   const { getToken } = useAuth()
   const activateSubscription = useStoryStore((s) => s.activateSubscription)
   const childDetails = useStoryStore((s) => s.childDetails)
+  const { isIndia } = useRegion()
 
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual')
   const [loading, setLoading] = useState<'stripe' | 'razorpay' | null>(null)
 
   const plan = SUBSCRIPTION_PLANS.find((p) => p.id === selectedPlan)!
+  const priceDisplay = isIndia ? plan.displayInr : plan.displayUsd
+  const perMonthDisplay = isIndia ? plan.perMonthInr : plan.perMonthUsd
 
-  // Scale animation on plan switch
   const scale = useSharedValue(1)
   const priceAnim = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -295,7 +301,6 @@ function PaywallView({ onClose }: { onClose: () => void }) {
           transactionId: outcome.transactionId,
         })
 
-        // Brief success animation before closing
         await new Promise((r) => setTimeout(r, 300))
         onClose()
       } finally {
@@ -304,6 +309,52 @@ function PaywallView({ onClose }: { onClose: () => void }) {
     },
     [loading, selectedPlan, getToken, childDetails.name, activateSubscription, onClose],
   )
+
+  // India: Razorpay first (preferred), Stripe second
+  // Global: Stripe first (primary), Razorpay second
+  const primaryProvider = isIndia ? 'razorpay' : 'stripe'
+  const secondaryProvider = isIndia ? 'stripe' : 'razorpay'
+
+  const buttonConfig = {
+    razorpay: {
+      label: 'Pay with Razorpay',
+      icon: 'card-outline' as const,
+      primary: true,
+      textColor: '#FFFFFF',
+      btnStyle: styles.payBtnRazorpay,
+    },
+    stripe: {
+      label: 'Pay with Card',
+      icon: 'globe-outline' as const,
+      primary: false,
+      textColor: P.primary,
+      btnStyle: styles.payBtnStripe,
+    },
+  }
+
+  function PayButton({ provider }: { provider: 'stripe' | 'razorpay' }) {
+    const cfg = buttonConfig[provider]
+    return (
+      <Pressable
+        onPress={() => handlePayment(provider)}
+        disabled={!!loading}
+        style={({ pressed }) => [
+          styles.payBtn,
+          cfg.btnStyle,
+          { opacity: pressed || (loading && loading !== provider) ? 0.55 : 1 },
+        ]}
+      >
+        {loading === provider ? (
+          <ActivityIndicator color={cfg.primary ? '#FFFFFF' : P.primary} size="small" />
+        ) : (
+          <>
+            <Ionicons name={cfg.icon} size={18} color={cfg.textColor} style={{ marginRight: 8 }} />
+            <Text style={[styles.payBtnText, { color: cfg.textColor }]}>{cfg.label}</Text>
+          </>
+        )}
+      </Pressable>
+    )
+  }
 
   return (
     <ScrollView
@@ -340,6 +391,7 @@ function PaywallView({ onClose }: { onClose: () => void }) {
             key={p.id}
             plan={p}
             selected={selectedPlan === p.id}
+            isIndia={isIndia}
             onPress={() => handlePlanSelect(p.id as SubscriptionPlan)}
           />
         ))}
@@ -348,59 +400,22 @@ function PaywallView({ onClose }: { onClose: () => void }) {
       {/* Price summary */}
       <Animated.View entering={FadeInDown.delay(500).duration(400)} style={priceAnim}>
         <View style={styles.priceSummary}>
-          <Text style={styles.priceSummaryAmount}>{plan.displayInr}</Text>
+          <Text style={styles.priceSummaryAmount}>{priceDisplay}</Text>
           <Text style={styles.priceSummaryPeriod}>
             {plan.id === 'monthly' ? 'per month' : 'per year'}
           </Text>
           {plan.savingsPercent ? (
             <Text style={styles.priceSummaryNote}>
-              That's just {plan.perMonthInr} — save {plan.savingsPercent}% vs monthly
+              That's just {perMonthDisplay} — save {plan.savingsPercent}% vs monthly
             </Text>
           ) : null}
         </View>
       </Animated.View>
 
-      {/* Payment buttons */}
+      {/* Payment buttons — order driven by region */}
       <Animated.View entering={FadeInDown.delay(560).duration(400)} style={styles.paymentButtons}>
-        {/* Razorpay — primary for Indian users */}
-        <Pressable
-          onPress={() => handlePayment('razorpay')}
-          disabled={!!loading}
-          style={({ pressed }) => [
-            styles.payBtn,
-            styles.payBtnRazorpay,
-            { opacity: pressed || (loading && loading !== 'razorpay') ? 0.55 : 1 },
-          ]}
-        >
-          {loading === 'razorpay' ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <>
-              <Ionicons name="card-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.payBtnText}>Pay with Razorpay</Text>
-            </>
-          )}
-        </Pressable>
-
-        {/* Stripe — global */}
-        <Pressable
-          onPress={() => handlePayment('stripe')}
-          disabled={!!loading}
-          style={({ pressed }) => [
-            styles.payBtn,
-            styles.payBtnStripe,
-            { opacity: pressed || (loading && loading !== 'stripe') ? 0.55 : 1 },
-          ]}
-        >
-          {loading === 'stripe' ? (
-            <ActivityIndicator color={P.primary} size="small" />
-          ) : (
-            <>
-              <Ionicons name="globe-outline" size={18} color={P.primary} style={{ marginRight: 8 }} />
-              <Text style={[styles.payBtnText, { color: P.primary }]}>Pay with Card (Stripe)</Text>
-            </>
-          )}
-        </Pressable>
+        <PayButton provider={primaryProvider} />
+        <PayButton provider={secondaryProvider} />
       </Animated.View>
 
       {/* Legal */}
