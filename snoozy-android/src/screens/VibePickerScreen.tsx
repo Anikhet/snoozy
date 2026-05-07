@@ -48,18 +48,11 @@ export default function VibePickerScreen() {
   }
 
   return (
-    <View style={styles.root}>
-      <ImageBackground
-        source={require('../../assets/images/bg-loading.png')}
-        style={styles.bgImage}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
-          locations={[0, 0.2, 0.4]}
-          style={StyleSheet.absoluteFill}
-        />
-      </ImageBackground>
+    <ImageBackground
+      source={require('../../assets/images/bg-loading.png')}
+      style={styles.root}
+      resizeMode="cover"
+    >
     <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
       <BackSwipeZone onBack={backToWorldPicker} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -113,7 +106,7 @@ export default function VibePickerScreen() {
                   style={[
                     styles.vibeRow,
                     {
-                      backgroundColor: colors.surface,
+                      backgroundColor: '#F5F0E8',
                       borderColor: selected ? colors.primary : 'transparent',
                       borderWidth: 2,
                     },
@@ -187,13 +180,12 @@ export default function VibePickerScreen() {
         </View>
       </View>
     </SafeAreaView>
-    </View>
+    </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  bgImage: { ...StyleSheet.absoluteFillObject },
+  root: { flex: 1, backgroundColor: '#EDE8F8' },
   safe: { flex: 1 },
   scroll: { paddingBottom: Sizing.buttonHeight + Spacing.xxl },
   header: {

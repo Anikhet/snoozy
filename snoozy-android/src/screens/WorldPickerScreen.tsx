@@ -53,7 +53,7 @@ function WorldCard({ world, selected, onSelect, colors, index }: WorldCardProps)
         style={[
           styles.worldCard,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: '#F5F0E8',
             borderColor: selected ? colors.primary : 'transparent',
             borderWidth: 2,
           },
@@ -101,18 +101,11 @@ export default function WorldPickerScreen() {
   const displayAge = childDetails.age || onboardingDefaults?.age
 
   return (
-    <View style={styles.root}>
-      <ImageBackground
-        source={require('../../assets/images/bg-loading.png')}
-        style={styles.bgImage}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
-          locations={[0, 0.2, 0.4]}
-          style={StyleSheet.absoluteFill}
-        />
-      </ImageBackground>
+    <ImageBackground
+      source={require('../../assets/images/bg-loading.png')}
+      style={styles.root}
+      resizeMode="cover"
+    >
     <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
       <BackSwipeZone onBack={goHome} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -168,11 +161,11 @@ export default function WorldPickerScreen() {
       {/* Sticky CTA */}
       <View style={styles.stickyBar}>
         <LinearGradient
-          colors={['transparent', colors.background]}
+          colors={['transparent', '#EDE8F8']}
           style={styles.stickyFade}
           pointerEvents="none"
         />
-        <View style={[styles.stickyContent, { backgroundColor: colors.background }]}>
+        <View style={[styles.stickyContent, { backgroundColor: '#EDE8F8' }]}>
           <Pressable
             onPress={() => selectedWorldId && navigateToVibePicker(selectedWorldId)}
             disabled={!selectedWorldId}
@@ -199,13 +192,12 @@ export default function WorldPickerScreen() {
         </View>
       </View>
     </SafeAreaView>
-    </View>
+    </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  bgImage: { ...StyleSheet.absoluteFillObject },
+  root: { flex: 1, backgroundColor: '#EDE8F8' },
   safe: { flex: 1 },
   scroll: {
     paddingHorizontal: Spacing.lg,
