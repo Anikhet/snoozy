@@ -173,7 +173,7 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
                   accessibilityRole="button"
                   accessibilityLabel="Decrease age"
                 >
-                  <Ionicons name="remove" size={22} color="#5B5BD6" />
+                  <Ionicons name="remove" size={18} color="#5B5BD6" />
                 </Pressable>
                 <Text style={styles.stepAge}>{age}</Text>
                 <Pressable
@@ -182,7 +182,7 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
                   accessibilityRole="button"
                   accessibilityLabel="Increase age"
                 >
-                  <Ionicons name="add" size={22} color="#5B5BD6" />
+                  <Ionicons name="add" size={18} color="#5B5BD6" />
                 </Pressable>
               </View>
               <Text style={styles.ageHint}>Stories are tailored to this age</Text>
@@ -351,13 +351,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 56,
+    height: 44,
   },
   stepAge: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 28,
+    fontSize: 20,
     color: '#2D1F6E',
-    minWidth: 48,
+    minWidth: 36,
     textAlign: 'center',
   },
   ageHint: {

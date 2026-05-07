@@ -1,22 +1,28 @@
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
+import Constants, { ExecutionEnvironment } from 'expo-constants'
 import type { BedtimeValue } from '@/screens/BedtimeReminderScreen'
 
-const NOTIFICATION_ID_KEY = 'snoozy_bedtime_notif_id'
+export const NOTIFICATION_ID_KEY = 'snoozy_bedtime_notif_id'
 
-// Controls how notifications are presented when the app is foregrounded
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-})
+// expo-notifications is unsupported in Expo Go — all calls are no-ops there
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+
+if (!isExpoGo) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  })
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  if (isExpoGo) return false
+
   if (Platform.OS === 'android') {
-    // Android 13+ (API 33+) requires explicit runtime permission
     await Notifications.setNotificationChannelAsync('bedtime', {
       name: 'Bedtime Reminder',
       importance: Notifications.AndroidImportance.HIGH,
@@ -32,6 +38,8 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 export async function scheduleBedtimeNotification(bedtime: BedtimeValue): Promise<void> {
+  if (isExpoGo) return
+
   await cancelBedtimeNotification()
 
   let hour = bedtime.hour
@@ -51,12 +59,13 @@ export async function scheduleBedtimeNotification(bedtime: BedtimeValue): Promis
     },
   })
 
-  // Persist the notification ID so we can cancel it later
   const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage')
   await AsyncStorage.setItem(NOTIFICATION_ID_KEY, id)
 }
 
 export async function cancelBedtimeNotification(): Promise<void> {
+  if (isExpoGo) return
+
   const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage')
   const id = await AsyncStorage.getItem(NOTIFICATION_ID_KEY)
   if (id) {
@@ -64,5 +73,3 @@ export async function cancelBedtimeNotification(): Promise<void> {
     await AsyncStorage.removeItem(NOTIFICATION_ID_KEY)
   }
 }
-
-export { NOTIFICATION_ID_KEY }

@@ -57,7 +57,7 @@ function Stepper({
           accessibilityLabel={`Decrease ${label}`}
           hitSlop={8}
         >
-          <Ionicons name="remove" size={22} color="#5B5BD6" />
+          <Ionicons name="remove" size={18} color="#5B5BD6" />
         </Pressable>
         <Text style={styles.stepValue}>{display ?? value}</Text>
         <Pressable
@@ -67,7 +67,7 @@ function Stepper({
           accessibilityLabel={`Increase ${label}`}
           hitSlop={8}
         >
-          <Ionicons name="add" size={22} color="#5B5BD6" />
+          <Ionicons name="add" size={18} color="#5B5BD6" />
         </Pressable>
       </View>
     </View>
@@ -312,24 +312,24 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   stepBtn: {
-    width: 44,
-    height: 56,
+    width: 32,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepValue: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 26,
+    fontSize: 20,
     color: '#2D1F6E',
-    minWidth: 42,
+    minWidth: 32,
     textAlign: 'center',
   },
   colon: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 28,
+    fontSize: 22,
     color: '#4B367C',
     marginBottom: Spacing.xs,
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: 4,
   },
   periodBlock: { alignItems: 'center' },
   periodToggle: {
@@ -341,10 +341,10 @@ const styles = StyleSheet.create({
   },
   periodOption: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 15,
+    fontSize: 13,
     color: '#9B8EC4',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 10,
     textAlign: 'center',
   },
   periodActive: { color: '#5B5BD6', backgroundColor: '#EDE9FF' },

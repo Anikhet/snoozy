@@ -302,9 +302,9 @@ export function ProfileScreen() {
                   ]}
                 >
                   <LinearGradient
-                    colors={['#2D1B6B', '#1A0A3C']}
+                    colors={[colors.primary, '#9B8EC4']}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={styles.plusIconContainerDark}>
@@ -628,13 +628,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(245,197,24,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(245,197,24,0.3)',
+    borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  plusTitleDark: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#F2EDE3' },
+  plusTitleDark: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#FFFFFF' },
   plusBadgeActive: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -654,9 +654,9 @@ const styles = StyleSheet.create({
   },
   plusBadgeTextActive: { color: '#4CAF7D' },
   plusBadgeNew: {
-    backgroundColor: 'rgba(245,197,24,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(245,197,24,0.35)',
+    borderColor: 'rgba(255,255,255,0.4)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -664,8 +664,8 @@ const styles = StyleSheet.create({
   plusBadgeNewText: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 10,
-    color: '#F5C518',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-  plusSubtitleDark: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(242,237,227,0.65)' },
+  plusSubtitleDark: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.75)' },
 })
