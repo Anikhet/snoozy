@@ -12,14 +12,8 @@ import {
   View,
 } from 'react-native'
 import Animated, {
-  Easing,
-  FadeIn,
   FadeInDown,
   FadeInUp,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -28,7 +22,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Pronouns } from '@/types/story'
-import { useEffect } from 'react'
 import { useBackHandler } from '@/hooks/useBackHandler'
 
 export const CHILD_PROFILE_KEY = 'snoozy_child_profile'
@@ -64,17 +57,6 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
 
   const canProceed = name.trim().length > 0 && pronouns !== null
 
-  const floatY = useSharedValue(0)
-  const mascotStyle = useAnimatedStyle(() => ({ transform: [{ translateY: floatY.value }] }))
-
-  useEffect(() => {
-    floatY.value = withRepeat(
-      withTiming(-8, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    )
-  }, [])
-
   const handleStart = async () => {
     if (!canProceed || saving) return
     setSaving(true)
@@ -87,20 +69,18 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
   }
 
   return (
-    <View style={styles.root}>
-      <ImageBackground
-        source={require('../../assets/images/bg-loading.png')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
-      {/* Soft overlay so text stays readable */}
+    <ImageBackground
+      source={require('../../assets/images/bg-loading.png')}
+      style={styles.root}
+      resizeMode="cover"
+    >
       <LinearGradient
-        colors={['rgba(232,226,248,0.55)', 'rgba(248,244,255,0.75)']}
+        colors={['rgba(237,232,248,0.1)', 'rgba(237,232,248,0.35)', 'rgba(237,232,248,0.1)']}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -111,22 +91,10 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Mascot */}
-            <Animated.View entering={FadeIn.delay(100).duration(700)} style={styles.mascotWrapper}>
-              <Animated.View style={mascotStyle}>
-                <Animated.Image
-                  source={require('../../assets/images/mascot-happy.png')}
-                  style={styles.mascot}
-                  resizeMode="contain"
-                />
-              </Animated.View>
-            </Animated.View>
-
             {/* Hero text */}
             <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.heroBlock}>
               <Text style={styles.heroTitle}>
-                {'Now, tell us about\nyour little one '}
-                <Text style={styles.heroStar}>★</Text>
+                {'Tell us about your\nlittle one!'}
               </Text>
               <Text style={styles.heroSub}>
                 We'll use this to personalise every story
@@ -162,10 +130,8 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
                 />
               </View>
 
-              <View style={styles.divider} />
-
               {/* Age stepper */}
-              <Text style={styles.fieldLabel}>Age</Text>
+              <Text style={[styles.fieldLabel, { marginTop: Spacing.sm }]}>Age</Text>
               <View style={styles.stepper}>
                 <Pressable
                   onPress={() => setAge((a) => Math.max(MIN_AGE, a - 1))}
@@ -187,10 +153,8 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
               </View>
               <Text style={styles.ageHint}>Stories are tailored to this age</Text>
 
-              <View style={styles.divider} />
-
               {/* Pronouns */}
-              <Text style={styles.fieldLabel}>Pronouns</Text>
+              <Text style={[styles.fieldLabel, { marginTop: Spacing.sm }]}>Pronouns</Text>
               <View style={styles.pronounRow}>
                 {PRONOUN_OPTIONS.map((opt) => {
                   const selected = pronouns === opt.value
@@ -217,9 +181,18 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
                   )
                 })}
               </View>
+              {/* Info card */}
+              <View style={styles.infoCard}>
+                <View style={styles.infoIcon}>
+                  <Ionicons name="heart" size={20} color="#FFFFFF" />
+                </View>
+                <View style={styles.infoText}>
+                  <Text style={styles.infoTitle}>Your stories, your way</Text>
+                  <Text style={styles.infoBody}>We'll remember your preferences and progress to make every story extra special.</Text>
+                </View>
+              </View>
             </Animated.View>
 
-            <View style={styles.ctaSpacer} />
           </ScrollView>
         </KeyboardAvoidingView>
 
@@ -253,14 +226,14 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
           </Pressable>
         </Animated.View>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#E8E2F8',
+    backgroundColor: '#EDE8F8',
   },
   safe: {
     flex: 1,
@@ -269,16 +242,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scroll: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Sizing.buttonHeight + Spacing.xxl,
+    flexGrow: 1,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Sizing.buttonHeight + Spacing.lg,
+    justifyContent: 'center',
   },
   mascotWrapper: {
     alignItems: 'center',
     marginTop: Spacing.lg,
   },
   mascot: {
-    width: SCREEN_WIDTH * 0.46,
-    height: SCREEN_WIDTH * 0.46,
+    width: SCREEN_WIDTH * 0.52,
+    height: SCREEN_WIDTH * 0.52,
   },
   heroBlock: {
     alignItems: 'center',
@@ -288,7 +263,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 28,
+    fontSize: 29,
     color: '#2D1F6E',
     letterSpacing: -0.5,
     textAlign: 'center',
@@ -306,9 +281,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.62)',
     borderRadius: Radii.cardLarge,
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
   },
   fieldLabel: {
@@ -415,4 +390,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
   },
+  infoCard: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(91,61,168,0.10)',
+    borderRadius: Radii.card,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    gap: Spacing.sm,
+    alignItems: 'flex-start',
+    marginTop: Spacing.sm,
+  },
+  infoIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#7B5BD6',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  infoText: { flex: 1, gap: 2 },
+  infoTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#2D1F6E' },
+  infoBody: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: '#7B6B9E', lineHeight: 17 },
 })

@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   brandSub: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: '#7B6B9E', marginTop: -8 },
 
   // Sign-in floating mascot
-  signInMascotBlock: { width: SCREEN_WIDTH * 0.8, height: SCREEN_WIDTH * 0.63, alignItems: 'center', justifyContent: 'center', marginBottom: -30 },
+  signInMascotBlock: { width: SCREEN_WIDTH * 0.8, height: SCREEN_WIDTH * 0.63, alignItems: 'center', justifyContent: 'center', marginBottom: -27 },
 
   // Mascot anchored to card
   mascotCardWrapper: { width: '100%', marginTop: 70 },
