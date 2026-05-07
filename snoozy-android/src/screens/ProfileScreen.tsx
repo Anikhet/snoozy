@@ -30,6 +30,10 @@ import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import { BEDTIME_KEY, formatBedtime, BedtimeValue } from '@/screens/BedtimeReminderScreen'
 import { FAVORITE_WORLDS_KEY } from '@/screens/FavoriteThemesScreen'
 import { isActive, formatExpiry } from '@/services/subscriptionService'
+import {
+  requestNotificationPermission,
+  cancelBedtimeNotification,
+} from '@/services/notificationService'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AVATAR_STORAGE_KEY = 'snoozy_profile_avatar'
@@ -151,8 +155,16 @@ export function ProfileScreen() {
   }, [updateSavedVoice])
 
   const handleNotificationsToggle = useCallback(async (value: boolean) => {
-    setNotificationsEnabled(value)
-    await AsyncStorage.setItem(NOTIFICATIONS_KEY, value ? 'true' : 'false')
+    if (value) {
+      const granted = await requestNotificationPermission()
+      if (!granted) return // don't flip switch if user denied OS permission
+      setNotificationsEnabled(true)
+      await AsyncStorage.setItem(NOTIFICATIONS_KEY, 'true')
+    } else {
+      setNotificationsEnabled(false)
+      await AsyncStorage.setItem(NOTIFICATIONS_KEY, 'false')
+      await cancelBedtimeNotification()
+    }
   }, [])
 
   const handleLogout = useCallback(async () => {

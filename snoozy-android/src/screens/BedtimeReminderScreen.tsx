@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { scheduleBedtimeNotification } from '@/services/notificationService'
 import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
@@ -113,6 +114,11 @@ export function BedtimeReminderScreen() {
     setSaving(true)
     try {
       await AsyncStorage.setItem(BEDTIME_KEY, JSON.stringify(bedtime))
+      // Schedule the daily notification only if the user has enabled it
+      const notifRaw = await AsyncStorage.getItem('snoozy_notifications')
+      if (notifRaw === 'true') {
+        await scheduleBedtimeNotification(bedtime)
+      }
     } catch {}
     setSaving(false)
     closeProfilePanel()
