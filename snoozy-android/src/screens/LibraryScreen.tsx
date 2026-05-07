@@ -273,13 +273,13 @@ export function LibraryScreen() {
               style={styles.emptyMascot}
               resizeMode="contain"
             />
-            <Text style={[Fonts.serifItalic, { color: colors.inkMute, textAlign: 'center' }]}>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
               {filter === 'favorites' ? 'No favorites yet' : 'No stories yet'}
             </Text>
-            <Text style={[Fonts.caption, { color: colors.inkMute, textAlign: 'center', marginTop: 4 }]}>
+            <Text style={[Fonts.caption, { color: colors.inkMute, textAlign: 'center' }]}>
               {filter === 'favorites'
                 ? 'Tap the heart on any story to save it here'
-                : 'Your stories will appear here after you create them'}
+                : 'Your stories will appear here\nafter you create them'}
             </Text>
           </View>
         }
@@ -386,10 +386,16 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingTop: Spacing.xl,
-    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
   },
   emptyMascot: {
-    width: SCREEN_WIDTH * 0.32,
-    height: SCREEN_WIDTH * 0.32,
+    width: SCREEN_WIDTH * 0.72,
+    height: SCREEN_WIDTH * 0.72,
+  },
+  emptyTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 22,
+    textAlign: 'center',
   },
 })

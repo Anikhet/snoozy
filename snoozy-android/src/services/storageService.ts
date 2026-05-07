@@ -74,7 +74,12 @@ export function saveAudioFile(base64Data: string): string {
 
   const fileName = `${generateUUID()}.mp3`
   const file = new File(getAudioDir(), fileName)
-  file.write(base64Data, { encoding: 'base64' })
+  const binary = atob(base64Data)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  file.write(bytes)
 
   return fileName
 }

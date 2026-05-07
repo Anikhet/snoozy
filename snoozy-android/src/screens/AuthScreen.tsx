@@ -263,7 +263,7 @@ export function AuthScreen() {
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.kav}
@@ -330,9 +330,9 @@ function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple,
       </Animated.View>
 
       {/* Mascot */}
-      <Animated.View entering={FadeIn.delay(100).duration(700)} style={styles.mascotBlock}>
+      <Animated.View entering={FadeIn.delay(100).duration(700)} style={styles.signInMascotBlock}>
         <Animated.Image
-          source={require('../../assets/images/mascot-happy.png')}
+          source={require('../../assets/images/mascot-heart.png')}
           style={[styles.mascot, mascotFloatStyle]}
           resizeMode="contain"
         />
@@ -391,6 +391,7 @@ function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple,
 // ─── Sign Up View ──────────────────────────────────────────────────────────────
 
 function SignUpView({ firstName, setFirstName, lastName, setLastName, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, onSignUp, onSignIn, isLoading, error }: any) {
+
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.page}>
       {/* Back */}
@@ -398,8 +399,15 @@ function SignUpView({ firstName, setFirstName, lastName, setLastName, email, set
         <Ionicons name="chevron-back" size={22} color="#2D1F6E" />
       </Pressable>
 
-      {/* Card */}
-      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={[styles.card, styles.cardTopSpaced]}>
+      {/* Card with peeking mascot anchored to its top */}
+      <View style={styles.mascotCardWrapper}>
+        <Animated.Image
+          entering={FadeIn.delay(100).duration(700)}
+          source={require('../../assets/images/mascot-peeking.png')}
+          style={styles.mascotPeeking}
+          resizeMode="contain"
+        />
+        <Animated.View entering={FadeInUp.delay(150).duration(500)} style={styles.card}>
         <View style={styles.welcomeRow}>
           <Text style={[styles.welcomeText, styles.signupTitle]}>{'Create your\nSnoozy account'}</Text>
         </View>
@@ -441,6 +449,7 @@ function SignUpView({ firstName, setFirstName, lastName, setLastName, email, set
           </Pressable>
         </View>
       </Animated.View>
+      </View>
     </Animated.View>
   )
 }
@@ -485,17 +494,28 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#EDE8F8' },
   safe: { flex: 1 },
   kav: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl },
+  scroll: { flexGrow: 1, paddingHorizontal: Spacing.md, paddingBottom: Spacing.md, justifyContent: 'center' },
 
-  page: { flex: 1, alignItems: 'center' },
+  page: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   // Brand
-  brandBlock: { alignItems: 'center', paddingTop: Spacing.lg, gap: 2 },
+  brandBlock: { alignItems: 'center', paddingTop: Spacing.sm, gap: 0 },
   brandTitle: { fontFamily: 'Nunito_700Bold', fontSize: 54, color: '#2D1F6E', letterSpacing: -1 },
-  brandSub: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#7B6B9E' },
+  brandSub: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: '#7B6B9E', marginTop: -8 },
 
-  // Mascot
-  mascotBlock: { width: SCREEN_WIDTH * 0.7, height: SCREEN_WIDTH * 0.6, alignItems: 'center', justifyContent: 'center', marginBottom: -24 },
+  // Sign-in floating mascot
+  signInMascotBlock: { width: SCREEN_WIDTH * 0.8, height: SCREEN_WIDTH * 0.63, alignItems: 'center', justifyContent: 'center', marginBottom: -30 },
+
+  // Mascot anchored to card
+  mascotCardWrapper: { width: '100%', marginTop: 70 },
+  mascotPeeking: {
+    width: SCREEN_WIDTH * 0.6,
+    height: SCREEN_WIDTH * 0.6,
+    alignSelf: 'center',
+    position: 'absolute',
+    top: -(SCREEN_WIDTH * 0.6 * 0.59),
+    zIndex: 10,
+  },
   mascot: { width: '100%', height: '100%' },
 
   // Card
@@ -503,14 +523,16 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(255,255,255,0.62)',
     borderRadius: 28,
-    padding: Spacing.lg,
-    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: SCREEN_WIDTH * 0.45 * 0.1,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
   },
-  cardTopSpaced: { marginTop: Spacing.xl },
+  cardTopSpaced: { marginTop: Spacing.md },
 
   // Welcome
-  welcomeRow: { flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap' },
-  welcomeText: { fontFamily: 'Nunito_700Bold', fontSize: 22, color: '#2D1F6E' },
+  welcomeRow: { flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap', marginTop: Spacing.sm },
+  welcomeText: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: '#2D1F6E' },
   signupTitle: { fontSize: 26, lineHeight: 34 },
   sparkle: { fontFamily: 'Nunito_700Bold', fontSize: 20, color: '#C9A56B' },
   cardSub: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: '#7B6B9E', marginTop: -Spacing.sm },
@@ -538,8 +560,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'rgba(91,61,168,0.10)',
     borderRadius: Radii.card,
-    padding: Spacing.md,
-    gap: Spacing.md,
+    padding: Spacing.sm,
+    gap: Spacing.sm,
     alignItems: 'flex-start',
   },
   infoIcon: {
@@ -558,12 +580,14 @@ const styles = StyleSheet.create({
 
   // Back
   backBtn: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.sm,
+    position: 'absolute',
+    top: Spacing.sm,
+    left: Spacing.md,
     width: 36, height: 36,
     backgroundColor: 'rgba(255,255,255,0.6)',
     borderRadius: 18,
     alignItems: 'center', justifyContent: 'center',
+    zIndex: 20,
   },
 
   // Error
