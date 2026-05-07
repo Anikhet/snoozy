@@ -22,6 +22,7 @@ interface StoryCoverTileProps {
   size: 'sm' | 'md' | 'lg' | 'hero'
   borderRadius?: number
   showTitle?: boolean
+  resizeMode?: 'cover' | 'contain' | 'stretch' | 'center'
   style?: ViewStyle
 }
 
@@ -120,6 +121,7 @@ export const StoryCoverTile = memo(function StoryCoverTile({
   size,
   borderRadius,
   showTitle = true,
+  resizeMode = 'contain',
   style,
 }: StoryCoverTileProps) {
   const meta   = WORLD_META[worldId] ?? WORLD_META.kingdom
@@ -144,7 +146,7 @@ export const StoryCoverTile = memo(function StoryCoverTile({
       <Image
         source={image}
         style={styles.worldImage}
-        resizeMode="contain"
+        resizeMode={resizeMode}
       />
 
       {/* Layer 2 — Top scrim: darkens upper edge so the badge pill is legible */}

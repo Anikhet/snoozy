@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   BackHandler,
   Dimensions,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,7 +9,6 @@ import {
   View,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
 import Animated, {
   FadeIn,
@@ -19,17 +17,16 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Spacing, Radii } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TIMER_OPTIONS } from '@/services/audioService'
 import { WaveformScrubber } from '@/components/Visuals'
 import { StoryCoverTile } from '@/components/StoryCoverTile'
 
-const SCREEN_WIDTH = Dimensions.get('window').width
-// Cover card: full content width at ~0.68 aspect ratio
-const COVER_W = SCREEN_WIDTH - Spacing.lg * 2
-const COVER_H = Math.round(COVER_W * 0.68)
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
+const COVER_HEIGHT = Math.round(SCREEN_HEIGHT * 0.38)
+const CARD_TOP_RADIUS = 28
 
 const colors = Colors.light
 
@@ -55,6 +52,8 @@ export function StoryPlayerScreen() {
   const startSleepTimer = useStoryStore((s) => s.startSleepTimer)
   const cancelSleepTimer = useStoryStore((s) => s.cancelSleepTimer)
   const stopPlayback = useStoryStore((s) => s.stopPlayback)
+
+  const insets = useSafeAreaInsets()
 
   const [showTimerPicker, setShowTimerPicker] = useState(false)
   const [showText, setShowText] = useState(false)
@@ -130,76 +129,34 @@ export function StoryPlayerScreen() {
       : null
 
   return (
-    // Exact same architecture as ProfileScreen:
-    // plain View root → ImageBackground (abs fill) → SafeAreaView content
     <View style={styles.root}>
-      <ImageBackground
-        source={require('../../assets/images/bg-loading.png')}
-        style={StyleSheet.absoluteFillObject}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
-          locations={[0, 0.2, 0.4]}
-          style={StyleSheet.absoluteFill}
+      {/* Full-bleed cover image fills the top portion */}
+      <Animated.View entering={FadeIn.duration(500)} style={styles.coverContainer}>
+        <StoryCoverTile
+          title={currentStory.title}
+          worldId={currentStory.templateId}
+          size="hero"
+          borderRadius={0}
+          showTitle={false}
+          resizeMode="cover"
+          style={StyleSheet.absoluteFillObject}
         />
-      </ImageBackground>
+      </Animated.View>
 
-      <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
-        {/* Top controls */}
-        <View style={styles.topBar}>
-          <Pressable
-            style={styles.topBtn}
-            onPress={stopPlayback}
-            accessibilityRole="button"
-            accessibilityLabel="Close player"
-          >
-            <Ionicons name="chevron-back" size={20} color={colors.ink} />
-          </Pressable>
-          <View style={styles.topRight}>
-            <Pressable
-              style={styles.topBtn}
-              onPress={() => setIsFavorited((v) => !v)}
-              accessibilityRole="button"
-              accessibilityLabel={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-            >
-              <Ionicons
-                name={isFavorited ? 'heart' : 'heart-outline'}
-                size={18}
-                color={isFavorited ? colors.accent : colors.ink}
-              />
-            </Pressable>
-            <Pressable
-              style={styles.topBtn}
-              onPress={() => {}}
-              accessibilityRole="button"
-              accessibilityLabel="More options"
-            >
-              <Ionicons name="ellipsis-horizontal" size={18} color={colors.ink} />
-            </Pressable>
-          </View>
-        </View>
+      {/* Bottom card overlaps the image with rounded top corners */}
+      <View
+        style={[
+          styles.card,
+          { paddingBottom: Math.max(insets.bottom, Spacing.md) },
+        ]}
+      >
 
-        {/* Rounded cover image sitting on the page background */}
-        <Animated.View entering={FadeIn.delay(100).duration(500)} style={styles.coverWrapper}>
-          <StoryCoverTile
-            title={currentStory.title}
-            worldId={currentStory.templateId}
-            size="hero"
-            borderRadius={Radii.cardLarge}
-            showTitle={false}
-            style={StyleSheet.absoluteFillObject}
-          />
-        </Animated.View>
-
-        {/* Scrollable player controls */}
         <ScrollView
-          style={styles.playerScroll}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.playerContent}
         >
           {/* Story title */}
-          <Animated.View entering={FadeInUp.delay(200).duration(400)}>
+          <Animated.View entering={FadeInUp.delay(150).duration(400)}>
             <Text style={styles.storyTitle} numberOfLines={2}>
               {currentStory.title}
             </Text>
@@ -207,51 +164,14 @@ export function StoryPlayerScreen() {
 
           {/* Duration */}
           {duration > 0 ? (
-            <Animated.View entering={FadeInUp.delay(240).duration(400)} style={styles.durationRow}>
+            <Animated.View entering={FadeInUp.delay(180).duration(400)} style={styles.durationRow}>
               <Ionicons name="time-outline" size={12} color={colors.inkMute as string} />
               <Text style={styles.durationText}>{formatDuration(duration)}</Text>
             </Animated.View>
           ) : null}
 
-          {/* Two-line story preview */}
-          {storyPreview ? (
-            <Animated.Text
-              entering={FadeInUp.delay(270).duration(400)}
-              style={styles.storyPreview}
-              numberOfLines={2}
-            >
-              {storyPreview}
-            </Animated.Text>
-          ) : null}
-
-          {/* Read-along toggle */}
-          {currentStory.storyText.length > 0 ? (
-            <Pressable style={styles.readAlongBtn} onPress={() => setShowText((v) => !v)}>
-              <Ionicons
-                name={showText ? 'book' : 'book-outline'}
-                size={13}
-                color={colors.primary}
-              />
-              <Text style={styles.readAlongLabel}>
-                {showText ? 'Hide text' : 'Read along'}
-              </Text>
-            </Pressable>
-          ) : null}
-
-          {showText ? (
-            <Animated.View entering={FadeInUp.duration(300)} style={styles.storyTextCard}>
-              <ScrollView
-                style={styles.storyTextScroll}
-                nestedScrollEnabled
-                showsVerticalScrollIndicator={false}
-              >
-                <Text style={styles.storyTextBody}>{currentStory.storyText}</Text>
-              </ScrollView>
-            </Animated.View>
-          ) : null}
-
           {/* Waveform scrubber */}
-          <Animated.View entering={FadeInUp.delay(320).duration(400)} style={styles.scrubberBlock}>
+          <Animated.View entering={FadeInUp.delay(260).duration(400)} style={styles.scrubberBlock}>
             <GestureDetector gesture={composedGesture}>
               <View
                 onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
@@ -275,7 +195,7 @@ export function StoryPlayerScreen() {
           </Animated.View>
 
           {/* Playback controls */}
-          <Animated.View entering={FadeInUp.delay(370).duration(400)} style={styles.controls}>
+          <Animated.View entering={FadeInUp.delay(300).duration(400)} style={styles.controls}>
             <Pressable
               style={styles.seekCircle}
               onPress={() => seek(Math.max(0, currentTime - 15))}
@@ -313,7 +233,7 @@ export function StoryPlayerScreen() {
           </Animated.View>
 
           {/* Sleep timer */}
-          <Animated.View entering={FadeInUp.delay(420).duration(400)} style={styles.sleepRow}>
+          <Animated.View entering={FadeInUp.delay(340).duration(400)} style={styles.sleepRow}>
             <Pressable
               style={[styles.sleepChip, isSleepTimerActive && styles.sleepChipActive]}
               onPress={() => setShowTimerPicker((v) => !v)}
@@ -359,8 +279,83 @@ export function StoryPlayerScreen() {
               </View>
             ) : null}
           </Animated.View>
+
+          {/* Two-line story preview */}
+          {storyPreview ? (
+            <Animated.Text
+              entering={FadeInUp.delay(210).duration(400)}
+              style={styles.storyPreview}
+              numberOfLines={2}
+            >
+              {storyPreview}
+            </Animated.Text>
+          ) : null}
+
+          {/* Read-along toggle */}
+          {currentStory.storyText.length > 0 ? (
+            <Pressable style={styles.readAlongBtn} onPress={() => setShowText((v) => !v)}>
+              <Ionicons
+                name={showText ? 'book' : 'book-outline'}
+                size={13}
+                color={colors.primary}
+              />
+              <Text style={styles.readAlongLabel}>
+                {showText ? 'Hide text' : 'Read along'}
+              </Text>
+            </Pressable>
+          ) : null}
+
+          {showText ? (
+            <Animated.View entering={FadeInUp.duration(300)} style={styles.storyTextCard}>
+              <ScrollView
+                style={styles.storyTextScroll}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={styles.storyTextBody}>{currentStory.storyText}</Text>
+              </ScrollView>
+            </Animated.View>
+          ) : null}
         </ScrollView>
-      </SafeAreaView>
+      </View>
+
+      {/* Glass controls float over the image, respecting safe area */}
+      <Animated.View
+        entering={FadeIn.delay(200).duration(400)}
+        style={[styles.topBar, { top: insets.top + Spacing.sm }]}
+        pointerEvents="box-none"
+      >
+        <Pressable
+          style={styles.glassBtn}
+          onPress={stopPlayback}
+          accessibilityRole="button"
+          accessibilityLabel="Close player"
+        >
+          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+        </Pressable>
+        <View style={styles.topRight}>
+          <Pressable
+            style={styles.glassBtn}
+            onPress={() => setIsFavorited((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Ionicons
+              name={isFavorited ? 'heart' : 'heart-outline'}
+              size={18}
+              color={isFavorited ? '#FF6B8A' : '#FFFFFF'}
+            />
+          </Pressable>
+          <Pressable
+            style={styles.glassBtn}
+            onPress={() => {}}
+            accessibilityRole="button"
+            accessibilityLabel="More options"
+          >
+            <Ionicons name="ellipsis-horizontal" size={18} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </Animated.View>
     </View>
   )
 }
@@ -370,43 +365,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  safe: {
+  coverContainer: {
+    height: COVER_HEIGHT,
+    width: SCREEN_WIDTH,
+    overflow: 'hidden',
+  },
+  card: {
     flex: 1,
+    marginTop: -CARD_TOP_RADIUS,
+    backgroundColor: colors.background,
+    borderTopLeftRadius: CARD_TOP_RADIUS,
+    borderTopRightRadius: CARD_TOP_RADIUS,
   },
   topBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xs,
   },
   topRight: {
     flexDirection: 'row',
     gap: Spacing.sm,
   },
-  topBtn: {
+  glassBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.hair,
+    backgroundColor: 'rgba(0, 0, 0, 0.32)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  coverWrapper: {
-    marginHorizontal: Spacing.lg,
-    height: COVER_H,
-    borderRadius: Radii.cardLarge,
-    overflow: 'hidden',
-  },
-  playerScroll: {
-    flex: 1,
-  },
   playerContent: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.lg,
   },
   storyTitle: {

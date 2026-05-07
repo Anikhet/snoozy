@@ -161,11 +161,11 @@ export default function WorldPickerScreen() {
       {/* Sticky CTA */}
       <View style={styles.stickyBar}>
         <LinearGradient
-          colors={['transparent', '#EDE8F8']}
+          colors={['transparent', colors.background]}
           style={styles.stickyFade}
           pointerEvents="none"
         />
-        <View style={[styles.stickyContent, { backgroundColor: '#EDE8F8' }]}>
+        <View style={[styles.stickyContent, { backgroundColor: colors.background }]}>
           <Pressable
             onPress={() => selectedWorldId && navigateToVibePicker(selectedWorldId)}
             disabled={!selectedWorldId}
@@ -179,12 +179,12 @@ export default function WorldPickerScreen() {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={selectedWorldId ? [colors.primary, '#9B8EC4'] : [colors.hair, colors.hair]}
+              colors={[colors.primary, '#9B8EC4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
             >
-              <Text style={[Fonts.buttonLabel, { color: selectedWorldId ? '#FFFFFF' : (colors.inkMute as string) }]}>
+              <Text style={[Fonts.buttonLabel, { color: '#FFFFFF' }]}>
                 Next
               </Text>
             </LinearGradient>
