@@ -8,8 +8,6 @@ import Animated, {
   FadeIn,
   FadeOut,
   SlideInRight,
-  SlideInLeft,
-  SlideOutLeft,
   SlideOutRight,
   SlideInDown,
   SlideOutDown,
@@ -63,7 +61,6 @@ export default function App() {
   const isDark = false // Forced to false to disable dark mode per user request: scheme === 'dark'
   const colors = isDark ? Colors.dark : Colors.light
   const currentScreen = useStoryStore((s) => s.currentScreen)
-  const navDir = useStoryStore((s) => s.navDir)
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
   const editingProfile = useStoryStore((s) => s.editingProfile)
@@ -138,15 +135,15 @@ export default function App() {
       ) : null}
       {currentScreen === Screen.WorldPicker ? (
         <Animated.View key="worldPicker" style={styles.flex}
-          entering={(navDir === 'back' ? SlideInLeft : SlideInRight).duration(TRANSITION_DURATION)}
-          exiting={(navDir === 'back' ? SlideOutRight : SlideOutLeft).duration(TRANSITION_DURATION)}>
+          entering={FadeIn.duration(TRANSITION_DURATION)}
+          exiting={FadeOut.duration(TRANSITION_DURATION)}>
           <WorldPickerScreen />
         </Animated.View>
       ) : null}
       {currentScreen === Screen.VibePicker ? (
         <Animated.View key="vibePicker" style={styles.flex}
-          entering={SlideInRight.duration(TRANSITION_DURATION)}
-          exiting={(navDir === 'back' ? SlideOutRight : SlideOutLeft).duration(TRANSITION_DURATION)}>
+          entering={FadeIn.duration(TRANSITION_DURATION)}
+          exiting={FadeOut.duration(TRANSITION_DURATION)}>
           <VibePickerScreen />
         </Animated.View>
       ) : null}

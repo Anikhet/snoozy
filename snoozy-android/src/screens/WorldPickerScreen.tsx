@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import {
   Dimensions,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -100,7 +101,19 @@ export default function WorldPickerScreen() {
   const displayAge = childDetails.age || onboardingDefaults?.age
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={styles.root}>
+      <ImageBackground
+        source={require('../../assets/images/bg-loading.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.background}55`, `${colors.background}FF`]}
+          locations={[0, 0.2, 0.4]}
+          style={StyleSheet.absoluteFill}
+        />
+      </ImageBackground>
+    <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
       <BackSwipeZone onBack={goHome} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
@@ -186,11 +199,14 @@ export default function WorldPickerScreen() {
         </View>
       </View>
     </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bgImage: { ...StyleSheet.absoluteFillObject },
+  safe: { flex: 1 },
   scroll: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Sizing.buttonHeight + Spacing.xxl,

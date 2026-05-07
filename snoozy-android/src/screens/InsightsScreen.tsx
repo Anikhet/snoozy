@@ -187,7 +187,7 @@ export function InsightsScreen() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/bg-home.png')}
+      source={require('../../assets/images/bg-loading.png')}
       style={styles.root}
       resizeMode="cover"
     >
@@ -366,8 +366,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   mascot: {
-    width: CONTENT_WIDTH * 0.38,
-    height: CONTENT_WIDTH * 0.42,
+    width: CONTENT_WIDTH * 0.52,
+    height: CONTENT_WIDTH * 0.58,
   },
   heroCard: {
     flex: 1,
