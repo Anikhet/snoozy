@@ -7,9 +7,11 @@ import {
   DEFAULT_CHILD_DETAILS,
   createPlaceholderStory,
 } from '@/types/story'
+import { Subscription, DEFAULT_SUBSCRIPTION } from '@/types/subscription'
 import * as apiService from '@/services/apiService'
 import * as storageService from '@/services/storageService'
 import * as audioService from '@/services/audioService'
+import * as subscriptionService from '@/services/subscriptionService'
 import { generateUUID } from '@/utils/uuid'
 
 /**
@@ -65,9 +67,19 @@ interface StoryStore {
   toggleFavorite: (storyId: string) => void
   rateStory: (storyId: string, stars: number) => void
   cancelGeneration: () => void
-  profilePanel: 'storyPrefs' | 'bedtimeReminder' | 'accountDetails' | 'favoriteThemes' | 'passwordSecurity' | null
+  profilePanel: 'storyPrefs' | 'bedtimeReminder' | 'accountDetails' | 'favoriteThemes' | 'passwordSecurity' | 'snoozyPlus' | null
   openProfilePanel: (panel: NonNullable<StoryStore['profilePanel']>) => void
   closeProfilePanel: () => void
+
+  // ── Subscription ────────────────────────────────────────────────────────────
+  subscription: Subscription
+  loadSubscription: () => Promise<void>
+  activateSubscription: (params: {
+    plan: import('@/types/subscription').SubscriptionPlan
+    provider: import('@/types/subscription').SubscriptionProvider
+    transactionId: string
+  }) => Promise<void>
+  setSubscription: (sub: Subscription) => void
 }
 
 export const useStoryStore = create<StoryStore>((set, get) => {
@@ -276,6 +288,21 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         currentStory: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
       }))
+    },
+
+    // ── Subscription ──────────────────────────────────────────────────────────
+    subscription: { ...DEFAULT_SUBSCRIPTION },
+
+    setSubscription: (sub) => set({ subscription: sub }),
+
+    loadSubscription: async () => {
+      const sub = await subscriptionService.loadSubscription()
+      set({ subscription: sub })
+    },
+
+    activateSubscription: async (params) => {
+      const sub = await subscriptionService.activateSubscription(params)
+      set({ subscription: sub })
     },
 
     cancelGeneration: () => {

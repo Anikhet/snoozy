@@ -29,6 +29,7 @@ import { VOICES } from '@/config/voices'
 import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import { BEDTIME_KEY, formatBedtime, BedtimeValue } from '@/screens/BedtimeReminderScreen'
 import { FAVORITE_WORLDS_KEY } from '@/screens/FavoriteThemesScreen'
+import { isActive, formatExpiry } from '@/services/subscriptionService'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const AVATAR_STORAGE_KEY = 'snoozy_profile_avatar'
@@ -89,6 +90,10 @@ export function ProfileScreen() {
   const openProfileEdit = useStoryStore((s) => s.openProfileEdit)
   const updateSavedVoice = useStoryStore((s) => s.updateSavedVoice)
   const openProfilePanel = useStoryStore((s) => s.openProfilePanel)
+  const subscription = useStoryStore((s) => s.subscription)
+  const loadSubscription = useStoryStore((s) => s.loadSubscription)
+
+  const isPlusActive = isActive(subscription)
 
   const childName = childDetails.name || 'Dreamer'
   const initial = childName.charAt(0).toUpperCase()
@@ -111,8 +116,9 @@ export function ProfileScreen() {
       if (notifRaw !== null) setNotificationsEnabled(notifRaw === 'true')
       if (bedtimeRaw) setBedtime(JSON.parse(bedtimeRaw))
       if (worldsRaw) setFavoriteWorldCount((JSON.parse(worldsRaw) as string[]).length)
+      await loadSubscription()
     })()
-  }, [])
+  }, [loadSubscription])
 
   const handlePickAvatar = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -245,21 +251,65 @@ export function ProfileScreen() {
 
             {/* ── Snoozy Plus Banner ─────────────────────────── */}
             <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-              <Pressable style={[styles.card, styles.plusBanner, { backgroundColor: '#F9F4FF' }]}>
-                <View style={styles.plusIconContainer}>
-                  <Ionicons name="star" size={24} color="#F5C518" />
-                </View>
-                <View style={styles.plusContent}>
-                  <View style={styles.plusTitleRow}>
-                    <Text style={styles.plusTitle}>Snoozy Plus</Text>
-                    <View style={styles.plusBadge}>
-                      <Text style={styles.plusBadgeText}>Active</Text>
-                    </View>
+              {isPlusActive ? (
+                <Pressable
+                  onPress={() => openProfilePanel('snoozyPlus')}
+                  style={({ pressed }) => [
+                    styles.card,
+                    styles.plusBanner,
+                    { backgroundColor: '#F9F4FF', opacity: pressed ? 0.85 : 1 },
+                  ]}
+                >
+                  <View style={styles.plusIconContainer}>
+                    <Ionicons name="star" size={24} color="#F5C518" />
                   </View>
-                  <Text style={styles.plusSubtitle}>Magical stories, unlimited dreams.</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#C4B6D8" />
-              </Pressable>
+                  <View style={styles.plusContent}>
+                    <View style={styles.plusTitleRow}>
+                      <Text style={styles.plusTitle}>Snoozy Plus</Text>
+                      <View style={[styles.plusBadge, styles.plusBadgeActive]}>
+                        <View style={styles.plusActiveDot} />
+                        <Text style={[styles.plusBadgeText, styles.plusBadgeTextActive]}>Active</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.plusSubtitle}>
+                      {subscription.expiresAt
+                        ? `Renews ${formatExpiry(subscription.expiresAt)}`
+                        : 'Magical stories, unlimited dreams.'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#C4B6D8" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => openProfilePanel('snoozyPlus')}
+                  style={({ pressed }) => [
+                    styles.card,
+                    styles.plusBanner,
+                    styles.plusBannerUpgrade,
+                    { opacity: pressed ? 0.85 : 1 },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={['#2D1B6B', '#1A0A3C']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.plusIconContainerDark}>
+                    <Ionicons name="star" size={24} color="#F5C518" />
+                  </View>
+                  <View style={styles.plusContent}>
+                    <View style={styles.plusTitleRow}>
+                      <Text style={styles.plusTitleDark}>Snoozy Plus</Text>
+                      <View style={styles.plusBadgeNew}>
+                        <Text style={styles.plusBadgeNewText}>UPGRADE</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.plusSubtitleDark}>Unlock unlimited magic ✨</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.45)" />
+                </Pressable>
+              )}
             </Animated.View>
 
             {/* ── Account Section ────────────────────────────── */}
@@ -556,4 +606,54 @@ const styles = StyleSheet.create({
   voiceNameSelected: { color: '#3730A3' },
   voiceDesc: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: '#9B8EC4' },
   voiceDescSelected: { color: '#5B5BD6' },
+
+  // ── Plus banner variants ───────────────────────────────────────────────────
+  plusBannerUpgrade: {
+    overflow: 'hidden',
+    borderColor: 'transparent',
+  },
+  plusIconContainerDark: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(245,197,24,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,197,24,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusTitleDark: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#F2EDE3' },
+  plusBadgeActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(76,175,125,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(76,175,125,0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  plusActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4CAF7D',
+  },
+  plusBadgeTextActive: { color: '#4CAF7D' },
+  plusBadgeNew: {
+    backgroundColor: 'rgba(245,197,24,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,197,24,0.35)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  plusBadgeNewText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 10,
+    color: '#F5C518',
+    letterSpacing: 0.5,
+  },
+  plusSubtitleDark: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(242,237,227,0.65)' },
 })

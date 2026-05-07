@@ -45,6 +45,7 @@ import { BedtimeReminderScreen } from '@/screens/BedtimeReminderScreen'
 import { AccountDetailsScreen } from '@/screens/AccountDetailsScreen'
 import { FavoriteThemesScreen } from '@/screens/FavoriteThemesScreen'
 import { PasswordSecurityScreen } from '@/screens/PasswordSecurityScreen'
+import { SnoozyPlusScreen } from '@/screens/SnoozyPlusScreen'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || ''
 
@@ -212,13 +213,18 @@ export default function App() {
                         <Animated.View
                           key={profilePanel}
                           style={styles.flex}
-                          entering={SlideInRight.duration(TRANSITION_DURATION)}
-                          exiting={SlideOutRight.duration(TRANSITION_DURATION)}
+                          entering={profilePanel === 'snoozyPlus'
+                            ? SlideInDown.duration(TRANSITION_DURATION)
+                            : SlideInRight.duration(TRANSITION_DURATION)}
+                          exiting={profilePanel === 'snoozyPlus'
+                            ? SlideOutDown.duration(TRANSITION_DURATION)
+                            : SlideOutRight.duration(TRANSITION_DURATION)}
                         >
                           {profilePanel === 'storyPrefs' ? <StoryPreferencesScreen />
                           : profilePanel === 'bedtimeReminder' ? <BedtimeReminderScreen />
                           : profilePanel === 'accountDetails' ? <AccountDetailsScreen />
                           : profilePanel === 'favoriteThemes' ? <FavoriteThemesScreen />
+                          : profilePanel === 'snoozyPlus' ? <SnoozyPlusScreen />
                           : <PasswordSecurityScreen />}
                         </Animated.View>
                       ) : appScreens}

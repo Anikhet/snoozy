@@ -23,7 +23,8 @@
       "Bash(node tests/test-tts-elevenlabs.js cozy)",
       "Bash(ffmpeg -version)",
       "Bash(node -e ' *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git stash *)"
     ]
   }
 }
