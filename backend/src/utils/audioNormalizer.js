@@ -1,13 +1,16 @@
 'use strict'
 
 const { spawn, spawnSync } = require('child_process')
+const { writeFile, readFile, unlink } = require('fs/promises')
+const { tmpdir } = require('os')
+const path = require('path')
 
-const FFMPEG_BIN     = process.env.FFMPEG_PATH || 'ffmpeg'
-const LOUDNORM_AF    = 'loudnorm=I=-16:TP=-1.5:LRA=11'
-const TIMEOUT_MS     = 10_000
+const FFMPEG_BIN      = process.env.FFMPEG_PATH || 'ffmpeg'
+const FFPROBE_BIN     = process.env.FFPROBE_PATH || 'ffprobe'
+const FADE_OUT_D      = 4.0   // seconds
+const TIMEOUT_MS      = 15_000
 
 // ─── Check FFmpeg availability once at startup ────────────────────────────
-// Avoids paying the detection cost on every audio request.
 
 const FFMPEG_AVAILABLE = (() => {
   const result = spawnSync(FFMPEG_BIN, ['-version'], { stdio: 'ignore' })
@@ -20,71 +23,110 @@ if (FFMPEG_AVAILABLE) {
   console.warn(`[audioNormalizer] FFmpeg not found — normalization will be skipped (raw audio served)`)
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function probeDuration(filePath) {
+  return new Promise((resolve, reject) => {
+    const ffprobe = spawn(FFPROBE_BIN, [
+      '-v', 'quiet',
+      '-show_entries', 'format=duration',
+      '-of', 'csv=p=0',
+      filePath,
+    ])
+
+    let output = ''
+    ffprobe.stdout.on('data', (chunk) => { output += chunk })
+    ffprobe.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`ffprobe exited ${code}`))
+      const duration = parseFloat(output.trim())
+      if (isNaN(duration)) return reject(new Error('Could not parse duration'))
+      resolve(duration)
+    })
+    ffprobe.on('error', reject)
+  })
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────
 
 /**
- * Normalises the loudness of an MP3 buffer to -16 LUFS using FFmpeg loudnorm.
+ * Normalises an MP3 buffer: EBU R128 loudnorm (-18 LUFS / LRA 9), 8 kHz lowpass,
+ * 0.5 s fade-in, 4 s fade-out (start time computed via ffprobe). Output at 192 kbps.
  * Always resolves — falls back to the original buffer if FFmpeg is unavailable
  * or fails for any reason, so audio generation is never blocked.
  *
  * @param {Buffer} inputBuffer  — raw MP3 from ElevenLabs
  * @returns {Promise<{ buffer: Buffer, normalized: boolean, reason?: string }>}
  */
-function normalizeLoudness(inputBuffer) {
+async function normalizeLoudness(inputBuffer) {
   if (!FFMPEG_AVAILABLE) {
-    return Promise.resolve({ buffer: inputBuffer, normalized: false, reason: 'ffmpeg not found' })
+    return { buffer: inputBuffer, normalized: false, reason: 'ffmpeg not found' }
   }
 
-  return new Promise((resolve) => {
-    let timedOut = false
+  const tempIn  = path.join(tmpdir(), `snoozy_raw_${Date.now()}.mp3`)
+  const tempOut = path.join(tmpdir(), `snoozy_final_${Date.now()}.mp3`)
 
-    const ff = spawn(FFMPEG_BIN, [
-      '-i',    'pipe:0',     // read from stdin
-      '-af',   LOUDNORM_AF,  // loudness normalization
-      '-f',    'mp3',        // output format
-      '-b:a',  '128k',       // maintain 128kbps — same as ElevenLabs source
-      '-y',                  // non-interactive
-      'pipe:1',              // write to stdout
-    ], { stdio: ['pipe', 'pipe', 'pipe'] })
+  try {
+    await writeFile(tempIn, inputBuffer)
 
-    const timeout = setTimeout(() => {
-      timedOut = true
-      ff.kill('SIGKILL')
-      resolve({ buffer: inputBuffer, normalized: false, reason: 'timeout' })
-    }, TIMEOUT_MS)
+    const duration  = await probeDuration(tempIn)
+    const fadeStart = Math.max(0, duration - FADE_OUT_D)
 
-    const outputChunks = []
-    ff.stdout.on('data', (chunk) => outputChunks.push(chunk))
+    const filterChain = [
+      'loudnorm=I=-18:TP=-1.5:LRA=9',
+      'lowpass=f=8000',
+      'afade=t=in:st=0:d=0.5',
+      `afade=t=out:st=${fadeStart.toFixed(3)}:d=${FADE_OUT_D}`,
+    ].join(',')
 
-    // FFmpeg writes progress info to stderr — collect for debugging but don't log by default
-    const stderrChunks = []
-    ff.stderr.on('data', (chunk) => stderrChunks.push(chunk))
+    await new Promise((resolve, reject) => {
+      let timedOut = false
 
-    // Suppress EPIPE if FFmpeg exits before we finish writing (shouldn't happen but be safe)
-    ff.stdin.on('error', () => {})
+      const ff = spawn(FFMPEG_BIN, [
+        '-y',
+        '-i',   tempIn,
+        '-af',  filterChain,
+        '-b:a', '192k',
+        tempOut,
+      ])
 
-    ff.on('close', (code) => {
-      clearTimeout(timeout)
-      if (timedOut) return
+      const timeout = setTimeout(() => {
+        timedOut = true
+        ff.kill('SIGKILL')
+        reject(new Error('timeout'))
+      }, TIMEOUT_MS)
 
-      if (code !== 0) {
-        return resolve({ buffer: inputBuffer, normalized: false, reason: `ffmpeg exit ${code}` })
-      }
+      // Collect stderr for debugging but don't log by default
+      const stderrChunks = []
+      ff.stderr.on('data', (chunk) => stderrChunks.push(chunk))
 
-      const output = Buffer.concat(outputChunks)
+      ff.on('close', (code) => {
+        clearTimeout(timeout)
+        if (timedOut) return
+        if (code !== 0) {
+          return reject(new Error(`ffmpeg exit ${code}: ${Buffer.concat(stderrChunks).toString().slice(-300)}`))
+        }
+        resolve()
+      })
 
-      // Sanity check: normalized output should be at least 30% the size of input.
-      // If it's tiny, something went wrong and we got an error response instead of audio.
-      if (output.length < inputBuffer.length * 0.3) {
-        return resolve({ buffer: inputBuffer, normalized: false, reason: 'output suspiciously small' })
-      }
-
-      resolve({ buffer: output, normalized: true })
+      ff.on('error', reject)
     })
 
-    ff.stdin.write(inputBuffer)
-    ff.stdin.end()
-  })
+    const output = await readFile(tempOut)
+
+    if (output.length < inputBuffer.length * 0.3) {
+      return { buffer: inputBuffer, normalized: false, reason: 'output suspiciously small' }
+    }
+
+    return { buffer: output, normalized: true }
+
+  } catch (err) {
+    return { buffer: inputBuffer, normalized: false, reason: err.message }
+  } finally {
+    await Promise.all([
+      unlink(tempIn).catch(() => {}),
+      unlink(tempOut).catch(() => {}),
+    ])
+  }
 }
 
 module.exports = { normalizeLoudness, FFMPEG_AVAILABLE }

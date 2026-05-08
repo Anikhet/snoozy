@@ -7,7 +7,7 @@ const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
 const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
-const { normalizeLoudness } = require('../utils/audioNormalizer')
+const { FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
 const router = express.Router()
 
@@ -475,6 +475,78 @@ async function generateWithAzure(text, config, res, startTime, requestedVoice) {
 // Built-in loudness normalisation (normalize_loudness: true) removes FFmpeg dependency.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Bedtime audio post-processing pipeline (single FFmpeg pass):
+ *   1. Slows the final 25% by atempo=0.92 (sleep ending winds down)
+ *   2. Crossfades at the split point (0.5s) to avoid a hard cut
+ *   3. Gentle lowpass at 12kHz for warmth, fade in/out
+ *
+ * Falls back to raw buffer on any failure.
+ */
+async function applyBedtimeProcessing(inputBuffer) {
+  if (!FFMPEG_AVAILABLE) {
+    return { buffer: inputBuffer, processed: false, reason: 'ffmpeg not found' }
+  }
+
+  const os     = require('os')
+  const fs     = require('fs')
+  const path   = require('path')
+  const { spawn, spawnSync } = require('child_process')
+  const FFMPEG_BIN  = process.env.FFMPEG_PATH  || 'ffmpeg'
+  const FFPROBE_BIN = process.env.FFPROBE_PATH || 'ffprobe'
+
+  const tmpDir     = process.platform === 'linux' ? '/dev/shm' : os.tmpdir()
+  const id         = Date.now()
+  const inputPath  = path.join(tmpDir, `snoozy_raw_${id}.mp3`)
+  const outputPath = path.join(tmpDir, `snoozy_out_${id}.mp3`)
+
+  fs.writeFileSync(inputPath, inputBuffer)
+
+  try {
+    const probe = spawnSync(FFPROBE_BIN, [
+      '-i', inputPath,
+      '-show_entries', 'format=duration',
+      '-v', 'quiet',
+      '-of', 'csv=p=0',
+    ])
+    const duration = parseFloat(probe.stdout?.toString().trim())
+    if (!duration || duration <= 0) {
+      return { buffer: inputBuffer, processed: false, reason: 'could not detect duration' }
+    }
+
+    const splitPoint   = (duration * 0.75).toFixed(3)
+    const fadeOutStart = Math.max(0, duration - 4.0).toFixed(3)
+
+    const filterComplex = [
+      `[0:a]atrim=0:${splitPoint},asetpts=PTS-STARTPTS[early]`,
+      `[0:a]atrim=${splitPoint},asetpts=PTS-STARTPTS,atempo=0.92[late]`,
+      `[early][late]acrossfade=d=0.5[joined]`,
+      `[joined]dynaudnorm=p=0.71:m=10:s=12:g=15,lowpass=f=12000,afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=4.0`,
+    ].join(';')
+
+    await new Promise((resolve, reject) => {
+      const ff = spawn(FFMPEG_BIN, [
+        '-i', inputPath,
+        '-filter_complex', filterComplex,
+        '-b:a', '192k',
+        '-y', outputPath,
+      ], { stdio: 'ignore' })
+      ff.on('close', (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)))
+    })
+
+    const output = fs.readFileSync(outputPath)
+    if (output.length < inputBuffer.length * 0.3) {
+      return { buffer: inputBuffer, processed: false, reason: 'output suspiciously small' }
+    }
+
+    return { buffer: output, processed: true }
+  } catch (err) {
+    return { buffer: inputBuffer, processed: false, reason: err.message }
+  } finally {
+    ;[inputPath, outputPath].forEach(f => { try { fs.unlinkSync(f) } catch {} })
+  }
+}
+
 async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res, startTime) {
   const processedText = prepareTextForFishAudio(text, vibeId)
   log('AUDIO', `Fish Audio pre-processor: ${text.length} chars → ${processedText.length} chars`)
@@ -544,8 +616,8 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   const arrayBuffer = await ttsResponse.arrayBuffer()
   const rawBuffer   = Buffer.from(arrayBuffer)
 
-  const { buffer, normalized } = await normalizeLoudness(rawBuffer)
-  log('AUDIO', `Loudness normalization: ${normalized ? 'applied' : 'skipped'}`)
+  const { buffer, processed, reason } = await applyBedtimeProcessing(rawBuffer)
+  log('AUDIO', `Bedtime processing: ${processed ? 'applied' : `skipped (${reason})`}`)
 
   setInCache(cacheKey, buffer)
 
