@@ -1,6 +1,7 @@
 const express = require('express')
 const crypto = require('crypto')
 const { z } = require('zod')
+const multer = require('multer')
 const OpenAI = require('openai')
 const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
@@ -9,6 +10,17 @@ const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPrep
 const { normalizeLoudness } = require('../utils/audioNormalizer')
 
 const router = express.Router()
+
+// Multer: store uploaded audio in memory (max 20 MB — enough for ~3 min uncompressed)
+const audioUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/x-wav', 'audio/flac', 'audio/webm', 'audio/ogg', 'video/webm']
+    if (allowed.includes(file.mimetype)) return cb(null, true)
+    cb(new Error(`Unsupported audio type: ${file.mimetype}`))
+  },
+})
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ELEVENLABS VOICE REGISTRY
@@ -538,5 +550,144 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   const totalElapsed = Date.now() - startTime
   log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms (cached for next request)`)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FISH AUDIO VOICE CLONING
+// ─────────────────────────────────────────────────────────────────────────────
+
+const createVoiceCloneSchema = z.object({
+  voiceName: z.string().min(1).max(100).optional(),
+})
+
+/**
+ * POST /api/create-voice-clone
+ *
+ * Accepts a multipart audio upload, sends it to Fish Audio to create a private
+ * voice clone model, and returns the model ID for use in future TTS calls.
+ *
+ * Form fields:
+ *   audio     (file)    — WAV / MP3 / FLAC / WebM, 15–120 seconds recommended
+ *   voiceName (string)  — optional display name, defaults to "My Voice"
+ *
+ * Response:
+ *   { success: true, voiceModelId: string }
+ */
+router.post(
+  '/create-voice-clone',
+  audioUpload.single('audio'),
+  (req, res, next) => {
+    // Validate text fields via Zod after multer has parsed the multipart body
+    const result = createVoiceCloneSchema.safeParse(req.body)
+    if (!result.success) {
+      return res.status(400).json({ success: false, error: 'Validation failed', details: result.error.issues })
+    }
+    req.validated = result.data
+    next()
+  },
+  async (req, res) => {
+    const startTime = Date.now()
+    const config    = req.app.locals.config
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No audio file uploaded. Send the file as form field "audio".' })
+      }
+
+      if (!config.fishApiKey) {
+        return res.status(503).json({ success: false, error: 'Voice cloning requires Fish Audio. Set TTS_PROVIDER=fishaudio and FISH_API_KEY.' })
+      }
+
+      const voiceName = req.validated.voiceName || 'My Voice'
+      log('VOICE', `Creating voice clone — name: "${voiceName}", file: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB, ${req.file.mimetype})`)
+
+      const formData = new FormData()
+      formData.append('type', 'tts')
+      formData.append('title', voiceName)
+      formData.append('train_mode', 'fast')
+      formData.append('visibility', 'private')
+      formData.append(
+        'voices',
+        new Blob([req.file.buffer], { type: req.file.mimetype }),
+        req.file.originalname,
+      )
+
+      const response = await fetch('https://api.fish.audio/model', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${config.fishApiKey}` },
+        body: formData,
+      })
+
+      const apiElapsed = Date.now() - startTime
+
+      if (!response.ok) {
+        const errorBody = await response.text()
+        log('VOICE', `Fish Audio ERROR ${response.status} (${apiElapsed}ms):`, errorBody)
+
+        const statusMessages = {
+          401: 'Fish Audio API key is invalid or missing.',
+          402: 'Fish Audio account has insufficient balance.',
+          422: 'Fish Audio rejected the audio. Ensure the file is a valid audio clip of at least 10 seconds.',
+        }
+        const message = statusMessages[response.status] || 'Failed to create voice clone. Please try again.'
+        return res.status(response.status === 402 ? 402 : 502).json({ success: false, error: message })
+      }
+
+      const data = await response.json()
+      const voiceModelId = data._id
+
+      if (!voiceModelId) {
+        log('VOICE', `Fish Audio response missing _id:`, JSON.stringify(data))
+        return res.status(502).json({ success: false, error: 'Voice clone created but no model ID returned.' })
+      }
+
+      const totalElapsed = Date.now() - startTime
+      log('VOICE', `Voice clone created: ${voiceModelId} (state: ${data.state}) in ${totalElapsed}ms`)
+
+      return res.status(201).json({ success: true, voiceModelId, state: data.state })
+    } catch (error) {
+      const elapsed = Date.now() - startTime
+      log('VOICE', `FAILED after ${elapsed}ms: ${error.message}`)
+      if (!res.headersSent) {
+        return res.status(500).json({ success: false, error: 'Failed to create voice clone. Please try again.' })
+      }
+    }
+  },
+)
+
+/**
+ * DELETE /api/voice-clone/:id
+ *
+ * Deletes a Fish Audio voice model. Call this when the user removes their
+ * cloned voice or deletes their account.
+ */
+router.delete('/voice-clone/:id', async (req, res) => {
+  const config = req.app.locals.config
+
+  if (!config.fishApiKey) {
+    return res.status(503).json({ success: false, error: 'Voice cloning requires Fish Audio. Set TTS_PROVIDER=fishaudio and FISH_API_KEY.' })
+  }
+
+  const { id } = req.params
+  log('VOICE', `Deleting voice model: ${id}`)
+
+  try {
+    const response = await fetch(`https://api.fish.audio/model/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${config.fishApiKey}` },
+    })
+
+    if (!response.ok && response.status !== 404) {
+      const errorBody = await response.text()
+      log('VOICE', `Fish Audio DELETE ERROR ${response.status}:`, errorBody)
+      return res.status(502).json({ success: false, error: 'Failed to delete voice model.' })
+    }
+
+    log('VOICE', `Voice model ${id} deleted`)
+    return res.json({ success: true })
+  } catch (error) {
+    log('VOICE', `DELETE FAILED: ${error.message}`)
+    return res.status(500).json({ success: false, error: 'Failed to delete voice model. Please try again.' })
+  }
+})
 
 module.exports = router
