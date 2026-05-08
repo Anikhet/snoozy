@@ -479,7 +479,6 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   const processedText = prepareTextForFishAudio(text, vibeId)
   log('AUDIO', `Fish Audio pre-processor: ${text.length} chars → ${processedText.length} chars`)
 
-  // reference_id is optional — omitting it lets Fish use its default voice
   const referenceId = requestedVoiceId || config.fishAudioVoiceId
 
   const cacheKey    = getCacheKey(processedText, referenceId || 'default')
@@ -496,14 +495,19 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   const body = {
     text: processedText,
     format: 'mp3',
-    mp3_bitrate: 128,
+    sample_rate: 44100,
+    mp3_bitrate: 192,
     latency: 'normal',
-    prosody: {
-      speed: 0.9,
-      normalize_loudness: true,
-    },
-    temperature: 0.7,
+    chunk_length: 300,
+    min_chunk_length: 50,
+    prosody: { speed: 0.92, volume: 0 },
+    temperature: 0.6,
+    top_p: 0.7,
+    repetition_penalty: 1.2,
     condition_on_previous_chunks: true,
+    max_new_tokens: 1024,
+    early_stop_threshold: 1,
+    normalize: true,
   }
   if (referenceId) body.reference_id = referenceId
 
@@ -529,7 +533,6 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
       422: 'Fish Audio rejected the request. Check voice model ID and text.',
     }
     const message = statusMessages[ttsResponse.status] || 'Failed to generate audio. Please try again.'
-
     if (!res.headersSent) {
       res.status(ttsResponse.status === 402 ? 402 : 502).json({ success: false, error: message })
     }
@@ -539,16 +542,19 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   log('AUDIO', `Fish Audio responded OK in ${apiElapsed}ms — buffering for cache...`)
 
   const arrayBuffer = await ttsResponse.arrayBuffer()
-  const buffer      = Buffer.from(arrayBuffer)
+  const rawBuffer   = Buffer.from(arrayBuffer)
+
+  const { buffer, normalized } = await normalizeLoudness(rawBuffer)
+  log('AUDIO', `Loudness normalization: ${normalized ? 'applied' : 'skipped'}`)
 
   setInCache(cacheKey, buffer)
+
+  const totalElapsed = Date.now() - startTime
+  log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
 
   res.setHeader('Content-Type', 'audio/mpeg')
   res.setHeader('X-Cache', 'MISS')
   res.end(buffer)
-
-  const totalElapsed = Date.now() - startTime
-  log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms (cached for next request)`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

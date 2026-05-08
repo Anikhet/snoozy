@@ -46,3 +46,7 @@ See `snoozy-android/CLAUDE.md` for the full guide. Summary:
 - **Auth**: Clerk — `SignedIn`/`SignedOut` wrappers in `App.tsx`; JWT passed on every API call.
 - **Storage**: `expo-file-system` for audio files + JSON story metadata; `AsyncStorage` for child profile and avatar URI.
 - **Design tokens**: `src/config/tokens.ts` — use `Spacing.*`, `Radii.*`, `Fonts.*`, `Colors.*` consistently.
+
+
+
+A child hearing their own mom or dad reading a personalized story when the parent isn't physically present? That's not a TTS feature — that's the entire product proposition.
