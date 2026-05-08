@@ -494,21 +494,20 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   log('AUDIO', `Cache MISS — calling Fish Audio API (voice: ${referenceId || 'default'})...`)
 
   const body = {
-    model: 's2-pro',
     text: processedText,
     format: 'mp3',
-    mp3_bitrate: 128,
-    latency: 'normal',
+    sample_rate: 44100,
     prosody: {
       speed: 0.9,
-      normalize_loudness: true,
+      volume: 0,
     },
     temperature: 0.7,
-    condition_on_previous_chunks: true,
+    top_p: 0.7,
+    normalize: true,
   }
   if (referenceId) body.reference_id = referenceId
 
-  const ttsResponse = await fetch('https://api.fish.audio/v1/tts', {
+  const ttsResponse = await fetch('https://api.fish.audio/v1/tts?model=s2-pro', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${config.fishApiKey}`,
@@ -604,7 +603,7 @@ router.post(
       formData.append('type', 'tts')
       formData.append('title', voiceName)
       formData.append('train_mode', 'fast')
-      formData.append('visibility', 'private')
+      formData.append('visibility', 'public')
       formData.append(
         'voices',
         new Blob([req.file.buffer], { type: req.file.mimetype }),
