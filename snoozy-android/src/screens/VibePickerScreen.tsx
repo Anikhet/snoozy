@@ -36,15 +36,11 @@ export default function VibePickerScreen() {
   const selectedWorld = WORLDS.find((w) => w.id === selectedWorldId)
   const childName = childDetails.name || 'your little one'
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!selectedVibeId || isGenerating) return
     setIsGenerating(true)
-    try {
-      const token = await getToken()
-      if (token) generateStory(selectedVibeId, token)
-    } finally {
-      setIsGenerating(false)
-    }
+    generateStory(selectedVibeId, getToken)
+    setIsGenerating(false)
   }
 
   return (

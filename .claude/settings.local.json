@@ -26,7 +26,24 @@
       "WebSearch",
       "Bash(git stash *)",
       "Bash(node -e \"const C = require\\('./snoozy-android/node_modules/expo-constants'\\); console.log\\(Object.keys\\(C\\)\\)\")",
-      "Bash(node -e \"const {requireAuth} = require\\('./snoozy-android/../backend/node_modules/@clerk/express'\\); console.log\\(requireAuth.toString\\(\\).substring\\(0,200\\)\\)\")"
+      "Bash(node -e \"const {requireAuth} = require\\('./snoozy-android/../backend/node_modules/@clerk/express'\\); console.log\\(requireAuth.toString\\(\\).substring\\(0,200\\)\\)\")",
+      "WebFetch(domain:docs.fish.audio)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:fish.audio)",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s2-pro' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}' -o /tmp/fish_test.mp3 -w '\\\\nHTTP Status: %{http_code}\\\\nSize: %{size_download} bytes')",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s2-pro' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}')",
+      "Bash(curl -s https://api.fish.audio/wallet/self/api-key -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246')",
+      "Bash(curl -s https://api.fish.audio/me -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246')",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s1' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}')",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}')",
+      "Bash(curl -s 'https://api.fish.audio/model?page_size=1' -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246')",
+      "Bash(curl -s https://api.fish.audio/model/933563129e564b19a115bedd57b7406a -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246')",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s2-pro' -d '{\"text\":\"Hello world\",\"format\":\"mp3\",\"reference_id\":\"933563129e564b19a115bedd57b7406a\"}')",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s2-pro' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}' -o /tmp/fish_test.mp3 -w 'HTTP %{http_code} — %{size_download} bytes')",
+      "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s2-pro' -d '{\"text\":\"Once upon a time in a magical forest, a little fox named Luna discovered a glowing stone.\",\"format\":\"mp3\",\"reference_id\":\"933563129e564b19a115bedd57b7406a\"}' -o /tmp/fish_voice_test.mp3 -w 'HTTP %{http_code} — %{size_download} bytes')",
+      "Bash(curl -s https://snoozy-kmoq.onrender.com/health)",
+      "Bash(curl -s -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H 'Content-Type: application/json' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}' -w '\\\\nHTTP %{http_code}')"
     ]
   }
 }

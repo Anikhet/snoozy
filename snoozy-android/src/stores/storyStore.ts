@@ -51,7 +51,7 @@ interface StoryStore {
   updateChildDetails: (partial: Partial<ChildDetails>) => void
   setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string; fishVoiceModelId?: string }) => void
   updateSavedVoice: (voiceId: string) => void
-  generateStory: (vibeId: string, token: string) => void
+  generateStory: (vibeId: string, getToken: () => Promise<string | null>) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
   retryStory: (story: Story) => void
@@ -208,7 +208,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
           : s.onboardingDefaults,
       })),
 
-    generateStory: (vibeId, token) => {
+    generateStory: (vibeId, getToken) => {
       const { selectedWorldId, childDetails } = get()
       if (!selectedWorldId) return
 
@@ -231,7 +231,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const details = { ...childDetails }
       const voiceId = details.voiceId
 
-      runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, token, abortController.signal)
+      runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, getToken, abortController.signal)
     },
 
     playStory: (story) => {
@@ -374,19 +374,25 @@ async function runGeneration(
   vibeId: string,
   childDetails: ChildDetails,
   voiceId: string,
-  token: string,
+  getToken: () => Promise<string | null>,
   signal: AbortSignal
 ): Promise<void> {
   try {
+    const storyToken = await getToken()
+    if (!storyToken) throw new Error('Not authenticated')
+
     const { title, storyText } = await apiService.generateStory(
       worldId,
       vibeId,
       childDetails,
-      token,
+      storyToken,
       signal
     )
 
-    const audioBase64 = await apiService.generateAudio(storyText, token, voiceId, signal, vibeId)
+    const audioToken = await getToken()
+    if (!audioToken) throw new Error('Not authenticated')
+
+    const audioBase64 = await apiService.generateAudio(storyText, audioToken, voiceId, signal, vibeId)
     const audioFileName = await storageService.saveAudioFile(audioBase64)
 
     const finishedStory: Story = {
