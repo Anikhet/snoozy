@@ -395,10 +395,17 @@ async function runGeneration(
     const audioBase64 = await apiService.generateAudio(storyText, audioToken, voiceId, signal, vibeId)
     const audioFileName = await storageService.saveAudioFile(audioBase64)
 
+    const displayText = storyText
+      .replace(/\[[^\]]+\]/g, '')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+
     const finishedStory: Story = {
       id: storyId,
       title,
-      storyText,
+      storyText: displayText,
       templateId: worldId,
       childName: childDetails.name,
       createdAt: new Date().toISOString(),
