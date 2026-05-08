@@ -496,22 +496,23 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   const body = {
     text: processedText,
     format: 'mp3',
-    sample_rate: 44100,
+    mp3_bitrate: 128,
+    latency: 'normal',
     prosody: {
       speed: 0.9,
-      volume: 0,
+      normalize_loudness: true,
     },
     temperature: 0.7,
-    top_p: 0.7,
-    normalize: true,
+    condition_on_previous_chunks: true,
   }
   if (referenceId) body.reference_id = referenceId
 
-  const ttsResponse = await fetch('https://api.fish.audio/v1/tts?model=s2-pro', {
+  const ttsResponse = await fetch('https://api.fish.audio/v1/tts', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${config.fishApiKey}`,
       'Content-Type': 'application/json',
+      'model': 's2-pro',
     },
     body: JSON.stringify(body),
   })
