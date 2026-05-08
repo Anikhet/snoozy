@@ -30,7 +30,7 @@ interface StoryStore {
   generatingStoryId: string | null
   childDetails: ChildDetails
   /** Child profile set once post-signup. Seeds every story. */
-  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string } | null
+  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string; fishVoiceModelId?: string } | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -49,7 +49,7 @@ interface StoryStore {
   navigateToInsights: () => void
   goHome: () => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string }) => void
+  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string; fishVoiceModelId?: string }) => void
   updateSavedVoice: (voiceId: string) => void
   generateStory: (vibeId: string, token: string) => void
   playStory: (story: Story) => void
@@ -196,8 +196,8 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       set((s) => ({
         onboardingDefaults: defaults,
         childDetails: s.childDetails.name
-          ? { ...s.childDetails, voiceId: defaults.voiceId ?? s.childDetails.voiceId }
-          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns, voiceId: defaults.voiceId ?? s.childDetails.voiceId },
+          ? { ...s.childDetails, voiceId: defaults.voiceId ?? s.childDetails.voiceId, fishVoiceModelId: defaults.fishVoiceModelId ?? s.childDetails.fishVoiceModelId }
+          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns, voiceId: defaults.voiceId ?? s.childDetails.voiceId, fishVoiceModelId: defaults.fishVoiceModelId },
       })),
 
     updateSavedVoice: (voiceId) =>

@@ -494,6 +494,7 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
   log('AUDIO', `Cache MISS — calling Fish Audio API (voice: ${referenceId || 'default'})...`)
 
   const body = {
+    model: 's2-pro',
     text: processedText,
     format: 'mp3',
     mp3_bitrate: 128,
@@ -512,7 +513,6 @@ async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res
     headers: {
       'Authorization': `Bearer ${config.fishApiKey}`,
       'Content-Type': 'application/json',
-      'model': 's2-pro',
     },
     body: JSON.stringify(body),
   })
