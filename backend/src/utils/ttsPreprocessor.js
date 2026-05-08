@@ -120,15 +120,51 @@ function injectParagraphBreaks(text, vibeId) {
 }
 
 // ─────────────────────────────────────────────
-// MAIN EXPORT
+// FISH AUDIO — EMOTION TAG CONFIG
+// ─────────────────────────────────────────────
+
+// Vibes that warrant a soft/gentle opening tone
+const FISH_SOFT_VIBES = new Set(['cozy', 'kind'])
+
+/**
+ * Adds sentence-level [long pause] tags inside the last paragraph (sleep ending).
+ * Fish Audio equivalent of addSleepEndingBreaks for SSML.
+ * Must run BEFORE injectFishParagraphBreaks.
+ */
+function addFishSleepEndingBreaks(text) {
+  const paragraphs = text.split('\n\n')
+  if (paragraphs.length < 2) return text
+
+  const last = paragraphs[paragraphs.length - 1].trim()
+  const sentences = last.match(/[^.!?]+[.!?]+['"']?/g)
+  if (!sentences || sentences.length < 2) return text
+
+  const processedLast =
+    sentences.map((s) => s.trim()).join('\n[long pause]\n') +
+    '\n[long pause]'
+
+  return [...paragraphs.slice(0, -1), processedLast].join('\n\n')
+}
+
+/**
+ * Replaces double-newline paragraph breaks with [pause] tags.
+ * Must run AFTER addFishSleepEndingBreaks.
+ */
+function injectFishParagraphBreaks(text) {
+  return text.replace(/\n\n/g, '\n[pause]\n')
+}
+
+// ─────────────────────────────────────────────
+// MAIN EXPORTS
 // ─────────────────────────────────────────────
 
 /**
- * Full pre-processing pipeline. Pass story body (title already stripped) and vibeId.
+ * Full pre-processing pipeline for ElevenLabs (SSML).
+ * Pass story body (title already stripped) and vibeId.
  * The returned string is ready to send to ElevenLabs with enable_ssml_parsing: true.
  *
  * @param {string} text   — story body, title already stripped
- * @param {string} vibeId — one of: cozy | brave | kind | wonder | friends
+ * @param {string} vibeId — one of: cozy | brave | kind | wonder | friends | inspired
  * @returns {string}      — TTS-ready text with SSML annotations
  */
 function prepareTextForTTS(text, vibeId) {
@@ -144,8 +180,35 @@ function prepareTextForTTS(text, vibeId) {
   return t.trim()
 }
 
+/**
+ * Full pre-processing pipeline for Fish Audio (emotion tags).
+ * Fish Audio uses plain-text emotion tags ([soft], [pause], [long pause]) instead of SSML.
+ *
+ * @param {string} text   — story body, title already stripped
+ * @param {string} vibeId — one of: cozy | brave | kind | wonder | friends | inspired
+ * @returns {string}      — TTS-ready text with Fish Audio emotion tags
+ */
+function prepareTextForFishAudio(text, vibeId) {
+  let t = text.trim()
+
+  t = normalizeEmDashes(t)
+  t = normalizeEllipses(t)
+  t = stripMarkdown(t)
+  // No phoneme tags — Fish Audio handles pronunciation natively
+  t = addFishSleepEndingBreaks(t)   // must come before injectFishParagraphBreaks
+  t = injectFishParagraphBreaks(t)
+
+  // Prepend a [soft] tag for calm vibes so the voice opens gently
+  if (FISH_SOFT_VIBES.has(vibeId)) {
+    t = `[soft]${t}`
+  }
+
+  return t.trim()
+}
+
 module.exports = {
   prepareTextForTTS,
+  prepareTextForFishAudio,
   VIBE_BREAK_MS,
   // Exported for testing individual transforms
   _transforms: {
@@ -155,5 +218,7 @@ module.exports = {
     applyPronunciationDictionary,
     addSleepEndingBreaks,
     injectParagraphBreaks,
+    addFishSleepEndingBreaks,
+    injectFishParagraphBreaks,
   },
 }

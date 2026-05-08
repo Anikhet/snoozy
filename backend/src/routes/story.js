@@ -5,7 +5,7 @@ const OpenAI = require('openai')
 const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
-const { prepareTextForTTS } = require('../utils/ttsPreprocessor')
+const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
 const { normalizeLoudness } = require('../utils/audioNormalizer')
 
 const router = express.Router()
@@ -251,6 +251,8 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
       await generateWithElevenLabs(text, voiceId, userRegion, gender, vibeId, config, res, startTime)
     } else if (config.ttsProvider === 'azure') {
       await generateWithAzure(text, config, res, startTime, voice)
+    } else if (config.ttsProvider === 'fishaudio') {
+      await generateWithFishAudio(text, voiceId, vibeId, config, res, startTime)
     } else {
       await generateWithOpenAI(text, config, res, startTime, voice)
     }
@@ -453,6 +455,88 @@ async function generateWithAzure(text, config, res, startTime, requestedVoice) {
       res.status(500).json({ success: false, error: `Azure OpenAI TTS Failed: ${error.message}` })
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FISH AUDIO TTS
+// Uses s2-pro model with emotion tags for bedtime-optimised narration.
+// Built-in loudness normalisation (normalize_loudness: true) removes FFmpeg dependency.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res, startTime) {
+  const processedText = prepareTextForFishAudio(text, vibeId)
+  log('AUDIO', `Fish Audio pre-processor: ${text.length} chars → ${processedText.length} chars`)
+
+  // reference_id is optional — omitting it lets Fish use its default voice
+  const referenceId = requestedVoiceId || config.fishAudioVoiceId
+
+  const cacheKey    = getCacheKey(processedText, referenceId || 'default')
+  const cachedAudio = getFromCache(cacheKey)
+  if (cachedAudio) {
+    log('AUDIO', `Cache HIT (${cacheKey.slice(0, 8)}…) — serving ${(cachedAudio.length / 1024).toFixed(1)}KB from cache`)
+    res.setHeader('Content-Type', 'audio/mpeg')
+    res.setHeader('X-Cache', 'HIT')
+    res.end(cachedAudio)
+    return
+  }
+  log('AUDIO', `Cache MISS — calling Fish Audio API (voice: ${referenceId || 'default'})...`)
+
+  const body = {
+    text: processedText,
+    format: 'mp3',
+    mp3_bitrate: 128,
+    latency: 'normal',
+    prosody: {
+      speed: 0.9,
+      normalize_loudness: true,
+    },
+    temperature: 0.7,
+    condition_on_previous_chunks: true,
+  }
+  if (referenceId) body.reference_id = referenceId
+
+  const ttsResponse = await fetch('https://api.fish.audio/v1/tts', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${config.fishApiKey}`,
+      'Content-Type': 'application/json',
+      'model': 's2-pro',
+    },
+    body: JSON.stringify(body),
+  })
+
+  const apiElapsed = Date.now() - startTime
+
+  if (!ttsResponse.ok) {
+    const errorBody = await ttsResponse.text()
+    log('AUDIO', `Fish Audio ERROR ${ttsResponse.status} (${apiElapsed}ms):`, errorBody)
+
+    const statusMessages = {
+      401: 'Fish Audio API key is invalid or missing.',
+      402: 'Fish Audio account has insufficient balance.',
+      422: 'Fish Audio rejected the request. Check voice model ID and text.',
+    }
+    const message = statusMessages[ttsResponse.status] || 'Failed to generate audio. Please try again.'
+
+    if (!res.headersSent) {
+      res.status(ttsResponse.status === 402 ? 402 : 502).json({ success: false, error: message })
+    }
+    return
+  }
+
+  log('AUDIO', `Fish Audio responded OK in ${apiElapsed}ms — buffering for cache...`)
+
+  const arrayBuffer = await ttsResponse.arrayBuffer()
+  const buffer      = Buffer.from(arrayBuffer)
+
+  setInCache(cacheKey, buffer)
+
+  res.setHeader('Content-Type', 'audio/mpeg')
+  res.setHeader('X-Cache', 'MISS')
+  res.end(buffer)
+
+  const totalElapsed = Date.now() - startTime
+  log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms (cached for next request)`)
 }
 
 module.exports = router

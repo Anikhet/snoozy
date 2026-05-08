@@ -239,14 +239,14 @@ export function AuthScreen() {
 
   const onApple = async () => {
     try {
-      const { createdSessionId, setActive } = await startApple({ strategy: 'oauth_apple' })
+      const { createdSessionId, setActive } = await startApple({ strategy: 'oauth_apple', redirectUrl: 'snoozy://oauth-native-callback' })
       if (createdSessionId && setActive) await setActive({ session: createdSessionId })
     } catch { /* cancelled */ }
   }
 
   const onGoogle = async () => {
     try {
-      const { createdSessionId, setActive } = await startGoogle({ strategy: 'oauth_google' })
+      const { createdSessionId, setActive } = await startGoogle({ strategy: 'oauth_google', redirectUrl: 'snoozy://oauth-native-callback' })
       if (createdSessionId && setActive) await setActive({ session: createdSessionId })
     } catch { /* cancelled */ }
   }

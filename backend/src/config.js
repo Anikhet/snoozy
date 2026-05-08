@@ -13,6 +13,8 @@ function loadConfig() {
     required.push('ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID')
   } else if (ttsProvider === 'azure') {
     required.push('AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT')
+  } else if (ttsProvider === 'fishaudio') {
+    required.push('FISH_API_KEY')
   }
 
   const missing = required.filter((key) => !process.env[key])
@@ -26,6 +28,8 @@ function loadConfig() {
     openaiTtsVoice: process.env.OPENAI_TTS_VOICE || 'shimmer',
     elevenlabsApiKey: process.env.ELEVENLABS_API_KEY,
     elevenlabsVoiceId: process.env.ELEVENLABS_VOICE_ID,
+    fishApiKey: process.env.FISH_API_KEY,
+    fishAudioVoiceId: process.env.FISH_AUDIO_VOICE_ID,
     azureOpenaiEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
     azureOpenaiApiKey: process.env.AZURE_OPENAI_API_KEY,
     azureOpenaiApiVersion: process.env.AZURE_OPENAI_API_VERSION || '2025-12-15',

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Snoozy",
     "slug": "snoozy-android",
+    "scheme": "snoozy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,7 +16,6 @@
       "supportsTablet": false,
       "infoPlist": {
         "UIBackgroundModes": [
-          "audio",
           "audio"
         ]
       },
