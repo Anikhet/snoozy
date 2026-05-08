@@ -119,40 +119,6 @@ function injectParagraphBreaks(text, vibeId) {
   return text.replace(/\n\n/g, `\n<break time="${ms}ms"/>\n`)
 }
 
-// ─────────────────────────────────────────────
-// FISH AUDIO — EMOTION TAG CONFIG
-// ─────────────────────────────────────────────
-
-// Vibes that warrant a soft/gentle opening tone
-const FISH_SOFT_VIBES = new Set(['cozy', 'kind'])
-
-/**
- * Adds sentence-level [long pause] tags inside the last paragraph (sleep ending).
- * Fish Audio equivalent of addSleepEndingBreaks for SSML.
- * Must run BEFORE injectFishParagraphBreaks.
- */
-function addFishSleepEndingBreaks(text) {
-  const paragraphs = text.split('\n\n')
-  if (paragraphs.length < 2) return text
-
-  const last = paragraphs[paragraphs.length - 1].trim()
-  const sentences = last.match(/[^.!?]+[.!?]+['"']?/g)
-  if (!sentences || sentences.length < 2) return text
-
-  const processedLast =
-    sentences.map((s) => s.trim()).join('\n[long pause]\n') +
-    '\n[long pause]'
-
-  return [...paragraphs.slice(0, -1), processedLast].join('\n\n')
-}
-
-/**
- * Replaces double-newline paragraph breaks with [pause] tags.
- * Must run AFTER addFishSleepEndingBreaks.
- */
-function injectFishParagraphBreaks(text) {
-  return text.replace(/\n\n/g, '\n[pause]\n')
-}
 
 // ─────────────────────────────────────────────
 // MAIN EXPORTS
@@ -182,28 +148,22 @@ function prepareTextForTTS(text, vibeId) {
 
 /**
  * Full pre-processing pipeline for Fish Audio (emotion tags).
- * Fish Audio uses plain-text emotion tags ([soft], [pause], [long pause]) instead of SSML.
+ * Tags are embedded by the LLM at generation time — this function sanitizes
+ * and normalizes them, strips markdown, and cleans up punctuation.
  *
- * @param {string} text   — story body, title already stripped
- * @param {string} vibeId — one of: cozy | brave | kind | wonder | friends | inspired
- * @returns {string}      — TTS-ready text with Fish Audio emotion tags
+ * @param {string} text — story body, title already stripped, tags already embedded
+ * @returns {{ text: string, stripped: string[], warnings: string[] }}
  */
-function prepareTextForFishAudio(text, vibeId) {
+function prepareTextForFishAudio(text) {
   let t = text.trim()
 
   t = normalizeEmDashes(t)
   t = normalizeEllipses(t)
   t = stripMarkdown(t)
-  // No phoneme tags — Fish Audio handles pronunciation natively
-  t = addFishSleepEndingBreaks(t)   // must come before injectFishParagraphBreaks
-  t = injectFishParagraphBreaks(t)
 
-  // Prepend a [soft] tag for calm vibes so the voice opens gently
-  if (FISH_SOFT_VIBES.has(vibeId)) {
-    t = `[soft]${t}`
-  }
+  const { sanitized, stripped, warnings } = sanitizeFishAudioTags(t)
 
-  return t.trim()
+  return { text: sanitized.trim(), stripped, warnings }
 }
 
 // ─────────────────────────────────────────────
@@ -217,7 +177,7 @@ function prepareTextForFishAudio(text, vibeId) {
 const APPROVED_TAGS = new Set([
   'pause', 'short pause', 'slow',
   'soft', 'soft voice', 'low voice', 'whisper',
-  'exhale', 'inhale',
+  'exhale',
   'gentle', 'emphasis',  // 'tender' removed
 ])
 
@@ -262,7 +222,6 @@ const TAG_ALIASES = {
   'breath': 'exhale',
   'breathe': 'exhale',
   'breathe out': 'exhale',
-  'breath in': 'inhale',
   
   // Banned (silently stripped — bedtime-inappropriate)
   'excited': null,
@@ -352,11 +311,22 @@ function analyzeTagDensity(text) {
   }
 }
 
+/**
+ * Strips all Fish Audio emotion tags for display in the reading view.
+ * @param {string} text — tagged story text
+ * @returns {string}    — clean text safe to render
+ */
+function stripTagsForDisplay(text) {
+  return text.replace(/\[[^\]]+\]/g, '').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 module.exports = {
   prepareTextForTTS,
   prepareTextForFishAudio,
+  sanitizeFishAudioTags,
+  analyzeTagDensity,
+  stripTagsForDisplay,
   VIBE_BREAK_MS,
-  // Exported for testing individual transforms
   _transforms: {
     normalizeEmDashes,
     normalizeEllipses,
@@ -364,7 +334,7 @@ module.exports = {
     applyPronunciationDictionary,
     addSleepEndingBreaks,
     injectParagraphBreaks,
-    addFishSleepEndingBreaks,
-    injectFishParagraphBreaks,
+    sanitizeFishAudioTags,
+    analyzeTagDensity,
   },
 }

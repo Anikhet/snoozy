@@ -6,7 +6,7 @@ const OpenAI = require('openai')
 const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
-const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
+const { prepareTextForTTS, prepareTextForFishAudio, sanitizeFishAudioTags, analyzeTagDensity } = require('../utils/ttsPreprocessor')
 const { FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
 const router = express.Router()
@@ -231,6 +231,15 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
     const storyBody = hasTitle ? lines.slice(1).join('\n').trim() : storyText.trim()
 
     log('STORY', `Done! Title: "${title}", Body: ${storyBody.length} chars (${elapsed}ms total)`)
+
+    if (config.ttsProvider === 'fish_audio') {
+      const { stripped, warnings } = sanitizeFishAudioTags(storyBody)
+      const { count, density }     = analyzeTagDensity(storyBody)
+      log('STORY', `Tag density: ${count} tags (${density.toFixed(2)} per 100 words)`)
+      if (warnings.length > 0) {
+        log('STORY', `Tag warnings: stripped [${stripped.join(', ')}]`)
+      }
+    }
 
     return res.json({ success: true, title, storyText: storyBody })
   } catch (error) {
@@ -547,9 +556,12 @@ async function applyBedtimeProcessing(inputBuffer) {
   }
 }
 
-async function generateWithFishAudio(text, requestedVoiceId, vibeId, config, res, startTime) {
-  const processedText = prepareTextForFishAudio(text, vibeId)
+async function generateWithFishAudio(text, requestedVoiceId, _vibeId, config, res, startTime) {
+  const { text: processedText, warnings, stripped } = prepareTextForFishAudio(text)
   log('AUDIO', `Fish Audio pre-processor: ${text.length} chars → ${processedText.length} chars`)
+  if (warnings.length > 0) {
+    log('AUDIO', `Tag sanitizer: stripped [${stripped.join(', ')}]`)
+  }
 
   const referenceId = requestedVoiceId || config.fishAudioVoiceId
 
