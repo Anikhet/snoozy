@@ -432,6 +432,117 @@ ENDINGS:
   giving the voice a natural decrescendo.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EMOTION TAGS — direct the voice with inline tags
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This story will be rendered by Fish Audio S2 Pro, a TTS engine that 
+interprets inline bracketed tags to control voice delivery. You will 
+embed these tags directly into the story at narratively meaningful 
+moments. The tags are stripped before the story is shown to the reader 
+visually, but interpreted by the voice model when spoken aloud.
+
+You are the only author who knows where the emotional shifts are.
+A preprocessor cannot place these tags well. You can.
+
+APPROVED TAGS — use only these. Any other tags will be stripped:
+
+  [pause]            longer beat between paragraphs or sections
+  [short pause]      brief beat mid-paragraph, before a shift
+  [soft]             wraps a quiet sensory word, sound, or onomatopoeia
+                     — usable in any section
+  [soft voice]       gentle baseline delivery
+  [low voice]        quieter, deeper register
+  [whisper]          barely audible, reserved for the sleep ending
+  [slow]             deliberate pacing, usually paired
+  [exhale]           a real breath out — sighs, settling moments,
+                     the final breath before sleep. Not a generic
+                     softness tag — only use where a person would
+                     actually exhale.
+  [gentle]           warm tenderness — the heart of a moment
+  [emphasis]         a single significant word lifts slightly.
+                     USE 0 OR 1 TIMES PER STORY. NEVER MORE.
+
+NEVER USE — these tags exist but break the bedtime atmosphere:
+
+  [excited] [laughing] [shouting] [loud] [angry] [surprised]
+  [screaming] [shocked] [panting] [crying] [sad] [moaning]
+  [dramatic] [intense] [urgent] [tender]
+
+DO NOT INVENT NEW TAGS. If you find yourself reaching for [calmly], 
+[slowly], [peacefully], or any tag not on the approved list — express 
+the feeling through word choice and sentence rhythm instead. Invented 
+tags are stripped before rendering, so they do nothing.
+
+TAG PLACEMENT BY STORY SECTION
+
+1. The Opening
+   Light. Optionally one [gentle] or [soft voice] at the start to 
+   establish baseline tone. Often no tags at all — let the voice settle.
+
+2. The Invitation
+   Minimal. Optionally one [short pause] before {name} makes their choice, 
+   to let the moment land.
+
+3. The Journey
+   Light tagging. Wrap any onomatopoeia or italicized sound words with 
+   [soft]. Example: [soft] *hummm* or [soft] *plink, plink*. 
+   One or two [short pause] beats are fine. Otherwise let the prose breathe.
+
+4. The Heart
+   One or two well-placed tags carry the emotional payoff:
+   - For Kind, Wonder, or Friends vibes: [gentle] before the moment line
+   - For Brave vibe: [emphasis] on the brave word, then [gentle] on the
+     warm aftermath line. The [gentle] is doing the real work — 
+     [emphasis] alone feels like bite without warmth.
+   - For Cozy vibe: [soft voice] as the world settles around {name}
+
+5. The Sleep Ending
+   This is where tags do their most important work. Apply progressive 
+   softening across the final paragraphs:
+   
+   - First sleep paragraph:  [soft voice]
+   - Middle sleep paragraph: [low voice, slow]
+   - Final 2-3 lines:        [whisper]
+   - Final breath/sigh:      [exhale]
+
+PLACEMENT RULES
+
+✦ Tags go at the START of the sentence or clause they modify.
+✦ Place [pause] on its own line at paragraph breaks where you want a 
+  longer beat — not every paragraph break, only meaningful ones.
+✦ Aim for 6 to 12 tags total in the story. Never more than 15.
+✦ [soft] can wrap sensory words anywhere they appear — a soft sigh
+  in The Heart, a soft hum in The Journey, a soft breath in the
+  Sleep Ending. It is not section-bound.
+✦ Combine at most two tags: [low voice, slow] is fine. 
+  [low voice, slow, whispered, gentle] is too much.
+✦ Do not tag dialogue attribution words ("she said", "he whispered"). 
+  Tag the line, not the verb.
+
+EXAMPLE — a properly tagged sleep ending
+
+  [pause]
+  [soft voice] {Name} curled into the warm grass.
+  The fireflies hummed their small song.
+  [low voice, slow] Her eyes grew heavy.
+  The world grew softer.
+  [whisper] Sleep came tiptoeing in.
+  [exhale] And everything was still.
+
+EXAMPLE — a tagged Brave heart moment
+
+  The little firefly blinked once and asked, "Were you brave tonight?"
+  {Name} smiled — small, but real.
+  [emphasis] "Yes."
+  [gentle] That word felt round and warm inside her chest.
+
+EXAMPLE — a tagged Kind heart moment
+
+  [gentle] {Name} reached out and helped the little star find its glow.
+  The star spun once in quiet thanks.
+  Their lights mixed and spread out around them like soft honey.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FORMAT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Line 1: Story title (creative, evocative, 3-6 words)

@@ -206,6 +206,152 @@ function prepareTextForFishAudio(text, vibeId) {
   return t.trim()
 }
 
+// ─────────────────────────────────────────────
+// FISH AUDIO TAG SANITIZER
+// ─────────────────────────────────────────────
+
+/**
+ * The single source of truth for tags Storybell allows in TTS output.
+ * Anything not in this set (or mappable via TAG_ALIASES) gets stripped.
+ */
+const APPROVED_TAGS = new Set([
+  'pause', 'short pause', 'slow',
+  'soft', 'soft voice', 'low voice', 'whisper',
+  'exhale', 'inhale',
+  'gentle', 'emphasis',  // 'tender' removed
+])
+
+/**
+ * Common LLM hallucinations mapped to their canonical Storybell equivalents.
+ * Anything mapped to null is silently stripped (banned content).
+ */
+const TAG_ALIASES = {
+  // Pacing variants
+  'slowly': 'slow',
+  'long pause': 'pause',
+  'pausing': 'pause',
+  'beat': 'pause',
+  
+  // Voice quality variants
+  'softly': 'soft',
+  'quietly': 'soft voice',
+  'quiet': 'soft voice',
+  'hushed': 'soft voice',
+  'whispered': 'whisper',
+  'whispering': 'whisper',
+  'whisper softly': 'whisper',
+  'low': 'low voice',
+  'deep voice': 'low voice',
+  
+  // Emotion variants
+  'gently': 'gentle',
+  'tender': 'gentle',       // newly mapped
+  'tenderly': 'gentle',
+  'warm': 'gentle',
+  'warmly': 'gentle',
+  'calm': 'gentle',
+  'calmly': 'gentle',
+  'peaceful': 'gentle',
+  'peacefully': 'gentle',
+  'kindly': 'gentle',
+  
+  // Breath variants
+  'sigh': 'exhale',
+  'sighs': 'exhale',
+  'sighing': 'exhale',
+  'breath': 'exhale',
+  'breathe': 'exhale',
+  'breathe out': 'exhale',
+  'breath in': 'inhale',
+  
+  // Banned (silently stripped — bedtime-inappropriate)
+  'excited': null,
+  'laughing': null,
+  'laugh': null,
+  'shouting': null,
+  'shout': null,
+  'loud': null,
+  'angry': null,
+  'surprised': null,
+  'screaming': null,
+  'shocked': null,
+  'panting': null,
+  'crying': null,
+  'sad': null,
+  'moaning': null,
+  'dramatic': null,
+  'intense': null,
+  'urgent': null,
+  'fearful': null,
+  'scared': null,
+}
+
+/**
+ * Sanitizes Fish Audio emotion tags in story text.
+ * 
+ * - Approved tags pass through unchanged.
+ * - Aliased tags are normalized to their canonical form.
+ * - Unknown tags are stripped (with a warning logged for review).
+ * - Banned tags are silently removed.
+ * - Compound tags (e.g., "low voice, slow") are split, validated, and rejoined.
+ * 
+ * @param {string} text - Story text with [tags] embedded by the LLM
+ * @returns {{ sanitized: string, stripped: string[], warnings: string[] }}
+ */
+function sanitizeFishAudioTags(text) {
+  const stripped = []
+  const warnings = []
+  
+  const sanitized = text.replace(/\[([^\]]+)\]/g, (match, rawContent) => {
+    const tagContent = rawContent.trim().toLowerCase()
+    
+    // Handle compound tags like "low voice, slow"
+    const parts = tagContent.split(',').map(p => p.trim()).filter(Boolean)
+    const normalized = []
+    
+    for (const part of parts) {
+      if (APPROVED_TAGS.has(part)) {
+        normalized.push(part)
+      } else if (part in TAG_ALIASES) {
+        const aliased = TAG_ALIASES[part]
+        if (aliased) {
+          normalized.push(aliased)
+        } else {
+          stripped.push(part)
+        }
+      } else {
+        // Unknown — strip and warn for review
+        stripped.push(part)
+        warnings.push(`Unknown tag stripped: [${part}]`)
+      }
+    }
+    
+    if (normalized.length === 0) return ''
+    return `[${normalized.join(', ')}]`
+  })
+  
+  // Tidy up double spaces / orphaned blank lines from removals
+  const tidied = sanitized
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  
+  return { sanitized: tidied, stripped, warnings }
+}
+
+/**
+ * Tag density check — sanity check the LLM didn't go overboard.
+ * Returns { count, density } where density is tags per 100 words.
+ */
+function analyzeTagDensity(text) {
+  const tagMatches = text.match(/\[[^\]]+\]/g) || []
+  const wordCount = text.replace(/\[[^\]]+\]/g, '').trim().split(/\s+/).length
+  return {
+    count: tagMatches.length,
+    density: (tagMatches.length / wordCount) * 100,
+  }
+}
+
 module.exports = {
   prepareTextForTTS,
   prepareTextForFishAudio,
