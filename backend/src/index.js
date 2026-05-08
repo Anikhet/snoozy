@@ -19,7 +19,10 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 
-app.use('/api', requireAuth(), storyRoutes)
+app.use('/api', requireAuth({ signInUrl: undefined }), (req, res, next) => {
+  if (!req.auth?.()?.userId) return res.status(401).json({ success: false, error: 'Unauthorized' })
+  next()
+}, storyRoutes)
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err.message)

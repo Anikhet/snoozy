@@ -92,10 +92,61 @@ export async function generateAudio(
 
 function buildVoicePayload(voiceId: string | undefined, text: string, vibeId: string | undefined) {
   const voice = VOICES.find((v) => v.id === voiceId)
-  if (voice?.provider === 'elevenlabs') {
+  // Known ElevenLabs voice, or unrecognised ID (Fish Audio clone) → send as voiceId
+  if (!voice || voice.provider === 'elevenlabs') {
     return { text, voiceId, vibeId }
   }
+  // Known OpenAI/Azure voice → send as voice
   return { text, voice: voiceId, vibeId }
+}
+
+/**
+ * Uploads an audio recording to the backend to create a Fish Audio voice clone.
+ * Returns the voice model ID to store in the child profile.
+ */
+export async function createVoiceClone(
+  audioUri: string,
+  voiceName: string,
+  token: string,
+): Promise<string> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 60_000)
+
+  const ext = audioUri.split('.').pop()?.toLowerCase() ?? 'm4a'
+  const mimeType = ext === 'wav' ? 'audio/wav' : ext === 'flac' ? 'audio/flac' : 'audio/mp4'
+
+  const formData = new FormData()
+  formData.append('audio', { uri: audioUri, type: mimeType, name: `voice-sample.${ext}` } as unknown as Blob)
+  formData.append('voiceName', voiceName)
+
+  const response = await fetch(`${AppConfig.backendUrl}/api/create-voice-clone`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+    signal: controller.signal,
+  })
+  clearTimeout(timeoutId)
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as Record<string, string>
+    throw new Error(body.error ?? `Voice clone failed (${response.status})`)
+  }
+
+  const data = await response.json()
+  return data.voiceModelId as string
+}
+
+/**
+ * Deletes a Fish Audio voice clone model. Call when the user removes their voice.
+ */
+export async function deleteVoiceClone(modelId: string, token: string): Promise<void> {
+  const response = await fetch(`${AppConfig.backendUrl}/api/voice-clone/${encodeURIComponent(modelId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`Delete voice clone failed (${response.status})`)
+  }
 }
 
 function blobToBase64(blob: Blob): Promise<string> {

@@ -29,6 +29,8 @@ export interface ChildDetails {
   favoriteAnimal?: string
   favoriteThing?: string
   voiceId: string
+  /** Fish Audio voice model _id — set after the parent records their voice. */
+  fishVoiceModelId?: string
 }
 
 export const DEFAULT_CHILD_DETAILS: ChildDetails = {

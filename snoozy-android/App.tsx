@@ -44,6 +44,7 @@ import { AccountDetailsScreen } from '@/screens/AccountDetailsScreen'
 import { FavoriteThemesScreen } from '@/screens/FavoriteThemesScreen'
 import { PasswordSecurityScreen } from '@/screens/PasswordSecurityScreen'
 import { SnoozyPlusScreen } from '@/screens/SnoozyPlusScreen'
+import { VoiceSetupScreen } from '@/screens/VoiceSetupScreen'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || ''
 
@@ -222,6 +223,7 @@ export default function App() {
                           : profilePanel === 'accountDetails' ? <AccountDetailsScreen />
                           : profilePanel === 'favoriteThemes' ? <FavoriteThemesScreen />
                           : profilePanel === 'snoozyPlus' ? <SnoozyPlusScreen />
+                          : profilePanel === 'voiceSetup' ? <VoiceSetupScreen />
                           : <PasswordSecurityScreen />}
                         </Animated.View>
                       ) : appScreens}

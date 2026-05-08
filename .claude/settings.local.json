@@ -24,7 +24,9 @@
       "Bash(ffmpeg -version)",
       "Bash(node -e ' *)",
       "WebSearch",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(node -e \"const C = require\\('./snoozy-android/node_modules/expo-constants'\\); console.log\\(Object.keys\\(C\\)\\)\")",
+      "Bash(node -e \"const {requireAuth} = require\\('./snoozy-android/../backend/node_modules/@clerk/express'\\); console.log\\(requireAuth.toString\\(\\).substring\\(0,200\\)\\)\")"
     ]
   }
 }

@@ -67,9 +67,10 @@ interface StoryStore {
   toggleFavorite: (storyId: string) => void
   rateStory: (storyId: string, stars: number) => void
   cancelGeneration: () => void
-  profilePanel: 'storyPrefs' | 'bedtimeReminder' | 'accountDetails' | 'favoriteThemes' | 'passwordSecurity' | 'snoozyPlus' | null
+  profilePanel: 'storyPrefs' | 'bedtimeReminder' | 'accountDetails' | 'favoriteThemes' | 'passwordSecurity' | 'snoozyPlus' | 'voiceSetup' | null
   openProfilePanel: (panel: NonNullable<StoryStore['profilePanel']>) => void
   closeProfilePanel: () => void
+  setFishVoiceModelId: (id: string | null) => void
 
   // ── Subscription ────────────────────────────────────────────────────────────
   subscription: Subscription
@@ -123,6 +124,22 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     openProfilePanel: (panel) => set({ profilePanel: panel }),
 
     closeProfilePanel: () => set({ profilePanel: null }),
+
+    setFishVoiceModelId: (id) =>
+      set((s) => {
+        const prevFishId = s.childDetails.fishVoiceModelId
+        const newVoiceId = id !== null
+          ? id
+          : s.childDetails.voiceId === prevFishId
+            ? DEFAULT_CHILD_DETAILS.voiceId
+            : s.childDetails.voiceId
+        return {
+          childDetails: { ...s.childDetails, fishVoiceModelId: id ?? undefined, voiceId: newVoiceId },
+          onboardingDefaults: s.onboardingDefaults
+            ? { ...s.onboardingDefaults, voiceId: newVoiceId }
+            : s.onboardingDefaults,
+        }
+      }),
 
     navigateToWorldPicker: () => set({ navDir: 'forward' as const, currentScreen: Screen.WorldPicker }),
 

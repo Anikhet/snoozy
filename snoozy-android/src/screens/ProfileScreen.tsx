@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ImageBackground,
   Linking,
@@ -81,6 +82,66 @@ function SettingsRow({
   )
 }
 
+// ─── YourVoiceCard ───────────────────────────────────────────────────────────
+
+function YourVoiceCard({
+  fishVoiceModelId,
+  isSelected,
+  onSelect,
+  onSetup,
+}: {
+  fishVoiceModelId?: string
+  isSelected: boolean
+  onSelect: () => void
+  onSetup: () => void
+}) {
+  const hasClone = !!fishVoiceModelId
+
+  if (!hasClone) {
+    return (
+      <Pressable
+        onPress={onSetup}
+        style={({ pressed }) => [styles.voiceCard, styles.voiceCardSetup, { opacity: pressed ? 0.75 : 1 }]}
+        accessibilityRole="button"
+        accessibilityLabel="Record your own narrator voice"
+      >
+        <View style={styles.voiceCardTop}>
+          <Ionicons name="mic-outline" size={18} color="#9B8EC4" />
+        </View>
+        <Text style={styles.voiceName}>Your Voice</Text>
+        <Text style={styles.voiceDesc}>Tap to record</Text>
+      </Pressable>
+    )
+  }
+
+  return (
+    <Pressable
+      onPress={onSelect}
+      onLongPress={onSetup}
+      delayLongPress={400}
+      style={({ pressed }) => [
+        styles.voiceCard,
+        isSelected ? styles.voiceCardSelected : styles.voiceCardUnselected,
+        { opacity: pressed ? 0.75 : 1 },
+      ]}
+      accessibilityRole="radio"
+      accessibilityState={{ selected: isSelected }}
+      accessibilityLabel="Your Voice, your own recording"
+    >
+      <View style={styles.voiceCardTop}>
+        <Ionicons name={isSelected ? 'mic' : 'mic-outline'} size={18} color={isSelected ? '#5B5BD6' : '#9B8EC4'} />
+        {isSelected && (
+          <View style={styles.voiceCheck}>
+            <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
+      <Text style={[styles.voiceName, isSelected && styles.voiceNameSelected]}>Your Voice</Text>
+      <Text style={[styles.voiceDesc, isSelected && styles.voiceDescSelected]}>Your recording</Text>
+    </Pressable>
+  )
+}
+
 // ─── ProfileScreen ────────────────────────────────────────────────────────────
 
 export function ProfileScreen() {
@@ -157,7 +218,17 @@ export function ProfileScreen() {
   const handleNotificationsToggle = useCallback(async (value: boolean) => {
     if (value) {
       const granted = await requestNotificationPermission()
-      if (!granted) return // don't flip switch if user denied OS permission
+      if (!granted) {
+        Alert.alert(
+          'Notifications blocked',
+          'Please enable notifications for Snoozy in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
+        )
+        return
+      }
       setNotificationsEnabled(true)
       await AsyncStorage.setItem(NOTIFICATIONS_KEY, 'true')
     } else {
@@ -383,6 +454,16 @@ export function ProfileScreen() {
               <Text style={styles.sectionTitle}>Narrator Voice</Text>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.voiceGrid}>
+                  {/* Your Voice card — always first */}
+                  <YourVoiceCard
+                    fishVoiceModelId={childDetails.fishVoiceModelId}
+                    isSelected={!!childDetails.fishVoiceModelId && childDetails.voiceId === childDetails.fishVoiceModelId}
+                    onSelect={() => {
+                      if (childDetails.fishVoiceModelId) handleVoiceSelect(childDetails.fishVoiceModelId)
+                    }}
+                    onSetup={() => openProfilePanel('voiceSetup')}
+                  />
+
                   {VOICES.map((v) => {
                     const selected = childDetails.voiceId === v.id
                     return (
@@ -600,6 +681,7 @@ const styles = StyleSheet.create({
   voiceCard: { width: '47.5%', borderRadius: 16, padding: Spacing.md, borderWidth: 1.5 },
   voiceCardSelected: { backgroundColor: '#EDE9FF', borderColor: '#5B5BD6' },
   voiceCardUnselected: { backgroundColor: '#F9F7FF', borderColor: '#E8E2F8' },
+  voiceCardSetup: { backgroundColor: '#FAFAFE', borderColor: '#C4B6D8', borderStyle: 'dashed' },
   voiceCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
