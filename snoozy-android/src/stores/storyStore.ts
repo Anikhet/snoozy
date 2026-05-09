@@ -7,6 +7,7 @@ import {
   DEFAULT_CHILD_DETAILS,
   createPlaceholderStory,
 } from '@/types/story'
+import { VoiceProfile } from '@/types/voice'
 import { Subscription, DEFAULT_SUBSCRIPTION } from '@/types/subscription'
 import * as apiService from '@/services/apiService'
 import * as storageService from '@/services/storageService'
@@ -20,6 +21,12 @@ import { generateUUID } from '@/utils/uuid'
  */
 const generationTasks = new Map<string, AbortController>()
 
+type OnboardingDefaults = {
+  name: string
+  age: number
+  pronouns: import('@/types/story').Pronouns
+  voiceId?: string
+}
 
 interface StoryStore {
   currentScreen: Screen
@@ -30,7 +37,7 @@ interface StoryStore {
   generatingStoryId: string | null
   childDetails: ChildDetails
   /** Child profile set once post-signup. Seeds every story. */
-  onboardingDefaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string; fishVoiceModelId?: string } | null
+  onboardingDefaults: OnboardingDefaults | null
   currentStory: Story | null
   savedStories: Story[]
   isPlaying: boolean
@@ -49,7 +56,7 @@ interface StoryStore {
   navigateToInsights: () => void
   goHome: () => void
   updateChildDetails: (partial: Partial<ChildDetails>) => void
-  setOnboardingDefaults: (defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string; fishVoiceModelId?: string }) => void
+  setOnboardingDefaults: (defaults: OnboardingDefaults) => void
   updateSavedVoice: (voiceId: string) => void
   generateStory: (vibeId: string, getToken: () => Promise<string | null>) => void
   playStory: (story: Story) => void
@@ -70,7 +77,12 @@ interface StoryStore {
   profilePanel: 'storyPrefs' | 'bedtimeReminder' | 'accountDetails' | 'favoriteThemes' | 'passwordSecurity' | 'snoozyPlus' | 'voiceSetup' | null
   openProfilePanel: (panel: NonNullable<StoryStore['profilePanel']>) => void
   closeProfilePanel: () => void
-  setFishVoiceModelId: (id: string | null) => void
+
+  // ── Voice Profiles ───────────────────────────────────────────────────────────
+  voiceProfiles: VoiceProfile[]
+  loadVoiceProfiles: () => Promise<void>
+  addVoiceProfile: (profile: VoiceProfile) => Promise<void>
+  removeVoiceProfile: (id: string) => Promise<void>
 
   // ── Subscription ────────────────────────────────────────────────────────────
   subscription: Subscription
@@ -114,6 +126,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     sleepTimerRemaining: null,
     editingProfile: false,
     profilePanel: null,
+    voiceProfiles: [],
 
     navigateTo: (screen) => set({ currentScreen: screen }),
 
@@ -124,22 +137,6 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     openProfilePanel: (panel) => set({ profilePanel: panel }),
 
     closeProfilePanel: () => set({ profilePanel: null }),
-
-    setFishVoiceModelId: (id) =>
-      set((s) => {
-        const prevFishId = s.childDetails.fishVoiceModelId
-        const newVoiceId = id !== null
-          ? id
-          : s.childDetails.voiceId === prevFishId
-            ? DEFAULT_CHILD_DETAILS.voiceId
-            : s.childDetails.voiceId
-        return {
-          childDetails: { ...s.childDetails, fishVoiceModelId: id ?? undefined, voiceId: newVoiceId },
-          onboardingDefaults: s.onboardingDefaults
-            ? { ...s.onboardingDefaults, voiceId: newVoiceId }
-            : s.onboardingDefaults,
-        }
-      }),
 
     navigateToWorldPicker: () => set({ navDir: 'forward' as const, currentScreen: Screen.WorldPicker }),
 
@@ -192,13 +189,28 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         childDetails: { ...s.childDetails, ...partial },
       })),
 
+    /**
+     * Called when the child profile is saved (name/age/pronouns).
+     * Merges into existing onboardingDefaults so voiceId is never lost
+     * when a name change comes in without a voiceId.
+     */
     setOnboardingDefaults: (defaults) =>
-      set((s) => ({
-        onboardingDefaults: defaults,
-        childDetails: s.childDetails.name
-          ? { ...s.childDetails, voiceId: defaults.voiceId ?? s.childDetails.voiceId, fishVoiceModelId: defaults.fishVoiceModelId ?? s.childDetails.fishVoiceModelId }
-          : { ...s.childDetails, name: defaults.name, age: defaults.age, pronouns: defaults.pronouns, voiceId: defaults.voiceId ?? s.childDetails.voiceId, fishVoiceModelId: defaults.fishVoiceModelId },
-      })),
+      set((s) => {
+        const merged: OnboardingDefaults = {
+          ...defaults,
+          voiceId: defaults.voiceId ?? s.onboardingDefaults?.voiceId,
+        }
+        return {
+          onboardingDefaults: merged,
+          childDetails: {
+            ...s.childDetails,
+            name: defaults.name,
+            age: defaults.age,
+            pronouns: defaults.pronouns,
+            voiceId: merged.voiceId ?? s.childDetails.voiceId,
+          },
+        }
+      }),
 
     updateSavedVoice: (voiceId) =>
       set((s) => ({
@@ -307,6 +319,58 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       }))
     },
 
+    // ── Voice Profiles ────────────────────────────────────────────────────────
+
+    loadVoiceProfiles: async () => {
+      const profiles = await storageService.loadVoiceProfiles()
+      set((s) => {
+        // Activate the first profile if no voice is currently selected
+        const hasCustomVoice = profiles.some((p) => p.modelId === s.childDetails.voiceId)
+        if (!hasCustomVoice && profiles.length > 0) {
+          const voiceId = profiles[0].modelId
+          return {
+            voiceProfiles: profiles,
+            childDetails: { ...s.childDetails, voiceId },
+            onboardingDefaults: s.onboardingDefaults
+              ? { ...s.onboardingDefaults, voiceId }
+              : s.onboardingDefaults,
+          }
+        }
+        return { voiceProfiles: profiles }
+      })
+    },
+
+    addVoiceProfile: async (profile) => {
+      await storageService.saveVoiceProfile(profile)
+      set((s) => ({
+        voiceProfiles: [...s.voiceProfiles, profile],
+        childDetails: { ...s.childDetails, voiceId: profile.modelId },
+        onboardingDefaults: s.onboardingDefaults
+          ? { ...s.onboardingDefaults, voiceId: profile.modelId }
+          : s.onboardingDefaults,
+      }))
+    },
+
+    removeVoiceProfile: async (id) => {
+      const { voiceProfiles, childDetails, onboardingDefaults } = get()
+      const profile = voiceProfiles.find((p) => p.id === id)
+      const remaining = voiceProfiles.filter((p) => p.id !== id)
+
+      const wasActive = profile?.modelId === childDetails.voiceId
+      const newVoiceId = wasActive
+        ? (remaining[0]?.modelId ?? DEFAULT_CHILD_DETAILS.voiceId)
+        : childDetails.voiceId
+
+      await storageService.deleteVoiceProfile(id)
+      set({
+        voiceProfiles: remaining,
+        childDetails: { ...childDetails, voiceId: newVoiceId },
+        onboardingDefaults: onboardingDefaults
+          ? { ...onboardingDefaults, voiceId: newVoiceId }
+          : onboardingDefaults,
+      })
+    },
+
     // ── Subscription ──────────────────────────────────────────────────────────
     subscription: { ...DEFAULT_SUBSCRIPTION },
 
@@ -348,12 +412,10 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 })
 
 /**
- * Returns a fresh ChildDetails instance seeded with the onboarding-declared
- * name/age (if any). Keeps the parent from having to retype every night.
+ * Returns a fresh ChildDetails instance seeded from onboardingDefaults.
+ * voiceId is preserved so voice profiles survive navigation resets.
  */
-function freshChildDetails(
-  defaults: { name: string; age: number; pronouns: import('@/types/story').Pronouns; voiceId?: string } | null,
-): ChildDetails {
+function freshChildDetails(defaults: OnboardingDefaults | null): ChildDetails {
   if (!defaults) return { ...DEFAULT_CHILD_DETAILS }
   return {
     ...DEFAULT_CHILD_DETAILS,
@@ -436,7 +498,7 @@ function markStoryFailed(storyId: string): void {
   useStoryStore.setState((s) => ({
     savedStories: s.savedStories.map((story) =>
       story.id === storyId
-        ? { ...story, status: StoryStatus.Failed, title: 'Story failed \u2014 tap to retry' }
+        ? { ...story, status: StoryStatus.Failed, title: 'Story failed — tap to retry' }
         : story
     ),
   }))

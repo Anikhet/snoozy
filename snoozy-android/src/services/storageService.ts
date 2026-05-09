@@ -1,9 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { File, Paths, Directory } from 'expo-file-system'
 import { Story } from '@/types/story'
+import { VoiceProfile } from '@/types/voice'
 import { generateUUID } from '@/utils/uuid'
 
-const STORIES_KEY = 'snoozy_stories'
+const STORIES_KEY        = 'snoozy_stories'
+const VOICE_PROFILES_KEY = 'snoozy_voice_profiles'
+const LEGACY_PROFILE_KEY = 'snoozy_child_profile'
 
 function getAudioDir(): Directory {
   return new Directory(Paths.document, 'Audio')
@@ -100,5 +103,56 @@ export function deleteAudioFile(fileName: string): void {
 export function getAudioFileUri(fileName: string): string {
   const file = new File(getAudioDir(), fileName)
   return file.uri
+}
+
+// ─── Voice Profiles ───────────────────────────────────────────────────────────
+
+/**
+ * Loads saved voice profiles. On first run, migrates any fishVoiceModelId
+ * from the legacy child profile key into a VoiceProfile entry.
+ */
+export async function loadVoiceProfiles(): Promise<VoiceProfile[]> {
+  try {
+    const json = await AsyncStorage.getItem(VOICE_PROFILES_KEY)
+    if (json) return JSON.parse(json) as VoiceProfile[]
+
+    // One-time migration from old fishVoiceModelId in child profile
+    const legacyJson = await AsyncStorage.getItem(LEGACY_PROFILE_KEY)
+    if (legacyJson) {
+      const legacy = JSON.parse(legacyJson) as Record<string, unknown>
+      if (typeof legacy.fishVoiceModelId === 'string') {
+        const migrated: VoiceProfile = {
+          id: generateUUID(),
+          name: 'My Voice',
+          modelId: legacy.fishVoiceModelId,
+          createdAt: new Date().toISOString(),
+        }
+        await AsyncStorage.setItem(VOICE_PROFILES_KEY, JSON.stringify([migrated]))
+        return [migrated]
+      }
+    }
+    return []
+  } catch {
+    return []
+  }
+}
+
+/** Upserts a voice profile by id. */
+export async function saveVoiceProfile(profile: VoiceProfile): Promise<void> {
+  const profiles = await loadVoiceProfiles()
+  const idx = profiles.findIndex((p) => p.id === profile.id)
+  const updated = idx >= 0
+    ? profiles.map((p) => (p.id === profile.id ? profile : p))
+    : [...profiles, profile]
+  await AsyncStorage.setItem(VOICE_PROFILES_KEY, JSON.stringify(updated))
+}
+
+/** Removes a voice profile by id. */
+export async function deleteVoiceProfile(id: string): Promise<void> {
+  const profiles = await loadVoiceProfiles()
+  await AsyncStorage.setItem(
+    VOICE_PROFILES_KEY,
+    JSON.stringify(profiles.filter((p) => p.id !== id)),
+  )
 }
 

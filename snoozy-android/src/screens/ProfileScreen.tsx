@@ -27,6 +27,7 @@ import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { VOICES } from '@/config/voices'
+import { VoiceProfile } from '@/types/voice'
 import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import { BEDTIME_KEY, formatBedtime, BedtimeValue } from '@/screens/BedtimeReminderScreen'
 import { FAVORITE_WORLDS_KEY } from '@/screens/FavoriteThemesScreen'
@@ -82,62 +83,71 @@ function SettingsRow({
   )
 }
 
-// ─── YourVoiceCard ───────────────────────────────────────────────────────────
+// ─── VoiceProfileCard ────────────────────────────────────────────────────────
 
-function YourVoiceCard({
-  fishVoiceModelId,
-  isSelected,
+function VoiceProfileCard({
+  profile,
+  isActive,
   onSelect,
-  onSetup,
+  onDelete,
 }: {
-  fishVoiceModelId?: string
-  isSelected: boolean
+  profile: VoiceProfile
+  isActive: boolean
   onSelect: () => void
-  onSetup: () => void
+  onDelete: () => void
 }) {
-  const hasClone = !!fishVoiceModelId
-
-  if (!hasClone) {
-    return (
-      <Pressable
-        onPress={onSetup}
-        style={({ pressed }) => [styles.voiceCard, styles.voiceCardSetup, { opacity: pressed ? 0.75 : 1 }]}
-        accessibilityRole="button"
-        accessibilityLabel="Record your own narrator voice"
-      >
-        <View style={styles.voiceCardTop}>
-          <Ionicons name="mic-outline" size={18} color="#9B8EC4" />
-        </View>
-        <Text style={styles.voiceName}>Your Voice</Text>
-        <Text style={styles.voiceDesc}>Tap to record</Text>
-      </Pressable>
-    )
-  }
-
   return (
     <Pressable
       onPress={onSelect}
-      onLongPress={onSetup}
+      onLongPress={() =>
+        Alert.alert(
+          `Delete "${profile.name}"?`,
+          'This voice will be removed. Stories already generated will still play.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: onDelete },
+          ]
+        )
+      }
       delayLongPress={400}
       style={({ pressed }) => [
         styles.voiceCard,
-        isSelected ? styles.voiceCardSelected : styles.voiceCardUnselected,
+        isActive ? styles.voiceCardSelected : styles.voiceCardUnselected,
         { opacity: pressed ? 0.75 : 1 },
       ]}
       accessibilityRole="radio"
-      accessibilityState={{ selected: isSelected }}
-      accessibilityLabel="Your Voice, your own recording"
+      accessibilityState={{ selected: isActive }}
+      accessibilityLabel={`${profile.name}, your voice recording`}
     >
       <View style={styles.voiceCardTop}>
-        <Ionicons name={isSelected ? 'mic' : 'mic-outline'} size={18} color={isSelected ? '#5B5BD6' : '#9B8EC4'} />
-        {isSelected && (
+        <Ionicons name={isActive ? 'mic' : 'mic-outline'} size={18} color={isActive ? '#5B5BD6' : '#9B8EC4'} />
+        {isActive && (
           <View style={styles.voiceCheck}>
             <Ionicons name="checkmark" size={10} color="#FFFFFF" />
           </View>
         )}
       </View>
-      <Text style={[styles.voiceName, isSelected && styles.voiceNameSelected]}>Your Voice</Text>
-      <Text style={[styles.voiceDesc, isSelected && styles.voiceDescSelected]}>Your recording</Text>
+      <Text style={[styles.voiceName, isActive && styles.voiceNameSelected]}>{profile.name}</Text>
+      <Text style={[styles.voiceDesc, isActive && styles.voiceDescSelected]}>Your recording</Text>
+    </Pressable>
+  )
+}
+
+// ─── AddVoiceCard ─────────────────────────────────────────────────────────────
+
+function AddVoiceCard({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.voiceCard, styles.voiceCardSetup, { opacity: pressed ? 0.75 : 1 }]}
+      accessibilityRole="button"
+      accessibilityLabel="Record a new narrator voice"
+    >
+      <View style={styles.voiceCardTop}>
+        <Ionicons name="mic-outline" size={18} color="#9B8EC4" />
+      </View>
+      <Text style={styles.voiceName}>Add voice</Text>
+      <Text style={styles.voiceDesc}>Tap to record</Text>
     </Pressable>
   )
 }
@@ -155,6 +165,8 @@ export function ProfileScreen() {
   const openProfileEdit = useStoryStore((s) => s.openProfileEdit)
   const updateSavedVoice = useStoryStore((s) => s.updateSavedVoice)
   const openProfilePanel = useStoryStore((s) => s.openProfilePanel)
+  const voiceProfiles = useStoryStore((s) => s.voiceProfiles)
+  const removeVoiceProfile = useStoryStore((s) => s.removeVoiceProfile)
   const subscription = useStoryStore((s) => s.subscription)
   const loadSubscription = useStoryStore((s) => s.loadSubscription)
 
@@ -454,16 +466,16 @@ export function ProfileScreen() {
               <Text style={styles.sectionTitle}>Narrator Voice</Text>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.voiceGrid}>
-                  {/* Your Voice card — always first */}
-                  <YourVoiceCard
-                    fishVoiceModelId={childDetails.fishVoiceModelId}
-                    isSelected={!!childDetails.fishVoiceModelId && childDetails.voiceId === childDetails.fishVoiceModelId}
-                    onSelect={() => {
-                      if (childDetails.fishVoiceModelId) handleVoiceSelect(childDetails.fishVoiceModelId)
-                    }}
-                    onSetup={() => openProfilePanel('voiceSetup')}
-                  />
-
+                  {voiceProfiles.map((profile) => (
+                    <VoiceProfileCard
+                      key={profile.id}
+                      profile={profile}
+                      isActive={childDetails.voiceId === profile.modelId}
+                      onSelect={() => handleVoiceSelect(profile.modelId)}
+                      onDelete={() => removeVoiceProfile(profile.id)}
+                    />
+                  ))}
+                  <AddVoiceCard onPress={() => openProfilePanel('voiceSetup')} />
                   {VOICES.map((v) => {
                     const selected = childDetails.voiceId === v.id
                     return (

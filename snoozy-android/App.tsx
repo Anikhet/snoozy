@@ -63,6 +63,7 @@ export default function App() {
   const colors = isDark ? Colors.dark : Colors.light
   const currentScreen = useStoryStore((s) => s.currentScreen)
   const loadSavedStories = useStoryStore((s) => s.loadSavedStories)
+  const loadVoiceProfiles = useStoryStore((s) => s.loadVoiceProfiles)
   const setOnboardingDefaults = useStoryStore((s) => s.setOnboardingDefaults)
   const editingProfile = useStoryStore((s) => s.editingProfile)
   const closeProfileEdit = useStoryStore((s) => s.closeProfileEdit)
@@ -78,6 +79,7 @@ export default function App() {
   useEffect(() => {
     configureAudioMode()
     loadSavedStories()
+    loadVoiceProfiles()
 
     ;(async () => {
       try {
@@ -101,7 +103,7 @@ export default function App() {
         setAssetsLoaded(true)
       }
     })()
-  }, [loadSavedStories, setOnboardingDefaults])
+  }, [loadSavedStories, loadVoiceProfiles, setOnboardingDefaults])
 
   if (!fontsLoaded || childProfileState === 'loading') return null
 
