@@ -377,7 +377,10 @@ export function VoiceSetupScreen() {
             <Ionicons name="chevron-back" size={24} color={colors.ink} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: colors.ink }]}>
-            {phase === 'recording' ? 'Recording' : phase === 'reviewing' ? 'Preview' : 'Voice setup'}
+            {phase === 'recording' ? 'Recording'
+              : phase === 'reviewing' ? 'Preview'
+              : (phase === 'success' || phase === 'has_clone') ? 'All set'
+              : 'Voice setup'}
           </Text>
           <Text style={[styles.stepLabel, { color: colors.inkMute }]}>
             {STEP_OF[phase]} OF {TOTAL_STEPS}
@@ -611,61 +614,65 @@ export function VoiceSetupScreen() {
             </Animated.View>
           )}
 
-          {/* ── SUCCESS ── */}
-          {phase === 'success' && (
-            <Animated.View entering={FadeInDown.delay(80).duration(420)} style={[styles.card, styles.cardCenter, { backgroundColor: colors.surface }]}>
-              <View style={styles.successCircle}>
-                <Ionicons name="checkmark" size={32} color="#FFFFFF" />
-              </View>
-              <Text style={[styles.successTitle, { color: colors.ink }]}>Voice clone created</Text>
-              <Text style={[styles.successSub, { color: colors.inkSoft }]}>Your next story will be narrated in your voice.</Text>
-            </Animated.View>
-          )}
+          {/* ── DONE (success + has_clone) ── */}
+          {(phase === 'success' || phase === 'has_clone') && (
+            <Animated.View entering={FadeInDown.delay(60).duration(420)}>
 
-          {/* ── HAS CLONE ── */}
-          {phase === 'has_clone' && (
-            <>
-              <Animated.View entering={FadeInDown.delay(160).duration(420)} style={[styles.card, { backgroundColor: colors.surface }]}>
-                <View style={styles.activeRow}>
-                  <View style={[styles.activeIconWrap, { backgroundColor: colors.primarySoft }]}>
-                    <Ionicons name="mic" size={22} color={colors.primary} />
-                  </View>
-                  <View style={styles.activeInfo}>
-                    <View style={styles.activeTitleRow}>
-                      <Text style={[styles.activeName, { color: colors.ink }]}>Your Voice</Text>
-                      <View style={styles.activeBadge}>
-                        <View style={styles.activeDot} />
-                        <Text style={styles.activeBadgeText}>Active</Text>
-                      </View>
-                    </View>
-                    <Text style={[styles.activeSub, { color: colors.inkSoft }]}>Every story is narrated in your voice</Text>
+              {/* Hero — check circle with sparkle stars */}
+              <View style={styles.doneHero}>
+                <View style={styles.doneStarsWrap}>
+                  <Text style={[styles.doneStar, { top: -4,  left:  6, fontSize: 18 }]}>✦</Text>
+                  <Text style={[styles.doneStar, { top: -14, right: -8, fontSize: 26 }]}>✦</Text>
+                  <Text style={[styles.doneStar, { top: 36,  right: -20, fontSize: 13 }]}>✦</Text>
+                  <Text style={[styles.doneStar, { bottom: 0, left: 0,  fontSize: 20 }]}>✦</Text>
+                  <View style={styles.doneCircle}>
+                    <Ionicons name="checkmark" size={38} color="#FFFFFF" />
                   </View>
                 </View>
-              </Animated.View>
+                <Text style={[styles.doneHeading, { color: colors.ink }]}>
+                  {'Your voice is '}
+                  <Text style={{ color: colors.primary }}>ready</Text>
+                </Text>
+                <Text style={[styles.doneSubtitle, { color: colors.inkSoft }]}>
+                  {"We'll use it to read stories for\n"}
+                  <Text style={{ color: colors.primary }}>{childDetails.name || 'your child'}</Text>
+                  {'.'}
+                </Text>
+              </View>
 
-              <Animated.View entering={FadeInDown.delay(220).duration(420)} style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
-                <Pressable
-                  onPress={handleReRecord}
-                  style={({ pressed }) => [styles.actionRow, { backgroundColor: pressed ? colors.primarySoft : 'transparent' }]}
-                >
-                  <View style={[styles.actionIconWrap, { backgroundColor: colors.primarySoft }]}>
-                    <Ionicons name="mic-outline" size={18} color={colors.primary} />
+              {/* Voice card */}
+              <View style={[styles.card, styles.doneCard, { backgroundColor: colors.surface }]}>
+                {/* Title row */}
+                <View style={styles.doneCardTitleRow}>
+                  <Text style={[styles.doneCardTitle, { color: colors.ink }]}>Your Voice</Text>
+                  <View style={styles.doneActiveBadge}>
+                    <Text style={styles.doneActiveBadgeText}>Active</Text>
                   </View>
-                  <Text style={[styles.actionLabel, { color: colors.ink }]}>Re-record my voice</Text>
-                  <Ionicons name="chevron-forward" size={18} color={colors.inkMute} />
-                </Pressable>
-                <View style={[styles.actionDivider, { backgroundColor: colors.hair }]} />
-                <Pressable
-                  onPress={handleRemoveVoice}
-                  style={({ pressed }) => [styles.actionRow, { backgroundColor: pressed ? '#FFF5F5' : 'transparent' }]}
-                >
-                  <View style={[styles.actionIconWrap, { backgroundColor: '#FFECEC' }]}>
-                    <Ionicons name="trash-outline" size={18} color={colors.error} />
+                </View>
+                <Text style={[styles.doneCardSub, { color: colors.inkSoft }]}>
+                  Reads stories for {childDetails.name || 'your child'}
+                </Text>
+
+                {/* Pronunciation sub-row */}
+                {selectedPronunciation !== '' && (
+                  <View style={[styles.donePronRow, { backgroundColor: colors.background }]}>
+                    <View style={styles.donePronText}>
+                      <Text style={[styles.donePronLabel, { color: colors.inkMute }]}>Pronunciation</Text>
+                      <Text style={[styles.donePronValue, { color: colors.ink }]}>{selectedPronunciation}</Text>
+                    </View>
+                    <Ionicons name="volume-medium-outline" size={22} color={colors.inkMute} />
                   </View>
-                  <Text style={[styles.actionLabel, { color: colors.error }]}>Remove my voice</Text>
-                </Pressable>
-              </Animated.View>
-            </>
+                )}
+              </View>
+
+              {/* Notice bar */}
+              <View style={[styles.doneNotice, { backgroundColor: colors.backgroundDeep }]}>
+                <Text style={[styles.doneNoticeStar, { color: colors.starGold }]}>★</Text>
+                <Text style={[styles.doneNoticeText, { color: colors.inkSoft }]}>
+                  You can update your voice or re-record anytime in settings.
+                </Text>
+              </View>
+            </Animated.View>
           )}
         </ScrollView>
 
@@ -729,12 +736,13 @@ export function VoiceSetupScreen() {
             {(phase === 'success' || phase === 'has_clone') && (
               <Pressable
                 onPress={closeProfilePanel}
-                style={({ pressed }) => [styles.ctaDone, { backgroundColor: colors.primarySoft, opacity: pressed ? 0.75 : 1 }]}
+                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, borderRadius: Radii.button }]}
                 accessibilityRole="button"
+                accessibilityLabel="Start reading stories"
               >
-                <Text style={[styles.ctaDoneLabel, { color: colors.primary }]}>
-                  {phase === 'success' ? 'Done' : 'Close'}
-                </Text>
+                <LinearGradient colors={['#5B5BD6', '#7B6BC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
+                  <Text style={styles.ctaLabel}>Start reading stories</Text>
+                </LinearGradient>
               </Pressable>
             )}
           </Animated.View>
@@ -877,27 +885,26 @@ const styles = StyleSheet.create({
   // Uploading
   uploadingText: { fontFamily: 'Nunito_500Medium', fontSize: 14, marginTop: Spacing.md },
 
-  // Success
-  successCircle:{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#4CAF7D', alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
-  successTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18, marginBottom: Spacing.sm },
-  successSub:   { fontFamily: 'Nunito_500Medium', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-
-  // Has clone
-  activeRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  activeIconWrap:{ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  activeInfo:    { flex: 1 },
-  activeTitleRow:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 2 },
-  activeName:    { fontFamily: 'Nunito_700Bold', fontSize: 16 },
-  activeBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(76,175,125,0.12)', borderWidth: 1, borderColor: 'rgba(76,175,125,0.25)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  activeDot:     { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CAF7D' },
-  activeBadgeText:{ fontFamily: 'Nunito_700Bold', fontSize: 10, color: '#4CAF7D' },
-  activeSub:     { fontFamily: 'Nunito_500Medium', fontSize: 13 },
-
-  // Actions
-  actionRow:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md },
-  actionIconWrap:{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  actionLabel:  { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
-  actionDivider:{ height: 1, marginLeft: 52 + Spacing.md },
+  // Done — Screen 4 (success + has_clone)
+  doneHero:         { alignItems: 'center', marginBottom: Spacing.xl },
+  doneStarsWrap:    { position: 'relative', width: 140, height: 110, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  doneStar:         { position: 'absolute', fontFamily: 'Nunito_700Bold', color: '#F5C842' },
+  doneCircle:       { width: 88, height: 88, borderRadius: 44, backgroundColor: '#4CAF7D', alignItems: 'center', justifyContent: 'center' },
+  doneHeading:      { fontSize: 28, fontFamily: 'Nunito_700Bold', letterSpacing: -0.3, textAlign: 'center', marginBottom: Spacing.sm },
+  doneSubtitle:     { fontFamily: 'Nunito_500Medium', fontSize: 15, textAlign: 'center', lineHeight: 22 },
+  doneCard:         { marginBottom: Spacing.sm },
+  doneCardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  doneCardTitle:    { fontFamily: 'Nunito_700Bold', fontSize: 17 },
+  doneActiveBadge:  { backgroundColor: 'rgba(76,175,125,0.12)', borderWidth: 1, borderColor: 'rgba(76,175,125,0.3)', paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: 10 },
+  doneActiveBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: '#4CAF7D' },
+  doneCardSub:      { fontFamily: 'Nunito_500Medium', fontSize: 14, marginBottom: Spacing.md },
+  donePronRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: Radii.small, padding: Spacing.md },
+  donePronText:     { flex: 1 },
+  donePronLabel:    { fontFamily: 'Nunito_600SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 },
+  donePronValue:    { fontFamily: 'Nunito_700Bold', fontSize: 16 },
+  doneNotice:       { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, borderRadius: Radii.card, padding: Spacing.md, marginBottom: Spacing.sm },
+  doneNoticeStar:   { fontSize: 18, lineHeight: 22 },
+  doneNoticeText:   { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20 },
 
   // CTA
   ctaBar: {
