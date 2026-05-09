@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,16 +32,96 @@ import { BackSwipeZone } from '@/components/BackSwipeZone'
 import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import * as apiService from '@/services/apiService'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-type Phase = 'idle' | 'recording' | 'reviewing' | 'uploading' | 'success' | 'has_clone'
+type Phase = 'briefing' | 'recording' | 'reviewing' | 'uploading' | 'success' | 'has_clone'
 
+const STEP_OF: Record<Phase, number> = {
+  briefing:  1,
+  recording: 2,
+  reviewing: 3,
+  uploading: 3,
+  success:   4,
+  has_clone: 4,
+}
+const TOTAL_STEPS = 4
 const MIN_RECORD_SECONDS = 10
-const REC_TIPS = [
-  { icon: 'location-outline' as const, text: 'Find a quiet spot away from background noise' },
-  { icon: 'mic-outline' as const, text: 'Speak naturally — your normal storytelling voice is perfect' },
-  { icon: 'book-outline' as const, text: 'Read anything aloud: a poem, a page, or just say hello' },
+const REC_AIM_SECONDS    = 45
+const REC_WAVEFORM_COLOR = '#D97070'
+const REC_MIC_COLORS     = ['#C96B7A', '#E09AA6'] as const
+const REC_PULSE_COLOR    = 'rgba(201,107,122,0.18)'
+
+const BRIEFING_TIPS = [
+  {
+    icon: 'volume-mute-outline' as const,
+    title: 'Find a quiet room',
+    sub: 'Background noise can affect quality.',
+  },
+  {
+    icon: 'phone-portrait-outline' as const,
+    title: 'Hold your phone steady',
+    sub: 'Keep it about 20–30 cm from your mouth.',
+  },
+  {
+    icon: 'time-outline' as const,
+    title: 'Speak clearly and slowly',
+    sub: 'Take your time — you can always re-record.',
+  },
 ]
+
+const PRONUNCIATION_OPTIONS: Record<string, string[]> = {
+  Aarav:   ['Aa-rav',   'Ah-rav',   'Ar-uv'],
+  Ananya:  ['A-nun-ya', 'Ah-nan-ya', 'Uh-nun-ya'],
+  Priya:   ['Pree-ya',  'Pri-ya',    'Pree-ah'],
+  Arjun:   ['Ar-jun',   'Ur-jun',    'Ar-joon'],
+  Diya:    ['Dee-ya',   'Di-ya',     'Dee-ah'],
+  Vihaan:  ['Vi-haan',  'Vee-han',   'Vih-aan'],
+  Ishaan:  ['I-shaan',  'Ee-shaan',  'Ish-aan'],
+  Aanya:   ['Aa-nya',   'Ah-nya',    'An-ya'],
+  Kavya:   ['Kuv-ya',   'Kav-ya',    'Kahv-ya'],
+  Rohan:   ['Ro-han',   'Roh-an',    'Ro-hun'],
+  Saanvi:  ['Saan-vi',  'San-vee',   'Saan-vee'],
+  Riya:    ['Ree-ya',   'Ri-ya',     'Ree-ah'],
+  Advait:  ['Ad-vait',  'Uhd-vait',  'Ad-vayt'],
+  Aditya:  ['A-dit-ya', 'Ah-dit-ya', 'Uh-dit-ya'],
+  Kiara:   ['Ki-ara',   'Kee-ara',   'Key-ara'],
+  Zara:    ['Za-ra',    'Zar-a',     'Zaa-ra'],
+  Siya:    ['See-ya',   'Si-ya',     'See-ah'],
+  Reyansh: ['Rey-ansh', 'Ray-unsh',  'Ree-ansh'],
+  Aarohi:  ['Aa-ro-hi', 'Ah-ro-hee', 'Ar-o-hee'],
+  Vivaan:  ['Vi-vaan',  'Vee-van',   'Vih-aan'],
+}
+
+function getPronunciationOptions(name: string): string[] {
+  return PRONUNCIATION_OPTIONS[name] ?? []
+}
+
+function buildScript(name: string): string {
+  return (
+    `Hi, I'm reading this story just for ${name}. ` +
+    `Once upon a time, in a land not so far away, ${name} went on a magical adventure filled with wonder.\n\n` +
+    `${name} learned that courage, kindness, and a little imagination can make every day special. ` +
+    `The end. Sweet dreams, ${name}.`
+  )
+}
+
+// ─── ScriptText ───────────────────────────────────────────────────────────────
+
+function ScriptText({ name, accentColor }: { name: string; accentColor: string }) {
+  const script = buildScript(name || 'your child')
+  if (!name) return <Text style={styles.scriptBody}>{script}</Text>
+
+  const parts = script.split(new RegExp(`(${name})`, 'g'))
+  return (
+    <Text style={styles.scriptBody}>
+      {parts.map((part, i) =>
+        part === name
+          ? <Text key={i} style={[styles.scriptName, { color: accentColor }]}>{part}</Text>
+          : part
+      )}
+    </Text>
+  )
+}
 
 // ─── VoiceSetupScreen ────────────────────────────────────────────────────────
 
@@ -48,20 +129,22 @@ export function VoiceSetupScreen() {
   const { colors } = useThemeColors()
   const { getToken } = useAuth()
   const closeProfilePanel = useStoryStore((s) => s.closeProfilePanel)
-  const childDetails = useStoryStore((s) => s.childDetails)
+  const childDetails      = useStoryStore((s) => s.childDetails)
   const setFishVoiceModelId = useStoryStore((s) => s.setFishVoiceModelId)
 
   const existingModelId = childDetails.fishVoiceModelId
-  const [phase, setPhase] = useState<Phase>(existingModelId ? 'has_clone' : 'idle')
-  const [recordingUri, setRecordingUri] = useState<string | null>(null)
+  const [phase, setPhase] = useState<Phase>(existingModelId ? 'has_clone' : 'briefing')
+  const [recordingUri, setRecordingUri]         = useState<string | null>(null)
   const [recordingSeconds, setRecordingSeconds] = useState(0)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadError, setUploadError]           = useState<string | null>(null)
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pronOptions = useMemo(() => getPronunciationOptions(childDetails.name ?? ''), [childDetails.name])
+  const [selectedPronunciation, setSelectedPronunciation] = useState(() => pronOptions[0] ?? '')
+
+  const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const previewPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null)
-
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
+  const recorder        = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
 
   useBackHandler(phase === 'recording' ? () => {} : closeProfilePanel)
 
@@ -72,7 +155,7 @@ export function VoiceSetupScreen() {
       pulse.value = withRepeat(
         withSequence(
           withTiming(1.25, { duration: 700 }),
-          withTiming(1.0, { duration: 700 }),
+          withTiming(1.0,  { duration: 700 }),
         ),
         -1,
       )
@@ -89,26 +172,16 @@ export function VoiceSetupScreen() {
   // ── Timer tick while recording ──────────────────────────────────────────
   useEffect(() => {
     if (phase === 'recording') {
-      timerRef.current = setInterval(() => {
-        setRecordingSeconds((s) => s + 1)
-      }, 1000)
+      timerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000)
     } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
-      }
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
     }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [phase])
 
   // ── Cleanup preview player on unmount ──────────────────────────────────
   useEffect(() => {
-    return () => {
-      previewPlayerRef.current?.remove()
-      previewPlayerRef.current = null
-    }
+    return () => { previewPlayerRef.current?.remove(); previewPlayerRef.current = null }
   }, [])
 
   // ── Recording actions ───────────────────────────────────────────────────
@@ -116,11 +189,7 @@ export function VoiceSetupScreen() {
   const handleStartRecording = useCallback(async () => {
     const { granted } = await AudioModule.requestRecordingPermissionsAsync()
     if (!granted) {
-      Alert.alert(
-        'Microphone access needed',
-        'Please allow microphone access in Settings to record your voice.',
-        [{ text: 'OK' }],
-      )
+      Alert.alert('Microphone access needed', 'Please allow microphone access in Settings to record your voice.', [{ text: 'OK' }])
       return
     }
     try {
@@ -146,7 +215,7 @@ export function VoiceSetupScreen() {
       setPhase('reviewing')
     } catch {
       Alert.alert('Recording error', 'Something went wrong. Please try again.')
-      setPhase('idle')
+      setPhase('briefing')
     }
   }, [recorder, recordingSeconds])
 
@@ -157,7 +226,7 @@ export function VoiceSetupScreen() {
     setRecordingSeconds(0)
     setIsPreviewPlaying(false)
     setUploadError(null)
-    setPhase('idle')
+    setPhase('briefing')
   }, [])
 
   // ── Preview playback ────────────────────────────────────────────────────
@@ -243,7 +312,7 @@ export function VoiceSetupScreen() {
               const profile = raw ? JSON.parse(raw) : {}
               delete profile.fishVoiceModelId
               await AsyncStorage.setItem(CHILD_PROFILE_KEY, JSON.stringify(profile))
-              setPhase('idle')
+              setPhase('briefing')
             }
           },
         },
@@ -251,32 +320,16 @@ export function VoiceSetupScreen() {
     )
   }, [existingModelId, getToken, setFishVoiceModelId])
 
-  // ── Hero content by phase ───────────────────────────────────────────────
-
-  const heroContent = (() => {
-    switch (phase) {
-      case 'idle':
-        return { emoji: '🎙️', title: 'Your narrator voice', sub: 'Record yourself for 15–30 seconds and every story will be told in your voice.' }
-      case 'recording':
-        return { emoji: '🔴', title: 'Recording…', sub: recordingSeconds < MIN_RECORD_SECONDS ? `Keep going — ${MIN_RECORD_SECONDS - recordingSeconds}s more` : "Tap stop whenever you're ready" }
-      case 'reviewing':
-        return { emoji: '🎧', title: 'How does it sound?', sub: "Play it back, then decide if you'd like to use it." }
-      case 'uploading':
-        return { emoji: '✨', title: 'Setting up your voice…', sub: 'This takes just a moment.' }
-      case 'success':
-        return { emoji: '🌟', title: 'Your voice is ready!', sub: 'Generate a new story to hear it for the first time.' }
-      case 'has_clone':
-        return { emoji: '🎙️', title: 'Your narrator voice', sub: 'Stories are narrated in your voice.' }
-    }
-  })()
-
-  // ── Format timer ────────────────────────────────────────────────────────
-
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
-    const sec = s % 60
-    return `${m}:${sec.toString().padStart(2, '0')}`
+    return `${m.toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
   }
+
+  const noticeText = recordingSeconds < MIN_RECORD_SECONDS
+    ? `Keep going — ${MIN_RECORD_SECONDS - recordingSeconds}s more to unlock stop`
+    : recordingSeconds < REC_AIM_SECONDS
+      ? `Sounding good — aim for ${REC_AIM_SECONDS} seconds.`
+      : "That's great — tap to stop when ready."
 
   // ── Render ──────────────────────────────────────────────────────────────
 
@@ -285,72 +338,172 @@ export function VoiceSetupScreen() {
       <BackSwipeZone onBack={phase === 'recording' ? () => {} : closeProfilePanel} />
 
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+
+        {/* ── Header ── */}
+        <View style={[styles.header, { borderBottomColor: colors.hair }]}>
+          <Pressable
+            onPress={phase === 'recording' ? undefined : closeProfilePanel}
+            style={({ pressed }) => [styles.backBtn, { opacity: pressed ? 0.5 : 1 }]}
+            hitSlop={12}
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.ink} />
+          </Pressable>
+          <Text style={[styles.headerTitle, { color: colors.ink }]}>
+            {phase === 'recording' ? 'Recording' : 'Voice setup'}
+          </Text>
+          <Text style={[styles.stepLabel, { color: colors.inkMute }]}>
+            {STEP_OF[phase]} OF {TOTAL_STEPS}
+          </Text>
+        </View>
+
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.scroll, { paddingBottom: phase === 'recording' ? Spacing.xxl : Sizing.buttonHeight + Spacing.xl * 2 }]}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingBottom: Sizing.buttonHeight + Spacing.xl * 2 },
+          ]}
         >
-          {/* Hero */}
-          <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.hero}>
-            <Text style={styles.heroEmoji}>{heroContent.emoji}</Text>
-            <Text style={styles.heroTitle}>{heroContent.title}</Text>
-            <Text style={styles.heroSub}>{heroContent.sub}</Text>
-          </Animated.View>
 
-          {/* ── IDLE: tips + big record button ── */}
-          {phase === 'idle' && (
-            <Animated.View entering={FadeInDown.delay(160).duration(420)} style={[styles.card, { backgroundColor: colors.surface }]}>
-              {REC_TIPS.map((tip, i) => (
-                <React.Fragment key={tip.text}>
-                  <View style={styles.tipRow}>
-                    <View style={styles.tipIconWrap}>
-                      <Ionicons name={tip.icon} size={18} color="#7B5EA7" />
+          {/* ── BRIEFING ── */}
+          {phase === 'briefing' && (
+            <Animated.View entering={FadeInDown.delay(60).duration(400)}>
+
+              {/* Heading */}
+              <View style={styles.briefingHeroText}>
+                <Text style={[styles.briefingHeading, { color: colors.ink }]}>
+                  {'Read stories in\n'}
+                  <Text style={[styles.briefingHeadingAccent, { color: colors.primary }]}>your voice</Text>
+                </Text>
+              </View>
+
+              {/* Mascot illustration */}
+              <View style={styles.mascotWrap}>
+                <Image
+                  source={require('../../assets/images/mascot-happy.png')}
+                  style={styles.mascot}
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* Tips */}
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                {BRIEFING_TIPS.map((tip, i) => (
+                  <React.Fragment key={tip.title}>
+                    <View style={styles.tipRow}>
+                      <View style={[styles.tipIconBox, { backgroundColor: colors.primarySoft }]}>
+                        <Ionicons name={tip.icon} size={18} color={colors.primary} />
+                      </View>
+                      <View style={styles.tipTextBlock}>
+                        <Text style={[styles.tipTitle, { color: colors.ink }]}>{tip.title}</Text>
+                        <Text style={[styles.tipSub, { color: colors.inkSoft }]}>{tip.sub}</Text>
+                      </View>
                     </View>
-                    <Text style={styles.tipText}>{tip.text}</Text>
-                  </View>
-                  {i < REC_TIPS.length - 1 && <View style={styles.divider} />}
-                </React.Fragment>
-              ))}
-            </Animated.View>
-          )}
-
-          {/* ── RECORDING: timer + waveform ── */}
-          {phase === 'recording' && (
-            <Animated.View entering={FadeIn.duration(300)} style={[styles.card, styles.cardCenter, { backgroundColor: colors.surface }]}>
-              <Text style={styles.timer}>{formatTime(recordingSeconds)}</Text>
-              <Text style={styles.timerSub}>
-                {recordingSeconds < MIN_RECORD_SECONDS
-                  ? `${MIN_RECORD_SECONDS - recordingSeconds}s until you can stop`
-                  : 'Recording in progress'}
-              </Text>
-
-              {/* Animated bars */}
-              <View style={styles.waveform}>
-                {WAVEFORM_HEIGHTS.map((h, i) => (
-                  <WaveBar key={i} height={h} index={i} />
+                    {i < BRIEFING_TIPS.length - 1 && (
+                      <View style={[styles.divider, { backgroundColor: colors.hair }]} />
+                    )}
+                  </React.Fragment>
                 ))}
               </View>
 
-              {/* Pulsing ring + stop button */}
-              <View style={styles.recordBtnWrap}>
-                <Animated.View style={[styles.pulseRing, pulseStyle]} />
-                <Pressable
-                  onPress={handleStopRecording}
-                  disabled={recordingSeconds < MIN_RECORD_SECONDS}
-                  style={({ pressed }) => [
-                    styles.stopBtn,
-                    { opacity: pressed ? 0.8 : recordingSeconds < MIN_RECORD_SECONDS ? 0.35 : 1 },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Stop recording"
-                >
-                  <View style={styles.stopIcon} />
-                </Pressable>
+              {/* Script card */}
+              <View style={[styles.card, styles.scriptCard, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.scriptLabel, { color: colors.inkMute }]}>Read this short script</Text>
+                <ScriptText
+                  name={childDetails.name ?? ''}
+                  accentColor={colors.primary}
+                />
               </View>
+
+              {/* Pronunciation */}
+              {pronOptions.length > 1 && (
+                <View style={styles.pronSection}>
+                  <Text style={[styles.pronQuestion, { color: colors.ink }]}>
+                    {'How do you say '}
+                    <Text style={{ color: colors.primary }}>{childDetails.name}</Text>
+                    {'?'}
+                  </Text>
+                  <View style={styles.pronChips}>
+                    {pronOptions.map((option) => {
+                      const selected = selectedPronunciation === option
+                      return (
+                        <Pressable
+                          key={option}
+                          onPress={() => setSelectedPronunciation(option)}
+                          style={[
+                            styles.pronChip,
+                            {
+                              borderColor:       selected ? colors.primary : colors.hair,
+                              backgroundColor:   selected ? colors.primarySoft : colors.surface,
+                              borderWidth:       selected ? 1.5 : 1,
+                            },
+                          ]}
+                        >
+                          <Text style={[
+                            styles.pronChipText,
+                            { color: selected ? colors.primary : colors.inkSoft },
+                          ]}>
+                            {option}
+                          </Text>
+                          {selected && (
+                            <Ionicons name="checkmark" size={13} color={colors.primary} />
+                          )}
+                        </Pressable>
+                      )
+                    })}
+                  </View>
+                </View>
+              )}
             </Animated.View>
           )}
 
-          {/* ── REVIEWING: playback ── */}
+          {/* ── RECORDING ── */}
+          {phase === 'recording' && (
+            <Animated.View entering={FadeIn.duration(300)}>
+
+              {/* Script card — stays visible so parent can read along */}
+              <View style={[styles.card, styles.scriptCard, { backgroundColor: colors.surface, marginBottom: Spacing.xl }]}>
+                <Text style={[styles.scriptLabel, { color: colors.inkMute }]}>Read this short script</Text>
+                <ScriptText name={childDetails.name ?? ''} accentColor={colors.primary} />
+              </View>
+
+              {/* Timer */}
+              <Text style={[styles.recTimer, { color: colors.ink }]}>{formatTime(recordingSeconds)}</Text>
+
+              {/* Waveform */}
+              <View style={styles.recWaveform}>
+                {WAVEFORM_HEIGHTS_REC.map((h, i) => (
+                  <WaveBar key={i} height={h} index={i} color={REC_WAVEFORM_COLOR} />
+                ))}
+              </View>
+
+              {/* Mic button */}
+              <View style={styles.recMicOuter}>
+                <Animated.View style={[styles.recPulseRing, { backgroundColor: REC_PULSE_COLOR }, pulseStyle]} />
+                <Pressable
+                  onPress={handleStopRecording}
+                  disabled={recordingSeconds < MIN_RECORD_SECONDS}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : recordingSeconds < MIN_RECORD_SECONDS ? 0.45 : 1 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Stop recording"
+                >
+                  <LinearGradient
+                    colors={REC_MIC_COLORS}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.recMicBtn}
+                  >
+                    <Ionicons name="mic" size={36} color="#FFFFFF" />
+                  </LinearGradient>
+                </Pressable>
+              </View>
+
+              {/* Hint */}
+              <Text style={[styles.recHint, { color: colors.inkMute }]}>Tap to stop recording</Text>
+            </Animated.View>
+          )}
+
+          {/* ── REVIEWING ── */}
           {phase === 'reviewing' && (
             <Animated.View entering={FadeInDown.delay(80).duration(380)} style={[styles.card, styles.cardCenter, { backgroundColor: colors.surface }]}>
               <Pressable
@@ -363,18 +516,18 @@ export function VoiceSetupScreen() {
                   <Ionicons name={isPreviewPlaying ? 'pause' : 'play'} size={28} color="#FFFFFF" />
                 </LinearGradient>
               </Pressable>
-              <Text style={styles.reviewLabel}>
+              <Text style={[styles.reviewLabel, { color: colors.inkSoft }]}>
                 {isPreviewPlaying ? 'Playing your recording…' : 'Tap to preview your voice'}
               </Text>
               {uploadError && (
-                <View style={styles.errorBanner}>
-                  <Ionicons name="warning-outline" size={16} color="#D96C6C" />
-                  <Text style={styles.errorText}>{uploadError}</Text>
+                <View style={[styles.errorBanner, { backgroundColor: '#FFF0F0', borderColor: '#F8CECE' }]}>
+                  <Ionicons name="warning-outline" size={16} color={colors.error} />
+                  <Text style={[styles.errorText, { color: colors.error }]}>{uploadError}</Text>
                 </View>
               )}
               <Pressable onPress={handleReRecord} style={({ pressed }) => [styles.reRecordBtn, { opacity: pressed ? 0.6 : 1 }]}>
-                <Ionicons name="refresh-outline" size={14} color="#7B5EA7" />
-                <Text style={styles.reRecordText}>Record again</Text>
+                <Ionicons name="refresh-outline" size={14} color={colors.primary} />
+                <Text style={[styles.reRecordText, { color: colors.primary }]}>Record again</Text>
               </Pressable>
             </Animated.View>
           )}
@@ -382,8 +535,8 @@ export function VoiceSetupScreen() {
           {/* ── UPLOADING ── */}
           {phase === 'uploading' && (
             <Animated.View entering={FadeIn.duration(300)} style={[styles.card, styles.cardCenter, { backgroundColor: colors.surface }]}>
-              <ActivityIndicator size="large" color="#5B5BD6" />
-              <Text style={styles.uploadingText}>Uploading your recording…</Text>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.uploadingText, { color: colors.inkSoft }]}>Uploading your recording…</Text>
             </Animated.View>
           )}
 
@@ -393,28 +546,28 @@ export function VoiceSetupScreen() {
               <View style={styles.successCircle}>
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </View>
-              <Text style={styles.successTitle}>Voice clone created</Text>
-              <Text style={styles.successSub}>Your next story will be narrated in your voice.</Text>
+              <Text style={[styles.successTitle, { color: colors.ink }]}>Voice clone created</Text>
+              <Text style={[styles.successSub, { color: colors.inkSoft }]}>Your next story will be narrated in your voice.</Text>
             </Animated.View>
           )}
 
-          {/* ── HAS CLONE: status + actions ── */}
+          {/* ── HAS CLONE ── */}
           {phase === 'has_clone' && (
             <>
               <Animated.View entering={FadeInDown.delay(160).duration(420)} style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.activeRow}>
-                  <View style={styles.activeIconWrap}>
-                    <Ionicons name="mic" size={22} color="#7B5EA7" />
+                  <View style={[styles.activeIconWrap, { backgroundColor: colors.primarySoft }]}>
+                    <Ionicons name="mic" size={22} color={colors.primary} />
                   </View>
                   <View style={styles.activeInfo}>
                     <View style={styles.activeTitleRow}>
-                      <Text style={styles.activeName}>Your Voice</Text>
+                      <Text style={[styles.activeName, { color: colors.ink }]}>Your Voice</Text>
                       <View style={styles.activeBadge}>
                         <View style={styles.activeDot} />
                         <Text style={styles.activeBadgeText}>Active</Text>
                       </View>
                     </View>
-                    <Text style={styles.activeSub}>Every story is narrated in your voice</Text>
+                    <Text style={[styles.activeSub, { color: colors.inkSoft }]}>Every story is narrated in your voice</Text>
                   </View>
                 </View>
               </Animated.View>
@@ -422,33 +575,39 @@ export function VoiceSetupScreen() {
               <Animated.View entering={FadeInDown.delay(220).duration(420)} style={[styles.card, { backgroundColor: colors.surface, padding: 0, overflow: 'hidden' }]}>
                 <Pressable
                   onPress={handleReRecord}
-                  style={({ pressed }) => [styles.actionRow, { backgroundColor: pressed ? '#F8F7FF' : 'transparent' }]}
+                  style={({ pressed }) => [styles.actionRow, { backgroundColor: pressed ? colors.primarySoft : 'transparent' }]}
                 >
-                  <View style={[styles.actionIconWrap, { backgroundColor: '#EDE9FF' }]}>
-                    <Ionicons name="mic-outline" size={18} color="#5B5BD6" />
+                  <View style={[styles.actionIconWrap, { backgroundColor: colors.primarySoft }]}>
+                    <Ionicons name="mic-outline" size={18} color={colors.primary} />
                   </View>
-                  <Text style={styles.actionLabel}>Re-record my voice</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#C4B6D8" />
+                  <Text style={[styles.actionLabel, { color: colors.ink }]}>Re-record my voice</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.inkMute} />
                 </Pressable>
-                <View style={styles.actionDivider} />
+                <View style={[styles.actionDivider, { backgroundColor: colors.hair }]} />
                 <Pressable
                   onPress={handleRemoveVoice}
                   style={({ pressed }) => [styles.actionRow, { backgroundColor: pressed ? '#FFF5F5' : 'transparent' }]}
                 >
                   <View style={[styles.actionIconWrap, { backgroundColor: '#FFECEC' }]}>
-                    <Ionicons name="trash-outline" size={18} color="#D96C6C" />
+                    <Ionicons name="trash-outline" size={18} color={colors.error} />
                   </View>
-                  <Text style={[styles.actionLabel, { color: '#D96C6C' }]}>Remove my voice</Text>
+                  <Text style={[styles.actionLabel, { color: colors.error }]}>Remove my voice</Text>
                 </Pressable>
               </Animated.View>
             </>
           )}
         </ScrollView>
 
-        {/* ── Sticky CTA ── */}
-        {(phase === 'idle' || phase === 'reviewing' || phase === 'success' || phase === 'has_clone') && (
+        {/* ── Sticky CTA / Notice ── */}
+        {(phase === 'briefing' || phase === 'recording' || phase === 'reviewing' || phase === 'success' || phase === 'has_clone') && (
           <Animated.View entering={FadeInDown.delay(260).duration(420)} style={styles.ctaBar}>
-            {phase === 'idle' && (
+            {phase === 'recording' && (
+              <View style={[styles.noticeBar, { backgroundColor: colors.primarySoft }]}>
+                <Ionicons name="sparkles" size={14} color={colors.primary} />
+                <Text style={[styles.noticeText, { color: colors.primary }]}>{noticeText}</Text>
+              </View>
+            )}
+            {phase === 'briefing' && (
               <Pressable
                 onPress={handleStartRecording}
                 style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, borderRadius: Radii.button }]}
@@ -466,21 +625,23 @@ export function VoiceSetupScreen() {
                 onPress={handleUseThisVoice}
                 style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, borderRadius: Radii.button }]}
                 accessibilityRole="button"
-                accessibilityLabel="Use this voice"
+                accessibilityLabel="Sounds good"
               >
                 <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
                   <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.ctaLabel}>Use this voice</Text>
+                  <Text style={styles.ctaLabel}>Sounds good</Text>
                 </LinearGradient>
               </Pressable>
             )}
             {(phase === 'success' || phase === 'has_clone') && (
               <Pressable
                 onPress={closeProfilePanel}
-                style={({ pressed }) => [styles.ctaDone, { opacity: pressed ? 0.75 : 1 }]}
+                style={({ pressed }) => [styles.ctaDone, { backgroundColor: colors.primarySoft, opacity: pressed ? 0.75 : 1 }]}
                 accessibilityRole="button"
               >
-                <Text style={styles.ctaDoneLabel}>{phase === 'success' ? 'Done' : 'Close'}</Text>
+                <Text style={[styles.ctaDoneLabel, { color: colors.primary }]}>
+                  {phase === 'success' ? 'Done' : 'Close'}
+                </Text>
               </Pressable>
             )}
           </Animated.View>
@@ -490,11 +651,12 @@ export function VoiceSetupScreen() {
   )
 }
 
-// ─── Animated waveform bar ────────────────────────────────────────────────────
+// ─── Waveform ─────────────────────────────────────────────────────────────────
 
 const WAVEFORM_HEIGHTS = [14, 22, 32, 40, 28, 36, 20, 30, 18, 26, 34, 24, 16, 30, 22]
+const WAVEFORM_HEIGHTS_REC = [6, 14, 24, 36, 28, 42, 30, 44, 22, 38, 46, 32, 40, 20, 36, 28, 44, 34, 18, 40, 26, 36, 22, 14, 8]
 
-function WaveBar({ height, index }: { height: number; index: number }) {
+function WaveBar({ height, index, color = '#8B7ED8' }: { height: number; index: number; color?: string }) {
   const anim = useSharedValue(height)
   useEffect(() => {
     anim.value = withRepeat(
@@ -507,7 +669,7 @@ function WaveBar({ height, index }: { height: number; index: number }) {
     )
   }, [anim, height, index])
   const barStyle = useAnimatedStyle(() => ({ height: anim.value }))
-  return <Animated.View style={[styles.waveBar, barStyle]} />
+  return <Animated.View style={[styles.waveBar, { backgroundColor: color }, barStyle]} />
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -515,17 +677,40 @@ function WaveBar({ height, index }: { height: number; index: number }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   safe: { flex: 1 },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+  },
+  backBtn:     { padding: Spacing.xs, marginRight: Spacing.sm },
+  headerTitle: { flex: 1, ...Fonts.bodyBold, textAlign: 'center' },
+  stepLabel:   { ...Fonts.caption, minWidth: 40, textAlign: 'right' },
+
+  // Scroll
   scroll: {
     flexGrow: 1,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
+    paddingTop: Spacing.lg,
   },
 
-  // Hero
-  hero: { alignItems: 'center', marginBottom: Spacing.lg, paddingHorizontal: Spacing.sm },
-  heroEmoji: { fontSize: 48, marginBottom: Spacing.sm },
-  heroTitle: { fontFamily: 'Nunito_700Bold', fontSize: 24, color: '#4B367C', textAlign: 'center', marginBottom: Spacing.sm },
-  heroSub: { fontFamily: 'Nunito_500Medium', fontSize: 15, color: '#7B6B9E', textAlign: 'center', lineHeight: 22 },
+  // Briefing hero
+  briefingHeroText: { alignItems: 'center', marginBottom: Spacing.md },
+  briefingHeading: {
+    fontSize: 30,
+    fontFamily: 'Nunito_700Bold',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+    lineHeight: 40,
+  },
+  briefingHeadingAccent: { fontSize: 30, fontFamily: 'Nunito_700Bold', letterSpacing: -0.5 },
+
+  // Mascot
+  mascotWrap: { alignItems: 'center', marginBottom: Spacing.lg },
+  mascot:     { width: 130, height: 130 },
 
   // Card
   card: {
@@ -533,123 +718,100 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#F0EBFF',
+    borderColor: 'rgba(91,91,214,0.1)',
   },
   cardCenter: { alignItems: 'center', paddingVertical: Spacing.xl },
 
   // Tips
-  tipRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.sm },
-  tipIconWrap: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#EDE9FF',
-    alignItems: 'center', justifyContent: 'center',
+  tipRow:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.sm },
+  tipIconBox:  { width: 38, height: 38, borderRadius: Radii.small, alignItems: 'center', justifyContent: 'center' },
+  tipTextBlock:{ flex: 1 },
+  tipTitle:    { fontFamily: 'Nunito_700Bold', fontSize: 14, marginBottom: 2 },
+  tipSub:      { fontFamily: 'Nunito_500Medium', fontSize: 13, lineHeight: 18 },
+  divider:     { height: 1, marginLeft: 38 + Spacing.md },
+
+  // Script card
+  scriptCard:  { paddingTop: Spacing.md },
+  scriptLabel: { ...Fonts.caption, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.sm },
+  scriptBody:  { fontFamily: 'Nunito_500Medium', fontSize: 15, lineHeight: 24 },
+  scriptName:  { fontFamily: 'Nunito_700Bold', fontSize: 15 },
+
+  // Pronunciation
+  pronSection: { marginTop: Spacing.sm, marginBottom: Spacing.sm },
+  pronQuestion:{ fontFamily: 'Nunito_700Bold', fontSize: 15, marginBottom: Spacing.sm },
+  pronChips:   { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  pronChip:    {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
+    borderRadius: Radii.button,
   },
-  tipText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#5C4D7D', lineHeight: 20 },
-  divider: { height: 1, backgroundColor: '#F3F0F8', marginLeft: 52 },
+  pronChipText:{ fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
 
-  // Timer
-  timer: { fontFamily: 'Nunito_700Bold', fontSize: 52, color: '#4B367C', letterSpacing: -1 },
-  timerSub: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: '#9B8EC4', marginTop: Spacing.xs, marginBottom: Spacing.lg },
-
-  // Waveform
+  // Waveform (shared bar shape)
   waveform: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 48, marginBottom: Spacing.xl },
-  waveBar: { width: 4, borderRadius: 2, backgroundColor: '#8B7ED8' },
+  waveBar:  { width: 4, borderRadius: 2 },
 
-  // Record / stop button
-  recordBtnWrap: { alignItems: 'center', justifyContent: 'center', width: 72, height: 72 },
-  pulseRing: {
-    position: 'absolute',
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#5B5BD6',
-  },
-  stopBtn: {
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#5B5BD6',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stopIcon: { width: 18, height: 18, borderRadius: 3, backgroundColor: '#FFFFFF' },
+  // Recording phase
+  recTimer:    { fontFamily: 'monospace', fontSize: 58, fontWeight: '700', letterSpacing: 3, textAlign: 'center', marginBottom: Spacing.lg },
+  recWaveform: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, height: 52, marginBottom: Spacing.xxl, paddingHorizontal: Spacing.md },
+  recMicOuter: { alignItems: 'center', justifyContent: 'center', width: 120, height: 120, alignSelf: 'center' },
+  recPulseRing:{ position: 'absolute', width: 120, height: 120, borderRadius: 60 },
+  recMicBtn:   { width: 90, height: 90, borderRadius: 45, alignItems: 'center', justifyContent: 'center' },
+  recHint:     { fontFamily: 'Nunito_500Medium', fontSize: 14, textAlign: 'center', marginTop: Spacing.lg },
+
+  // Notice bar (recording phase bottom)
+  noticeBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: 14, paddingHorizontal: Spacing.lg, borderRadius: Radii.button },
+  noticeText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
 
   // Review
-  playBtn: { marginBottom: Spacing.md },
-  playBtnGrad: {
-    width: 72, height: 72, borderRadius: 36,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  reviewLabel: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#7B6B9E', marginBottom: Spacing.md },
-  errorBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: '#FFF0F0', borderRadius: Radii.small,
-    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
-    marginBottom: Spacing.md,
-    borderWidth: 1, borderColor: '#F8CECE',
-  },
-  errorText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 13, color: '#D96C6C' },
-  reRecordBtn: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.sm },
-  reRecordText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: '#7B5EA7' },
+  playBtn:    { marginBottom: Spacing.md },
+  playBtnGrad:{ width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  reviewLabel:{ fontFamily: 'Nunito_500Medium', fontSize: 14, marginBottom: Spacing.md },
+  errorBanner:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, borderRadius: Radii.small, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, marginBottom: Spacing.md, borderWidth: 1 },
+  errorText:  { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 13 },
+  reRecordBtn:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.sm },
+  reRecordText:{ fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
 
   // Uploading
-  uploadingText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#7B6B9E', marginTop: Spacing.md },
+  uploadingText: { fontFamily: 'Nunito_500Medium', fontSize: 14, marginTop: Spacing.md },
 
   // Success
-  successCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: '#4CAF7D',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  successTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: '#4B367C', marginBottom: Spacing.sm },
-  successSub: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#7B6B9E', textAlign: 'center', lineHeight: 20 },
+  successCircle:{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#4CAF7D', alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  successTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18, marginBottom: Spacing.sm },
+  successSub:   { fontFamily: 'Nunito_500Medium', fontSize: 14, textAlign: 'center', lineHeight: 20 },
 
   // Has clone
-  activeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  activeIconWrap: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: '#EDE9FF',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  activeInfo: { flex: 1 },
-  activeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 2 },
-  activeName: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#4B367C' },
-  activeBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(76,175,125,0.12)',
-    borderWidth: 1, borderColor: 'rgba(76,175,125,0.25)',
-    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8,
-  },
-  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CAF7D' },
-  activeBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 10, color: '#4CAF7D' },
-  activeSub: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: '#7B6B9E' },
+  activeRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  activeIconWrap:{ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  activeInfo:    { flex: 1 },
+  activeTitleRow:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 2 },
+  activeName:    { fontFamily: 'Nunito_700Bold', fontSize: 16 },
+  activeBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(76,175,125,0.12)', borderWidth: 1, borderColor: 'rgba(76,175,125,0.25)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  activeDot:     { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CAF7D' },
+  activeBadgeText:{ fontFamily: 'Nunito_700Bold', fontSize: 10, color: '#4CAF7D' },
+  activeSub:     { fontFamily: 'Nunito_500Medium', fontSize: 13 },
 
   // Actions
-  actionRow: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
-    paddingHorizontal: Spacing.md, paddingVertical: Spacing.md,
-  },
-  actionIconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15, color: '#5C4D7D' },
-  actionDivider: { height: 1, backgroundColor: '#F3F0F8', marginLeft: 52 + Spacing.md },
+  actionRow:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md },
+  actionIconWrap:{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  actionLabel:  { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  actionDivider:{ height: 1, marginLeft: 52 + Spacing.md },
 
   // CTA
   ctaBar: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingBottom:     Spacing.lg,
+    paddingTop:        Spacing.sm,
   },
   ctaGradient: {
-    height: Sizing.buttonHeight,
-    borderRadius: Radii.button,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    height:          Sizing.buttonHeight,
+    borderRadius:    Radii.button,
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:             Spacing.sm,
   },
-  ctaLabel: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#FFFFFF' },
-  ctaDone: {
-    height: Sizing.buttonHeight,
-    borderRadius: Radii.button,
-    backgroundColor: '#F0EBFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaDoneLabel: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#5B5BD6' },
+  ctaLabel:     { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#FFFFFF' },
+  ctaDone:      { height: Sizing.buttonHeight, borderRadius: Radii.button, alignItems: 'center', justifyContent: 'center' },
+  ctaDoneLabel: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
 })
