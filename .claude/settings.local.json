@@ -44,7 +44,8 @@
       "Bash(curl -s -X POST https://api.fish.audio/v1/tts -H 'Authorization: Bearer 071b702ac14b4ee6be3b330945619246' -H 'Content-Type: application/json' -H 'model: s2-pro' -d '{\"text\":\"Once upon a time in a magical forest, a little fox named Luna discovered a glowing stone.\",\"format\":\"mp3\",\"reference_id\":\"933563129e564b19a115bedd57b7406a\"}' -o /tmp/fish_voice_test.mp3 -w 'HTTP %{http_code} — %{size_download} bytes')",
       "Bash(curl -s https://snoozy-kmoq.onrender.com/health)",
       "Bash(curl -s -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H 'Content-Type: application/json' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}' -w '\\\\nHTTP %{http_code}')",
-      "Bash(awk -F: '$2 > 550')"
+      "Bash(awk -F: '$2 > 550')",
+      "Bash(grep -A 5 \"return { systemPrompt, userMessage, world, vibe }\" /Users/pkats-mac/snoozy/backend/src/prompts/templates.js)"
     ]
   }
 }

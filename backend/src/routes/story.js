@@ -4,10 +4,9 @@ const zlib = require('zlib')
 const { z } = require('zod')
 const multer = require('multer')
 const OpenAI = require('openai')
-const { AzureOpenAI } = OpenAI
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
-const { prepareTextForTTS, prepareTextForFishAudio, sanitizeFishAudioTags, analyzeTagDensity } = require('../utils/ttsPreprocessor')
+const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
 const { FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
 const router = express.Router()
@@ -23,57 +22,7 @@ const audioUpload = multer({
   },
 })
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ELEVENLABS VOICE REGISTRY
-// Add voices here as you source them. Voice IDs are from ElevenLabs voice library.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const ELEVENLABS_VOICES = {
-  // --- USA ---
-  rachel: '21m00Tcm4TlvDq8ikWAM',   // Neutral American female — warm, tested for long-form narration
-  daniel: 'onwK4e9ZLuTAKqWW03F9',   // British male — bridges India + USA (shared)
-
-  // --- India ---
-  // TODO: Replace with sourced neutral Indian English female voice ID after testing.
-  // Use ElevenLabs Voice Design: "Female, Indian English, neutral metro accent,
-  // warm and calm, 30s, suitable for children's bedtime narration."
-  meera: '21m00Tcm4TlvDq8ikWAM',    // Placeholder — using Rachel until Meera is sourced
-
-  // --- Hindi (v2, not active yet) ---
-  // sia:   '<voice_id>',             // Warm, intimate, bedtime storytelling in Hindi
-  // viraj: '<voice_id>',             // Richly modulated, longform Hindi male
-}
-
-// Silent region defaults — Option 1 from our design discussion.
-// Parent never sees a picker. We pre-select the right voice by region.
-// Region codes must match what your auth/profile layer stores (ISO 3166-1 alpha-2).
-const REGION_VOICE_DEFAULTS = {
-  in: { female: ELEVENLABS_VOICES.meera,  male: ELEVENLABS_VOICES.daniel },
-  us: { female: ELEVENLABS_VOICES.rachel, male: ELEVENLABS_VOICES.daniel },
-  gb: { female: ELEVENLABS_VOICES.rachel, male: ELEVENLABS_VOICES.daniel },
-  // Fallback for any unlisted region
-  default: { female: ELEVENLABS_VOICES.rachel, male: ELEVENLABS_VOICES.daniel },
-}
-
-/**
- * Resolves the correct ElevenLabs voice ID for a user.
- *
- * Priority order:
- *   1. Explicit voiceId sent in the request (user has manually swapped via the story reader toggle)
- *   2. Region-based default from the user's profile (Option 1 — silent default)
- *   3. Global fallback (Rachel)
- *
- * @param {string|undefined} requestedVoiceId - Voice ID sent by the client, if any
- * @param {string|undefined} userRegion       - ISO region code from user profile (e.g. "in", "us")
- * @param {string}           gender           - "female" | "male", defaults to "female"
- */
-function resolveElevenLabsVoice(requestedVoiceId, userRegion, gender = 'female') {
-  if (requestedVoiceId) return requestedVoiceId
-
-  const regionKey = (userRegion || '').toLowerCase()
-  const regionDefaults = REGION_VOICE_DEFAULTS[regionKey] || REGION_VOICE_DEFAULTS.default
-  return regionDefaults[gender] || ELEVENLABS_VOICES.rachel
-}
+const ELEVENLABS_FALLBACK_VOICE = '21m00Tcm4TlvDq8ikWAM' // Rachel — used only if client sends no voiceId
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AUDIO CACHE
@@ -128,17 +77,11 @@ const generateStorySchema = z.object({
   }),
 })
 
-// FIX #6: voice now accepts any non-empty string up to 100 chars.
-// OpenAI voices (shimmer, nova…) and ElevenLabs voice IDs (21m00Tcm4TlvDq8ikWAM)
-// are both plain strings — provider-specific validation happens inside each function.
-// Also added: userRegion and gender for Option 1 silent region defaulting.
 const generateAudioSchema = z.object({
-  text:      z.string().min(1).max(10000),  // Raised to match ElevenLabs v2 limit
-  voiceId:   z.string().min(1).max(100).optional(),  // ElevenLabs voice ID (explicit override)
-  voice:     z.string().min(1).max(50).optional(),   // OpenAI/Azure voice name (shimmer, nova…)
-  userRegion: z.string().length(2).optional(),       // ISO 3166-1 alpha-2 from user profile
-  gender:    z.enum(['female', 'male']).optional().default('female'),
-  vibeId:    z.enum(validVibeIds).optional(),        // drives per-vibe ElevenLabs voice settings
+  text:     z.string().min(1).max(10000),
+  voiceId:  z.string().min(1).max(100).optional(),
+  provider: z.enum(['elevenlabs', 'fishaudio']),
+  vibeId:   z.enum(validVibeIds).optional(),
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,23 +121,10 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
     log('STORY', 'Prompt built successfully')
 
     const config = req.app.locals.config
-    let client
-    let model
 
-    if (config.ttsProvider === 'azure') {
-      log('STORY', `Calling Azure OpenAI GPT (${config.azureOpenaiChatDeployment})...`)
-      client = new AzureOpenAI({
-        endpoint:   config.azureOpenaiEndpoint,
-        apiKey:     config.azureOpenaiApiKey,
-        apiVersion: config.azureOpenaiChatVersion,
-        deployment: config.azureOpenaiChatDeployment,
-      })
-      model = config.azureOpenaiChatDeployment
-    } else {
-      log('STORY', `Calling Standard OpenAI (${RECOMMENDED_API_SETTINGS.model})...`)
-      client = new OpenAI({ apiKey: config.openaiApiKey })
-      model = RECOMMENDED_API_SETTINGS.model
-    }
+    log('STORY', `Calling OpenAI (${RECOMMENDED_API_SETTINGS.model})...`)
+    const client = new OpenAI({ apiKey: config.openaiApiKey })
+    const model  = RECOMMENDED_API_SETTINGS.model
 
     const { systemPrompt, userMessage } = result
 
@@ -233,15 +163,6 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
 
     log('STORY', `Done! Title: "${title}", Body: ${storyBody.length} chars (${elapsed}ms total)`)
 
-    if (config.ttsProvider === 'fish_audio') {
-      const { stripped, warnings } = sanitizeFishAudioTags(storyBody)
-      const { count, density }     = analyzeTagDensity(storyBody)
-      log('STORY', `Tag density: ${count} tags (${density.toFixed(2)} per 100 words)`)
-      if (warnings.length > 0) {
-        log('STORY', `Tag warnings: stripped [${stripped.join(', ')}]`)
-      }
-    }
-
     return res.json({ success: true, title, storyText: storyBody })
   } catch (error) {
     const elapsed = Date.now() - startTime
@@ -263,20 +184,15 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
   const config    = req.app.locals.config
 
   try {
-    // FIX #5: voice/voiceId/region are now destructured and passed to every provider function
-    const { text, voiceId, voice, userRegion, gender, vibeId } = req.validated
+    const { text, voiceId, provider, vibeId } = req.validated
 
     log('AUDIO', '--- New audio request ---')
-    log('AUDIO', `Text: ${text.length} chars | Provider: ${config.ttsProvider} | Region: ${userRegion || 'n/a'} | Gender: ${gender} | Vibe: ${vibeId || 'n/a'}`)
+    log('AUDIO', `Text: ${text.length} chars | Provider: ${provider} | Voice: ${voiceId || 'default'} | Vibe: ${vibeId || 'n/a'}`)
 
-    if (config.ttsProvider === 'elevenlabs') {
-      await generateWithElevenLabs(text, voiceId, userRegion, gender, vibeId, config, res, startTime)
-    } else if (config.ttsProvider === 'azure') {
-      await generateWithAzure(text, config, res, startTime, voice)
-    } else if (config.ttsProvider === 'fishaudio') {
-      await generateWithFishAudio(text, voiceId, vibeId, config, res, startTime)
+    if (provider === 'elevenlabs') {
+      await generateWithElevenLabs(text, voiceId, vibeId, config, res, startTime)
     } else {
-      await generateWithOpenAI(text, config, res, startTime, voice)
+      await generateWithFishAudio(text, voiceId, vibeId, config, res, startTime)
     }
   } catch (error) {
     const elapsed = Date.now() - startTime
@@ -304,9 +220,9 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
  *   speed: 0.88         — slightly slower than natural speech; sleep-inducing pace
  *   output_format       — mp3_44100_128: high quality, reasonable mobile file size
  */
-async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender, vibeId, config, res, startTime) {
-  const voiceId = resolveElevenLabsVoice(requestedVoiceId, userRegion, gender)
-  log('AUDIO', `ElevenLabs voice resolved: ${voiceId} (requested: ${requestedVoiceId || 'none'}, region: ${userRegion || 'none'})`)
+async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, res, startTime) {
+  const voiceId = requestedVoiceId || config.elevenlabsVoiceId || ELEVENLABS_FALLBACK_VOICE
+  log('AUDIO', `ElevenLabs voice: ${voiceId}`)
 
   const processedText = prepareTextForTTS(text, vibeId)
   log('AUDIO', `TTS pre-processor: ${text.length} chars → ${processedText.length} chars`)
@@ -392,91 +308,6 @@ async function generateWithElevenLabs(text, requestedVoiceId, userRegion, gender
 
   const totalElapsed = Date.now() - startTime
   log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms (cached for next request)`)
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// OPENAI TTS — unchanged, kept for non-ElevenLabs environments
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function generateWithOpenAI(text, config, res, startTime, requestedVoice) {
-  const VALID_OPENAI_VOICES = ['shimmer', 'nova', 'onyx', 'fable', 'alloy', 'echo']
-  const voice = VALID_OPENAI_VOICES.includes(requestedVoice) ? requestedVoice : (config.openaiTtsVoice || 'shimmer')
-  log('AUDIO', `Calling OpenAI TTS (tts-1, voice: ${voice})...`)
-
-  const openai = new OpenAI({ apiKey: config.openaiApiKey })
-
-  const mp3Response = await openai.audio.speech.create({
-    model:           'tts-1',
-    voice,
-    input:           text,
-    response_format: 'mp3',
-    speed:           0.95,
-  })
-
-  const apiElapsed = Date.now() - startTime
-  log('AUDIO', `OpenAI TTS responded in ${apiElapsed}ms, sending audio...`)
-
-  res.setHeader('Content-Type', 'audio/mpeg')
-
-  const buffer = Buffer.from(await mp3Response.arrayBuffer())
-  res.end(buffer)
-
-  const totalElapsed = Date.now() - startTime
-  log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AZURE TTS — unchanged
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function generateWithAzure(text, config, res, startTime, requestedVoice) {
-  const voice    = requestedVoice || config.openaiTtsVoice
-  const { azureOpenaiEndpoint, azureOpenaiApiKey, azureOpenaiApiVersion, azureOpenaiTtsDeployment } = config
-  const url      = `${azureOpenaiEndpoint.replace(/\/+$/, '')}/openai/deployments/${azureOpenaiTtsDeployment}/audio/speech?api-version=${azureOpenaiApiVersion}`
-
-  log('AUDIO', `Calling Azure OpenAI TTS: ${url}, voice: ${voice}`)
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'api-key':      azureOpenaiApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model:           azureOpenaiTtsDeployment,
-        input:           text,
-        voice,
-        response_format: 'mp3',
-        speed:           0.95,
-      }),
-    })
-
-    const apiElapsed = Date.now() - startTime
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      log('AUDIO', `Azure OpenAI FAILED (${response.status}) after ${apiElapsed}ms:`, errorText)
-      throw new Error(`Azure OpenAI error ${response.status}: ${errorText}`)
-    }
-
-    log('AUDIO', `Azure OpenAI TTS responded in ${apiElapsed}ms, sending audio...`)
-
-    res.setHeader('Content-Type', 'audio/mpeg')
-
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer      = Buffer.from(arrayBuffer)
-    res.end(buffer)
-
-    const totalElapsed = Date.now() - startTime
-    log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms`)
-  } catch (error) {
-    const elapsed = Date.now() - startTime
-    log('AUDIO', `FAILED after ${elapsed}ms: ${error.message}`)
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, error: `Azure OpenAI TTS Failed: ${error.message}` })
-    }
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

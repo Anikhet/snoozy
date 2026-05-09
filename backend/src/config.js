@@ -6,38 +6,20 @@ dotenv.config({ override: true })
  * a frozen config object used across the backend.
  */
 function loadConfig() {
-  const ttsProvider = (process.env.TTS_PROVIDER || 'openai').toLowerCase()
-
   const required = ['OPENAI_API_KEY']
-  if (ttsProvider === 'elevenlabs') {
-    required.push('ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID')
-  } else if (ttsProvider === 'azure') {
-    required.push('AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT')
-  } else if (ttsProvider === 'fishaudio') {
-    required.push('FISH_API_KEY')
-  }
-
   const missing = required.filter((key) => !process.env[key])
   if (missing.length > 0) {
     throw new Error(`Missing required env vars: ${missing.join(', ')}`)
   }
 
   return Object.freeze({
-    ttsProvider,
-    openaiApiKey: process.env.OPENAI_API_KEY,
-    openaiTtsVoice: process.env.OPENAI_TTS_VOICE || 'shimmer',
-    elevenlabsApiKey: process.env.ELEVENLABS_API_KEY,
+    openaiApiKey:      process.env.OPENAI_API_KEY,
+    elevenlabsApiKey:  process.env.ELEVENLABS_API_KEY,
     elevenlabsVoiceId: process.env.ELEVENLABS_VOICE_ID,
-    fishApiKey: process.env.FISH_API_KEY,
-    fishAudioVoiceId: process.env.FISH_AUDIO_VOICE_ID,
-    azureOpenaiEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
-    azureOpenaiApiKey: process.env.AZURE_OPENAI_API_KEY,
-    azureOpenaiApiVersion: process.env.AZURE_OPENAI_API_VERSION || '2025-12-15',
-    azureOpenaiTtsDeployment: process.env.AZURE_OPENAI_TTS_DEPLOYMENT || 'gpt-4o-mini-tts',
-    azureOpenaiChatDeployment: process.env.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-4o-mini',
-    azureOpenaiChatVersion: process.env.AZURE_OPENAI_CHAT_VERSION || '2025-01-01-preview',
+    fishApiKey:        process.env.FISH_API_KEY,
+    fishAudioVoiceId:  process.env.FISH_AUDIO_VOICE_ID,
     clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-    clerkSecretKey: process.env.CLERK_SECRET_KEY,
+    clerkSecretKey:    process.env.CLERK_SECRET_KEY,
     port: parseInt(process.env.PORT || '3001', 10),
   })
 }
