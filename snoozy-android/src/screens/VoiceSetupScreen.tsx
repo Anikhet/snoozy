@@ -519,6 +519,60 @@ export function VoiceSetupScreen() {
           {phase === 'reviewing' && (
             <Animated.View entering={FadeInDown.delay(60).duration(400)}>
 
+              {/* ── Name your voice — shown first so it's immediately visible ── */}
+              <View style={[styles.card, { backgroundColor: colors.surface, marginBottom: Spacing.md }]}>
+                <Text style={[styles.nameVoiceLabel, { color: colors.ink }]}>Name this voice</Text>
+                <Text style={[styles.nameVoiceSub, { color: colors.inkSoft }]}>
+                  Who's reading tonight?
+                </Text>
+
+                {/* Suggestion chips */}
+                <View style={styles.nameSuggestions}>
+                  {VOICE_NAME_SUGGESTIONS.map((s) => {
+                    const selected = voiceName === s
+                    return (
+                      <Pressable
+                        key={s}
+                        onPress={() => setVoiceName(s)}
+                        style={[
+                          styles.nameSuggestionChip,
+                          {
+                            backgroundColor: selected ? colors.primarySoft : colors.background,
+                            borderColor: selected ? colors.primary : colors.hair,
+                            borderWidth: selected ? 1.5 : 1,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.nameSuggestionText, { color: selected ? colors.primary : colors.inkSoft }]}>
+                          {s}
+                        </Text>
+                      </Pressable>
+                    )
+                  })}
+                </View>
+
+                {/* Free-text input */}
+                <View style={[styles.nameInput, { borderColor: voiceName && !VOICE_NAME_SUGGESTIONS.includes(voiceName) ? colors.primary : colors.hair }]}>
+                  <Ionicons name="mic-outline" size={16} color={colors.inkMute} />
+                  <TextInput
+                    style={[styles.nameInputText, { color: colors.ink }]}
+                    value={voiceName}
+                    onChangeText={setVoiceName}
+                    placeholder="Or type a name…"
+                    placeholderTextColor={colors.inkMute}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    maxLength={30}
+                    returnKeyType="done"
+                  />
+                  {voiceName.length > 0 && (
+                    <Pressable onPress={() => setVoiceName('')} hitSlop={8}>
+                      <Ionicons name="close-circle" size={16} color={colors.inkMute} />
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+
               {/* Heading */}
               <View style={styles.prevHeroText}>
                 <Text style={[styles.prevHeading, { color: colors.ink }]}>
@@ -583,60 +637,6 @@ export function VoiceSetupScreen() {
                         {uploadError ?? 'Upload failed — tap Try again'}
                       </Text>
                     </>
-                  )}
-                </View>
-              </View>
-
-              {/* ── Name your voice ── */}
-              <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.nameVoiceLabel, { color: colors.ink }]}>Name this voice</Text>
-                <Text style={[styles.nameVoiceSub, { color: colors.inkSoft }]}>
-                  Who's reading tonight?
-                </Text>
-
-                {/* Suggestion chips */}
-                <View style={styles.nameSuggestions}>
-                  {VOICE_NAME_SUGGESTIONS.map((s) => {
-                    const selected = voiceName === s
-                    return (
-                      <Pressable
-                        key={s}
-                        onPress={() => setVoiceName(s)}
-                        style={[
-                          styles.nameSuggestionChip,
-                          {
-                            backgroundColor: selected ? colors.primarySoft : colors.background,
-                            borderColor: selected ? colors.primary : colors.hair,
-                            borderWidth: selected ? 1.5 : 1,
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.nameSuggestionText, { color: selected ? colors.primary : colors.inkSoft }]}>
-                          {s}
-                        </Text>
-                      </Pressable>
-                    )
-                  })}
-                </View>
-
-                {/* Free-text input */}
-                <View style={[styles.nameInput, { borderColor: voiceName && !VOICE_NAME_SUGGESTIONS.includes(voiceName) ? colors.primary : colors.hair }]}>
-                  <Ionicons name="mic-outline" size={16} color={colors.inkMute} />
-                  <TextInput
-                    style={[styles.nameInputText, { color: colors.ink }]}
-                    value={voiceName}
-                    onChangeText={setVoiceName}
-                    placeholder="Or type a name…"
-                    placeholderTextColor={colors.inkMute}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    maxLength={30}
-                    returnKeyType="done"
-                  />
-                  {voiceName.length > 0 && (
-                    <Pressable onPress={() => setVoiceName('')} hitSlop={8}>
-                      <Ionicons name="close-circle" size={16} color={colors.inkMute} />
-                    </Pressable>
                   )}
                 </View>
               </View>
@@ -738,7 +738,9 @@ export function VoiceSetupScreen() {
                 {uploadStatus === 'done' ? (
                   <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
                     <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                    <Text style={styles.ctaLabel}>Sounds good</Text>
+                    <Text style={styles.ctaLabel}>
+                      {voiceName.trim() ? `Save as "${voiceName.trim()}"` : 'Sounds good'}
+                    </Text>
                   </LinearGradient>
                 ) : (
                   <View style={[styles.ctaGradient, { backgroundColor: uploadStatus === 'error' ? colors.error : 'rgba(91,91,214,0.22)' }]}>

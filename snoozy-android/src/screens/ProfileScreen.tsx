@@ -466,6 +466,7 @@ export function ProfileScreen() {
               <Text style={styles.sectionTitle}>Narrator Voice</Text>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.voiceGrid}>
+                  <AddVoiceCard onPress={() => openProfilePanel('voiceSetup')} />
                   {voiceProfiles.map((profile) => (
                     <VoiceProfileCard
                       key={profile.id}
@@ -475,7 +476,6 @@ export function ProfileScreen() {
                       onDelete={() => removeVoiceProfile(profile.id)}
                     />
                   ))}
-                  <AddVoiceCard onPress={() => openProfilePanel('voiceSetup')} />
                   {VOICES.map((v) => {
                     const selected = childDetails.voiceId === v.id
                     return (

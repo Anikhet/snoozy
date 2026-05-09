@@ -35,7 +35,7 @@ export const DEFAULT_CHILD_DETAILS: ChildDetails = {
   name: '',
   age: 5,
   pronouns: 'they/them',
-  voiceId: 'shimmer',
+  voiceId: '933563129e564b19a115bedd57b7406a',
 }
 
 export const storyResponseSchema = z.object({
