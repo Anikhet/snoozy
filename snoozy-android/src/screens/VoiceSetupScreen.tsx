@@ -137,7 +137,9 @@ export function VoiceSetupScreen() {
   const [recordingUri, setRecordingUri]         = useState<string | null>(null)
   const [recordingSeconds, setRecordingSeconds] = useState(0)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
-  const [uploadError, setUploadError]           = useState<string | null>(null)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
+  const [finalDuration, setFinalDuration]       = useState(0)
+  const uploadedModelIdRef                       = useRef<string | null>(null)
 
   const pronOptions = useMemo(() => getPronunciationOptions(childDetails.name ?? ''), [childDetails.name])
   const [selectedPronunciation, setSelectedPronunciation] = useState(() => pronOptions[0] ?? '')
@@ -211,21 +213,39 @@ export function VoiceSetupScreen() {
       previewPlayerRef.current?.remove()
       previewPlayerRef.current = null
       setRecordingUri(uri)
+      setFinalDuration(recordingSeconds)
       setIsPreviewPlaying(false)
+      setUploadStatus('uploading')
       setPhase('reviewing')
+
+      // Upload runs silently while the parent listens to playback
+      ;(async () => {
+        try {
+          const token = await getToken()
+          if (!token) throw new Error('Not authenticated')
+          const voiceName = childDetails.name ? `${childDetails.name}'s Voice` : 'My Voice'
+          const modelId = await apiService.createVoiceClone(uri, voiceName, token)
+          uploadedModelIdRef.current = modelId
+          setUploadStatus('done')
+        } catch {
+          setUploadStatus('error')
+        }
+      })()
     } catch {
       Alert.alert('Recording error', 'Something went wrong. Please try again.')
       setPhase('briefing')
     }
-  }, [recorder, recordingSeconds])
+  }, [recorder, recordingSeconds, getToken, childDetails.name])
 
   const handleReRecord = useCallback(() => {
     previewPlayerRef.current?.remove()
     previewPlayerRef.current = null
     setRecordingUri(null)
     setRecordingSeconds(0)
+    setFinalDuration(0)
     setIsPreviewPlaying(false)
-    setUploadError(null)
+    setUploadStatus('idle')
+    uploadedModelIdRef.current = null
     setPhase('briefing')
   }, [])
 
@@ -261,33 +281,41 @@ export function VoiceSetupScreen() {
   // ── Upload ──────────────────────────────────────────────────────────────
 
   const handleUseThisVoice = useCallback(async () => {
-    if (!recordingUri) return
-    setUploadError(null)
-    setPhase('uploading')
+    if (uploadStatus === 'uploading') return
 
+    // Retry if previous upload failed
+    if (uploadStatus === 'error' || !uploadedModelIdRef.current) {
+      if (!recordingUri) return
+      setUploadStatus('uploading')
+      ;(async () => {
+        try {
+          const token = await getToken()
+          if (!token) throw new Error('Not authenticated')
+          const voiceName = childDetails.name ? `${childDetails.name}'s Voice` : 'My Voice'
+          const modelId = await apiService.createVoiceClone(recordingUri, voiceName, token)
+          uploadedModelIdRef.current = modelId
+          setUploadStatus('done')
+        } catch {
+          setUploadStatus('error')
+        }
+      })()
+      return
+    }
+
+    // Upload already done — just persist and advance
+    const modelId = uploadedModelIdRef.current
     try {
-      const token = await getToken()
-      if (!token) throw new Error('Not authenticated')
-
-      const voiceName = childDetails.name ? `${childDetails.name}'s Voice` : 'My Voice'
-      const modelId = await apiService.createVoiceClone(recordingUri, voiceName, token)
-
       setFishVoiceModelId(modelId)
-
       const raw = await AsyncStorage.getItem(CHILD_PROFILE_KEY)
       const profile = raw ? JSON.parse(raw) : {}
       await AsyncStorage.setItem(
         CHILD_PROFILE_KEY,
         JSON.stringify({ ...profile, fishVoiceModelId: modelId, voiceId: modelId }),
       )
-
+    } finally {
       setPhase('success')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Upload failed. Please try again.'
-      setUploadError(msg)
-      setPhase('reviewing')
     }
-  }, [recordingUri, getToken, childDetails.name, setFishVoiceModelId])
+  }, [uploadStatus, recordingUri, getToken, childDetails.name, setFishVoiceModelId])
 
   // ── Remove clone ────────────────────────────────────────────────────────
 
@@ -349,7 +377,7 @@ export function VoiceSetupScreen() {
             <Ionicons name="chevron-back" size={24} color={colors.ink} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: colors.ink }]}>
-            {phase === 'recording' ? 'Recording' : 'Voice setup'}
+            {phase === 'recording' ? 'Recording' : phase === 'reviewing' ? 'Preview' : 'Voice setup'}
           </Text>
           <Text style={[styles.stepLabel, { color: colors.inkMute }]}>
             {STEP_OF[phase]} OF {TOTAL_STEPS}
@@ -505,30 +533,73 @@ export function VoiceSetupScreen() {
 
           {/* ── REVIEWING ── */}
           {phase === 'reviewing' && (
-            <Animated.View entering={FadeInDown.delay(80).duration(380)} style={[styles.card, styles.cardCenter, { backgroundColor: colors.surface }]}>
-              <Pressable
-                onPress={handleTogglePreview}
-                style={({ pressed }) => [styles.playBtn, { opacity: pressed ? 0.75 : 1 }]}
-                accessibilityRole="button"
-                accessibilityLabel={isPreviewPlaying ? 'Pause preview' : 'Play preview'}
-              >
-                <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.playBtnGrad}>
-                  <Ionicons name={isPreviewPlaying ? 'pause' : 'play'} size={28} color="#FFFFFF" />
-                </LinearGradient>
-              </Pressable>
-              <Text style={[styles.reviewLabel, { color: colors.inkSoft }]}>
-                {isPreviewPlaying ? 'Playing your recording…' : 'Tap to preview your voice'}
-              </Text>
-              {uploadError && (
-                <View style={[styles.errorBanner, { backgroundColor: '#FFF0F0', borderColor: '#F8CECE' }]}>
-                  <Ionicons name="warning-outline" size={16} color={colors.error} />
-                  <Text style={[styles.errorText, { color: colors.error }]}>{uploadError}</Text>
+            <Animated.View entering={FadeInDown.delay(60).duration(400)}>
+
+              {/* Heading */}
+              <View style={styles.prevHeroText}>
+                <Text style={[styles.prevHeading, { color: colors.ink }]}>
+                  {'How does '}
+                  <Text style={{ color: colors.primary }}>this sound?</Text>
+                </Text>
+                <Text style={[styles.prevSubtitle, { color: colors.inkSoft }]}>
+                  Listen back and make sure it sounds like you.
+                </Text>
+              </View>
+
+              {/* Playback card */}
+              <View style={[styles.card, styles.prevCard, { backgroundColor: colors.surface }]}>
+
+                {/* Play button */}
+                <View style={styles.prevPlayOuter}>
+                  <View style={[styles.prevPlayRing, { backgroundColor: colors.primarySoft }]} />
+                  <Pressable
+                    onPress={handleTogglePreview}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={isPreviewPlaying ? 'Pause preview' : 'Play preview'}
+                  >
+                    <View style={[styles.prevPlayBtn, { backgroundColor: colors.primary }]}>
+                      <Ionicons name={isPreviewPlaying ? 'pause' : 'play'} size={32} color="#FFFFFF" style={{ marginLeft: isPreviewPlaying ? 0 : 3 }} />
+                    </View>
+                  </Pressable>
                 </View>
-              )}
-              <Pressable onPress={handleReRecord} style={({ pressed }) => [styles.reRecordBtn, { opacity: pressed ? 0.6 : 1 }]}>
-                <Ionicons name="refresh-outline" size={14} color={colors.primary} />
-                <Text style={[styles.reRecordText, { color: colors.primary }]}>Record again</Text>
-              </Pressable>
+
+                {/* Waveform */}
+                <View style={styles.prevWaveform}>
+                  {WAVEFORM_HEIGHTS_PREVIEW.map((h, i) => (
+                    <WaveBar key={i} height={h} index={i} color={colors.primary} />
+                  ))}
+                </View>
+
+                {/* Duration badge */}
+                <View style={[styles.prevDurationBadge, { backgroundColor: colors.primarySoft }]}>
+                  <Text style={[styles.prevDurationText, { color: colors.primary }]}>
+                    {formatTime(finalDuration)} recorded
+                  </Text>
+                </View>
+
+                {/* Upload status */}
+                <View style={styles.prevStatusRow}>
+                  {uploadStatus === 'uploading' && (
+                    <>
+                      <ActivityIndicator size="small" color={colors.inkMute} />
+                      <Text style={[styles.prevStatusText, { color: colors.inkMute }]}>Saving your voice…</Text>
+                    </>
+                  )}
+                  {uploadStatus === 'done' && (
+                    <>
+                      <Ionicons name="checkmark-circle" size={15} color="#4CAF7D" />
+                      <Text style={[styles.prevStatusText, { color: '#4CAF7D' }]}>Voice saved</Text>
+                    </>
+                  )}
+                  {uploadStatus === 'error' && (
+                    <>
+                      <Ionicons name="warning-outline" size={15} color={colors.error} />
+                      <Text style={[styles.prevStatusText, { color: colors.error }]}>Upload failed — tap Try again</Text>
+                    </>
+                  )}
+                </View>
+              </View>
             </Animated.View>
           )}
 
@@ -621,17 +692,39 @@ export function VoiceSetupScreen() {
               </Pressable>
             )}
             {phase === 'reviewing' && (
-              <Pressable
-                onPress={handleUseThisVoice}
-                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, borderRadius: Radii.button }]}
-                accessibilityRole="button"
-                accessibilityLabel="Sounds good"
-              >
-                <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
-                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.ctaLabel}>Sounds good</Text>
-                </LinearGradient>
-              </Pressable>
+              <View style={styles.prevCtaStack}>
+                {/* Primary — disabled until upload done */}
+                <Pressable
+                  onPress={handleUseThisVoice}
+                  disabled={uploadStatus === 'uploading'}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, borderRadius: Radii.button }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={uploadStatus === 'error' ? 'Try again' : 'Sounds good'}
+                >
+                  {uploadStatus === 'done' ? (
+                    <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
+                      <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                      <Text style={styles.ctaLabel}>Sounds good</Text>
+                    </LinearGradient>
+                  ) : (
+                    <View style={[styles.ctaGradient, { backgroundColor: uploadStatus === 'error' ? colors.error : 'rgba(91,91,214,0.22)' }]}>
+                      <Text style={[styles.ctaLabel, { color: uploadStatus === 'error' ? '#FFFFFF' : colors.inkMute }]}>
+                        {uploadStatus === 'error' ? 'Try again' : 'Sounds good'}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+
+                {/* Secondary — record again */}
+                <Pressable
+                  onPress={handleReRecord}
+                  style={({ pressed }) => [styles.ctaRecordAgain, { borderColor: colors.hair, opacity: pressed ? 0.6 : 1 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Record again"
+                >
+                  <Text style={[styles.ctaRecordAgainLabel, { color: colors.inkSoft }]}>Record again</Text>
+                </Pressable>
+              </View>
             )}
             {(phase === 'success' || phase === 'has_clone') && (
               <Pressable
@@ -653,8 +746,9 @@ export function VoiceSetupScreen() {
 
 // ─── Waveform ─────────────────────────────────────────────────────────────────
 
-const WAVEFORM_HEIGHTS = [14, 22, 32, 40, 28, 36, 20, 30, 18, 26, 34, 24, 16, 30, 22]
-const WAVEFORM_HEIGHTS_REC = [6, 14, 24, 36, 28, 42, 30, 44, 22, 38, 46, 32, 40, 20, 36, 28, 44, 34, 18, 40, 26, 36, 22, 14, 8]
+const WAVEFORM_HEIGHTS         = [14, 22, 32, 40, 28, 36, 20, 30, 18, 26, 34, 24, 16, 30, 22]
+const WAVEFORM_HEIGHTS_REC     = [6, 14, 24, 36, 28, 42, 30, 44, 22, 38, 46, 32, 40, 20, 36, 28, 44, 34, 18, 40, 26, 36, 22, 14, 8]
+const WAVEFORM_HEIGHTS_PREVIEW = [4, 10, 20, 34, 26, 40, 30, 44, 18, 36, 42, 28, 38, 16, 32, 24, 40, 30, 14, 36, 22, 32, 18, 10, 6]
 
 function WaveBar({ height, index, color = '#8B7ED8' }: { height: number; index: number; color?: string }) {
   const anim = useSharedValue(height)
@@ -763,14 +857,22 @@ const styles = StyleSheet.create({
   noticeBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: 14, paddingHorizontal: Spacing.lg, borderRadius: Radii.button },
   noticeText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
 
-  // Review
-  playBtn:    { marginBottom: Spacing.md },
-  playBtnGrad:{ width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
-  reviewLabel:{ fontFamily: 'Nunito_500Medium', fontSize: 14, marginBottom: Spacing.md },
-  errorBanner:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, borderRadius: Radii.small, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, marginBottom: Spacing.md, borderWidth: 1 },
-  errorText:  { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 13 },
-  reRecordBtn:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.sm },
-  reRecordText:{ fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  // Preview (Screen 3)
+  prevHeroText:     { alignItems: 'center', marginBottom: Spacing.xl },
+  prevHeading:      { fontSize: 28, fontFamily: 'Nunito_700Bold', letterSpacing: -0.3, textAlign: 'center', marginBottom: Spacing.sm },
+  prevSubtitle:     { fontFamily: 'Nunito_500Medium', fontSize: 15, textAlign: 'center', lineHeight: 22 },
+  prevCard:         { alignItems: 'center', paddingVertical: Spacing.xl, paddingHorizontal: Spacing.lg },
+  prevPlayOuter:    { alignItems: 'center', justifyContent: 'center', width: 130, height: 130, marginBottom: Spacing.lg },
+  prevPlayRing:     { position: 'absolute', width: 130, height: 130, borderRadius: 65 },
+  prevPlayBtn:      { width: 90, height: 90, borderRadius: 45, alignItems: 'center', justifyContent: 'center' },
+  prevWaveform:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, height: 52, width: '100%', marginBottom: Spacing.md },
+  prevDurationBadge:{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: 20, marginBottom: Spacing.md },
+  prevDurationText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  prevStatusRow:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, minHeight: 22 },
+  prevStatusText:   { fontFamily: 'Nunito_500Medium', fontSize: 13 },
+  prevCtaStack:     { gap: Spacing.sm },
+  ctaRecordAgain:   { height: Sizing.buttonHeight, borderRadius: Radii.button, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  ctaRecordAgainLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 16 },
 
   // Uploading
   uploadingText: { fontFamily: 'Nunito_500Medium', fontSize: 14, marginTop: Spacing.md },
