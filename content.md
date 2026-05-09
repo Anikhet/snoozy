@@ -64,3 +64,13 @@ Request arrives with { text, vibeId, voiceId, provider... }
      prepareTextForTTS(text, vibeId)
      call Azure/OpenAI TTS API
      stream to client
+
+
+
+With ElevenLabs, parents pick a voice from a list. With Fish Audio + parent cloning, parents create the voice. This is a much more emotionally meaningful first-run experience — and a much higher conversion event. You're not just signing them up for a service; you're capturing something personal and irreplaceable.
+Frame the recording flow accordingly. Don't make it feel like "audio setup." Make it feel like a small, sweet moment — "Record your voice once, and Storybell will read every story to your little one in your voice, even when you can't be there."
+
+
+Some of your most emotionally compelling marketing is grandparent voices, especially distant or aging ones. A grandparent records their voice, the family preserves it, the child grows up with bedtime stories in grandma's voice. Fish Audio explicitly markets the use case of preserving a loved one's voice for personalized messages and stories that last generations. This is meaningful product territory, especially for an Indian user base where multi-generational family closeness is culturally central.
+
+A bedtime story read by an AI voice is technology. A bedtime story read by an AI clone of a parent's voice is something deeper — it's presence stretched across time and distance. A child whose dad travels for work, whose mom is at the hospital with a sibling, whose grandparents live abroad — these children will hear the voices that love them, every night, in the moment that matters most.

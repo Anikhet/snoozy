@@ -96,29 +96,27 @@ function getPronunciationOptions(name: string): string[] {
   return PRONUNCIATION_OPTIONS[name] ?? []
 }
 
-function buildScript(name: string): string {
-  return (
-    `Hi, I'm reading this story just for ${name}. ` +
-    `Once upon a time, in a land not so far away, ${name} went on a magical adventure filled with wonder.\n\n` +
-    `${name} learned that courage, kindness, and a little imagination can make every day special. ` +
-    `The end. Sweet dreams, ${name}.`
-  )
-}
+const SCRIPT_TEMPLATE =
+  `Tonight, the moon was soft and round, hanging low over the trees. Little [NAME] curled up under a warm blanket, eyes already heavy. Outside, the wind hummed a gentle song, and inside, everything felt hushed and still.\n\n` +
+  `Have you ever watched the stars drift slowly through the dark? Each one carries a tiny wish — brave ones and bright ones — floating through the quiet above the sleeping world. There are thousands of them up there tonight, and the very brightest of them all belongs to [NAME].\n\n` +
+  `Far across the fields, a cricket sang its slow, steady song. The branches swayed, the leaves gave a soft rustle, and the whole night breathed in and out like something very old and very calm. That breath found its way through the trees, past the hills, right to where [NAME] lay — warm, and safe, and loved.\n\n` +
+  `Goodnight. Sleep is already here, soft as a feather, waiting just at the door.`
 
 // ─── ScriptText ───────────────────────────────────────────────────────────────
 
 function ScriptText({ name, accentColor }: { name: string; accentColor: string }) {
-  const script = buildScript(name || 'your child')
-  if (!name) return <Text style={styles.scriptBody}>{script}</Text>
-
-  const parts = script.split(new RegExp(`(${name})`, 'g'))
+  const resolvedName = name || 'your child'
+  const parts = SCRIPT_TEMPLATE.split('[NAME]')
   return (
     <Text style={styles.scriptBody}>
-      {parts.map((part, i) =>
-        part === name
-          ? <Text key={i} style={[styles.scriptName, { color: accentColor }]}>{part}</Text>
-          : part
-      )}
+      {parts.map((part, i) => (
+        <React.Fragment key={i}>
+          <Text>{part}</Text>
+          {i < parts.length - 1 && (
+            <Text style={[styles.scriptName, { color: accentColor }]}>{resolvedName}</Text>
+          )}
+        </React.Fragment>
+      ))}
     </Text>
   )
 }
