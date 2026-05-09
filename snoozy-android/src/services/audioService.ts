@@ -3,6 +3,7 @@ import {
   createAudioPlayer,
   type AudioStatus,
 } from 'expo-audio'
+import { fadeToSilence as ambientFadeToSilence } from '@/services/ambientAudioService'
 
 type AudioPlayer = ReturnType<typeof createAudioPlayer>
 
@@ -27,6 +28,7 @@ let lastKnownPlaying = false
 let sleepTimerInterval: ReturnType<typeof setInterval> | null = null
 let sleepTimerRemaining: number | null = null
 let volumeBeforeFade = 1.0
+let ambientFadeTriggered = false
 
 const FADE_OUT_DURATION = 30
 
@@ -129,6 +131,7 @@ export function startSleepTimer(seconds: number | null): void {
   }
 
   sleepTimerRemaining = seconds
+  ambientFadeTriggered = false
   sleepTimerListener?.(seconds)
 
   sleepTimerInterval = setInterval(() => {
@@ -140,6 +143,12 @@ export function startSleepTimer(seconds: number | null): void {
     if (sleepTimerRemaining <= FADE_OUT_DURATION && currentPlayer) {
       const fraction = Math.max(0, sleepTimerRemaining / FADE_OUT_DURATION)
       currentPlayer.volume = volumeBeforeFade * fraction
+
+      // Trigger ambient fade once at the start of the fade window
+      if (!ambientFadeTriggered) {
+        ambientFadeTriggered = true
+        ambientFadeToSilence(FADE_OUT_DURATION * 1000)
+      }
     }
 
     if (sleepTimerRemaining <= 0) {
@@ -157,6 +166,7 @@ export function cancelSleepTimer(): void {
     sleepTimerInterval = null
   }
   sleepTimerRemaining = null
+  ambientFadeTriggered = false
   sleepTimerListener?.(null)
 
   if (currentPlayer) {

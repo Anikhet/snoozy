@@ -52,12 +52,15 @@ export function StoryPlayerScreen() {
   const startSleepTimer = useStoryStore((s) => s.startSleepTimer)
   const cancelSleepTimer = useStoryStore((s) => s.cancelSleepTimer)
   const stopPlayback = useStoryStore((s) => s.stopPlayback)
+  const ambientVolume = useStoryStore((s) => s.ambientVolume)
+  const setAmbientVolume = useStoryStore((s) => s.setAmbientVolume)
 
   const insets = useSafeAreaInsets()
 
   const [showTimerPicker, setShowTimerPicker] = useState(false)
   const [showText, setShowText] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
+  const [ambientBarWidth, setAmbientBarWidth] = useState(0)
   const [isFavorited, setIsFavorited] = useState(false)
 
   const playScale = useSharedValue(1)
@@ -108,6 +111,33 @@ export function StoryPlayerScreen() {
   const composedGesture = useMemo(
     () => Gesture.Race(panGesture, tapGesture),
     [panGesture, tapGesture],
+  )
+
+  const ambientPanGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .onChange((e) => {
+          if (ambientBarWidth <= 0) return
+          setAmbientVolume(Math.max(0, Math.min(1, e.x / ambientBarWidth)))
+        })
+        .runOnJS(true),
+    [ambientBarWidth, setAmbientVolume],
+  )
+
+  const ambientTapGesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .onEnd((e) => {
+          if (ambientBarWidth <= 0) return
+          setAmbientVolume(Math.max(0, Math.min(1, e.x / ambientBarWidth)))
+        })
+        .runOnJS(true),
+    [ambientBarWidth, setAmbientVolume],
+  )
+
+  const ambientComposedGesture = useMemo(
+    () => Gesture.Race(ambientPanGesture, ambientTapGesture),
+    [ambientPanGesture, ambientTapGesture],
   )
 
   const playBtnStyle = useAnimatedStyle(() => ({
@@ -278,6 +308,30 @@ export function StoryPlayerScreen() {
                 ))}
               </View>
             ) : null}
+          </Animated.View>
+
+          {/* Ambient volume mixer */}
+          <Animated.View entering={FadeInUp.delay(370).duration(400)} style={styles.ambientRow}>
+            <Ionicons name="volume-medium" size={14} color={colors.inkMute as string} />
+            <GestureDetector gesture={ambientComposedGesture}>
+              <View
+                style={styles.ambientTrackHit}
+                onLayout={(e) => setAmbientBarWidth(e.nativeEvent.layout.width)}
+              >
+                <View style={styles.ambientTrack}>
+                  <View style={[styles.ambientFill, { width: `${ambientVolume * 100}%` }]} />
+                  <View
+                    style={[
+                      styles.ambientThumb,
+                      { left: `${ambientVolume * 100}%` },
+                    ]}
+                  />
+                </View>
+              </View>
+            </GestureDetector>
+            <Text style={styles.ambientLabel}>
+              {Math.round(ambientVolume * 100)}%
+            </Text>
           </Animated.View>
 
           {/* Two-line story preview */}
@@ -546,5 +600,50 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 12,
     color: colors.ink,
+  },
+  ambientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  ambientTrackHit: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    justifyContent: 'center',
+  },
+  ambientTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.hair,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  ambientFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+  },
+  ambientThumb: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.background,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    marginLeft: -7,
+    top: -5,
+  },
+  ambientLabel: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 11,
+    color: colors.inkMute as string,
+    width: 30,
+    textAlign: 'right',
   },
 })

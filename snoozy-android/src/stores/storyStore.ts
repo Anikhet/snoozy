@@ -9,11 +9,14 @@ import {
 } from '@/types/story'
 import { VoiceProfile } from '@/types/voice'
 import { Subscription, DEFAULT_SUBSCRIPTION } from '@/types/subscription'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as apiService from '@/services/apiService'
 import * as storageService from '@/services/storageService'
 import * as audioService from '@/services/audioService'
+import * as ambientAudioService from '@/services/ambientAudioService'
 import * as subscriptionService from '@/services/subscriptionService'
 import { generateUUID } from '@/utils/uuid'
+import { DEFAULT_AMBIENT_VOLUME, AMBIENT_VOLUME_KEY } from '@/config/ambientAudioMap'
 
 /**
  * Module-level map tracking in-flight generation tasks by story ID.
@@ -44,6 +47,7 @@ interface StoryStore {
   currentTime: number
   duration: number
   sleepTimerRemaining: number | null
+  ambientVolume: number
 
   navigateTo: (screen: Screen) => void
   navigateToWorldPicker: () => void
@@ -68,6 +72,7 @@ interface StoryStore {
   startSleepTimer: (seconds: number | null) => void
   cancelSleepTimer: () => void
   stopPlayback: () => void
+  setAmbientVolume: (volume: number) => void
   editingProfile: boolean
   openProfileEdit: () => void
   closeProfileEdit: () => void
@@ -124,6 +129,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     currentTime: 0,
     duration: 0,
     sleepTimerRemaining: null,
+    ambientVolume: DEFAULT_AMBIENT_VOLUME,
     editingProfile: false,
     profilePanel: null,
     voiceProfiles: [],
@@ -145,13 +151,23 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     navigateToVibePicker: (worldId: string) =>
       set({ navDir: 'forward' as const, selectedWorldId: worldId, currentScreen: Screen.VibePicker }),
 
-    navigateToGenerating: () => set({ navDir: 'forward' as const, currentScreen: Screen.Generating }),
+    navigateToGenerating: () => {
+      const { selectedWorldId, ambientVolume } = get()
+      if (selectedWorldId) ambientAudioService.startAmbient(selectedWorldId, ambientVolume)
+      set({ navDir: 'forward' as const, currentScreen: Screen.Generating })
+    },
 
     navigateToStoryEnd: () => set({ navDir: 'forward' as const, currentScreen: Screen.StoryEnd }),
 
-    navigateToLibrary: () => set({ currentScreen: Screen.Library }),
+    navigateToLibrary: () => {
+      ambientAudioService.stopAmbient(true)
+      set({ currentScreen: Screen.Library })
+    },
 
-    navigateToInsights: () => set({ currentScreen: Screen.Insights }),
+    navigateToInsights: () => {
+      ambientAudioService.stopAmbient(true)
+      set({ currentScreen: Screen.Insights })
+    },
 
     toggleFavorite: (storyId) => {
       const story = get().savedStories.find((s) => s.id === storyId)
@@ -173,7 +189,8 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       storageService.saveStory(updated).catch(() => {})
     },
 
-    goHome: () =>
+    goHome: () => {
+      ambientAudioService.stopAmbient(true)
       set((s) => ({
         navDir: 'back' as const,
         currentScreen: Screen.Home,
@@ -182,7 +199,8 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         selectedVibeId: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
         currentStory: null,
-      })),
+      }))
+    },
 
     updateChildDetails: (partial) =>
       set((s) => ({
@@ -249,6 +267,8 @@ export const useStoryStore = create<StoryStore>((set, get) => {
     playStory: (story) => {
       if (story.status !== StoryStatus.Ready || !story.audioFileName) return
       const uri = storageService.getAudioFileUri(story.audioFileName)
+      const { ambientVolume } = get()
+      ambientAudioService.startAmbient(story.templateId, ambientVolume)
       set({ navDir: 'forward', currentStory: story, currentScreen: Screen.Player })
       audioService.loadAndPlay(uri)
     },
@@ -290,8 +310,16 @@ export const useStoryStore = create<StoryStore>((set, get) => {
      * Loads persisted stories and merges with in-flight placeholders.
      */
     loadSavedStories: async () => {
-      const persisted = await storageService.loadStories()
+      const [persisted, savedVolumeStr] = await Promise.all([
+        storageService.loadStories(),
+        AsyncStorage.getItem(AMBIENT_VOLUME_KEY),
+      ])
       const inFlightIds = new Set(generationTasks.keys())
+
+      const savedVolume = savedVolumeStr != null ? parseFloat(savedVolumeStr) : null
+      if (savedVolume != null && !isNaN(savedVolume)) {
+        ambientAudioService.setVolume(savedVolume)
+      }
 
       set((s) => {
         const inFlight = s.savedStories.filter((story) =>
@@ -300,7 +328,10 @@ export const useStoryStore = create<StoryStore>((set, get) => {
         const persistedFiltered = persisted.filter(
           (story) => !inFlightIds.has(story.id)
         )
-        return { savedStories: [...inFlight, ...persistedFiltered] }
+        return {
+          savedStories: [...inFlight, ...persistedFiltered],
+          ...(savedVolume != null && !isNaN(savedVolume) ? { ambientVolume: savedVolume } : {}),
+        }
       })
     },
 
@@ -311,12 +342,20 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
     stopPlayback: () => {
       audioService.stop()
+      ambientAudioService.stopAmbient(true)
       set((s) => ({
         navDir: 'back' as const,
         currentScreen: Screen.Home,
         currentStory: null,
         childDetails: freshChildDetails(s.onboardingDefaults),
       }))
+    },
+
+    setAmbientVolume: (volume) => {
+      const clamped = Math.max(0, Math.min(1, volume))
+      ambientAudioService.setVolume(clamped)
+      set({ ambientVolume: clamped })
+      AsyncStorage.setItem(AMBIENT_VOLUME_KEY, String(clamped)).catch(() => {})
     },
 
     // ── Voice Profiles ────────────────────────────────────────────────────────
@@ -395,6 +434,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
           generationTasks.delete(generatingStoryId)
         }
       }
+      ambientAudioService.stopAmbient(true)
       set((s) => ({
         navDir: 'back' as const,
         currentScreen: Screen.Home,
