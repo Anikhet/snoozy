@@ -1,5 +1,6 @@
 const express = require('express')
 const crypto = require('crypto')
+const zlib = require('zlib')
 const { z } = require('zod')
 const multer = require('multer')
 const OpenAI = require('openai')
@@ -645,6 +646,49 @@ async function generateWithFishAudio(text, requestedVoiceId, _vibeId, config, re
 // FISH AUDIO VOICE CLONING
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Generates a minimal valid PNG buffer (solid color, no external deps).
+ * Used as a default cover image for public Fish Audio voice models.
+ */
+function createCoverPng(r = 91, g = 91, b = 214, size = 128) {
+  function crc32(buf) {
+    let c = 0xFFFFFFFF
+    for (const byte of buf) {
+      c = (c >>> 8) ^ CRC_TABLE[(c ^ byte) & 0xFF]
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0
+  }
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256)
+    for (let n = 0; n < 256; n++) {
+      let c = n
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)
+      t[n] = c
+    }
+    return t
+  })()
+
+  function chunk(type, data) {
+    const tb = Buffer.from(type, 'ascii')
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length, 0)
+    const crcBuf = Buffer.alloc(4); crcBuf.writeUInt32BE(crc32(Buffer.concat([tb, data])), 0)
+    return Buffer.concat([len, tb, data, crcBuf])
+  }
+
+  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
+
+  const ihdr = Buffer.alloc(13)
+  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4)
+  ihdr[8] = 8; ihdr[9] = 2  // 8-bit RGB
+
+  const scanline = Buffer.alloc(1 + size * 3)
+  scanline[0] = 0
+  for (let i = 0; i < size; i++) { scanline[1 + i*3] = r; scanline[2 + i*3] = g; scanline[3 + i*3] = b }
+  const raw = Buffer.concat(Array.from({ length: size }, () => scanline))
+
+  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
+}
+
 const createVoiceCloneSchema = z.object({
   voiceName: z.string().min(1).max(100).optional(),
 })
@@ -695,6 +739,7 @@ router.post(
       formData.append('title', voiceName)
       formData.append('train_mode', 'fast')
       formData.append('visibility', 'public')
+      formData.append('cover_image', new Blob([createCoverPng()], { type: 'image/png' }), 'cover.png')
       formData.append(
         'voices',
         new Blob([req.file.buffer], { type: req.file.mimetype }),

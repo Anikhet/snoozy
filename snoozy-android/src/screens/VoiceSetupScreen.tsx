@@ -138,6 +138,7 @@ export function VoiceSetupScreen() {
   const [recordingSeconds, setRecordingSeconds] = useState(0)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
+  const [uploadError, setUploadError]   = useState<string | null>(null)
   const [finalDuration, setFinalDuration]       = useState(0)
   const uploadedModelIdRef                       = useRef<string | null>(null)
 
@@ -226,8 +227,12 @@ export function VoiceSetupScreen() {
           const voiceName = childDetails.name ? `${childDetails.name}'s Voice` : 'My Voice'
           const modelId = await apiService.createVoiceClone(uri, voiceName, token)
           uploadedModelIdRef.current = modelId
+          setUploadError(null)
           setUploadStatus('done')
-        } catch {
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error('[VoiceSetup] Upload failed:', msg)
+          setUploadError(msg)
           setUploadStatus('error')
         }
       })()
@@ -294,8 +299,12 @@ export function VoiceSetupScreen() {
           const voiceName = childDetails.name ? `${childDetails.name}'s Voice` : 'My Voice'
           const modelId = await apiService.createVoiceClone(recordingUri, voiceName, token)
           uploadedModelIdRef.current = modelId
+          setUploadError(null)
           setUploadStatus('done')
-        } catch {
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error('[VoiceSetup] Retry failed:', msg)
+          setUploadError(msg)
           setUploadStatus('error')
         }
       })()
@@ -598,7 +607,9 @@ export function VoiceSetupScreen() {
                   {uploadStatus === 'error' && (
                     <>
                       <Ionicons name="warning-outline" size={15} color={colors.error} />
-                      <Text style={[styles.prevStatusText, { color: colors.error }]}>Upload failed — tap Try again</Text>
+                      <Text style={[styles.prevStatusText, { color: colors.error }]}>
+                        {uploadError ?? 'Upload failed — tap Try again'}
+                      </Text>
                     </>
                   )}
                 </View>
