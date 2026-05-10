@@ -54,6 +54,7 @@ export function StoryPlayerScreen() {
   const stopPlayback = useStoryStore((s) => s.stopPlayback)
   const ambientVolume = useStoryStore((s) => s.ambientVolume)
   const setAmbientVolume = useStoryStore((s) => s.setAmbientVolume)
+  const toggleFavorite = useStoryStore((s) => s.toggleFavorite)
 
   const insets = useSafeAreaInsets()
 
@@ -61,7 +62,6 @@ export function StoryPlayerScreen() {
   const [showText, setShowText] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
   const [ambientBarWidth, setAmbientBarWidth] = useState(0)
-  const [isFavorited, setIsFavorited] = useState(false)
 
   const playScale = useSharedValue(1)
 
@@ -390,14 +390,14 @@ export function StoryPlayerScreen() {
         <View style={styles.topRight}>
           <Pressable
             style={styles.glassBtn}
-            onPress={() => setIsFavorited((v) => !v)}
+            onPress={() => toggleFavorite(currentStory.id)}
             accessibilityRole="button"
-            accessibilityLabel={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            accessibilityLabel={currentStory.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <Ionicons
-              name={isFavorited ? 'heart' : 'heart-outline'}
+              name={currentStory.isFavorite ? 'heart' : 'heart-outline'}
               size={18}
-              color={isFavorited ? '#FF6B8A' : '#FFFFFF'}
+              color={currentStory.isFavorite ? '#FF6B8A' : '#FFFFFF'}
             />
           </Pressable>
           <Pressable
