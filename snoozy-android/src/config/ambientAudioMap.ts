@@ -3,12 +3,12 @@
 // Placeholder entries (require of non-existent file) are commented out until
 // the producer delivers the assets — swap each null for the require() call.
 export const AMBIENT_AUDIO_MAP: Record<string, number | null> = {
-  forest:  null, // require('../../assets/audio/ambient/ambient-forest.mp3')
-  kingdom: null, // require('../../assets/audio/ambient/ambient-kingdom.mp3')
-  space:   null, // require('../../assets/audio/ambient/ambient-space.mp3')
-  ocean:   null, // require('../../assets/audio/ambient/ambient-ocean.mp3')
-  clouds:  null, // require('../../assets/audio/ambient/ambient-clouds.mp3')
-  jungle:  null, // require('../../assets/audio/ambient/ambient-jungle.mp3')
+  forest:  require('../../assets/audio/ambient/ambient-forest.mp3'),
+  kingdom: require('../../assets/audio/ambient/ambient-kingdom.mp3'),
+  space:   require('../../assets/audio/ambient/ambient-space.mp3'),
+  ocean:   require('../../assets/audio/ambient/ambient-ocean.mp3'),
+  clouds:  require('../../assets/audio/ambient/ambient-clouds.mp3'),
+  jungle:  require('../../assets/audio/ambient/ambient-jungle.mp3'),
 }
 
 // Default ambient volume: −14.9 dB relative to full scale.

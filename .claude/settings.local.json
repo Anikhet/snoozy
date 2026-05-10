@@ -48,7 +48,13 @@
       "Bash(grep -A 5 \"return { systemPrompt, userMessage, world, vibe }\" /Users/pkats-mac/snoozy/backend/src/prompts/templates.js)",
       "WebFetch(domain:elevenlabs.io)",
       "WebFetch(domain:help.elevenlabs.io)",
-      "Bash(node scripts/generate-ambient.js)"
+      "Bash(node scripts/generate-ambient.js)",
+      "Bash(node scripts/generate-ambient.js forest)",
+      "Bash(node scripts/generate-ambient.js space)",
+      "Bash(node scripts/generate-ambient.js kingdom)",
+      "Bash(node scripts/generate-ambient.js ocean)",
+      "Bash(node scripts/generate-ambient.js clouds)",
+      "Bash(node scripts/generate-ambient.js jungle)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend"

@@ -103,12 +103,12 @@ const WORLDS = {
   ocean: {
     name: 'Ocean Deep',
     prompt: [
-      'Warm shallow tropical ocean, heard from just beneath the surface.',
-      'Slow deep underwater resonance — low, soft, like a lullaby from the sea itself.',
-      'Soft continuous small bubbles rising at a leisurely, unhurried pace.',
-      'Low submarine hum, the weight and warmth of water all around.',
-      'No wave crashes. No splashing. No seabirds. Nothing sharp or sudden.',
-      'Cradled by the warm ocean. Weightless and completely safe.',
+      'Warm tropical ocean just beneath the surface.',
+      'Slow deep underwater resonance, low and soft like a lullaby from the sea.',
+      'Soft bubbles rising at a slow, steady pace.',
+      'Low submarine hum, warm water all around.',
+      'No wave crashes. No splashing. No seabirds. Nothing sudden.',
+      'Cradled by warm water. Weightless and safe.',
       'Sustained underwater ambient texture, sleep-inducing.',
     ].join(' '),
     promptInfluence: 0.32,
@@ -144,6 +144,18 @@ const WORLDS = {
 }
 
 // ─── FFmpeg check ─────────────────────────────────────────────────────────────
+
+// ElevenLabs sound generation API hard limit on prompt text
+const PROMPT_CHAR_LIMIT = 450
+
+// Validate all prompts at startup so we catch overruns before spending API credits
+const overlong = Object.entries(WORLDS).filter(([, def]) => def.prompt.length > PROMPT_CHAR_LIMIT)
+if (overlong.length > 0) {
+  overlong.forEach(([id, def]) => {
+    console.error(`✗  Prompt for "${id}" is ${def.prompt.length} chars (limit ${PROMPT_CHAR_LIMIT}). Shorten it.`)
+  })
+  process.exit(1)
+}
 
 const FFMPEG_AVAILABLE = spawnSync('ffmpeg', ['-version']).status === 0
 
