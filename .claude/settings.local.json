@@ -45,7 +45,13 @@
       "Bash(curl -s https://snoozy-kmoq.onrender.com/health)",
       "Bash(curl -s -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H 'Content-Type: application/json' -d '{\"text\":\"Hello world\",\"format\":\"mp3\"}' -w '\\\\nHTTP %{http_code}')",
       "Bash(awk -F: '$2 > 550')",
-      "Bash(grep -A 5 \"return { systemPrompt, userMessage, world, vibe }\" /Users/pkats-mac/snoozy/backend/src/prompts/templates.js)"
+      "Bash(grep -A 5 \"return { systemPrompt, userMessage, world, vibe }\" /Users/pkats-mac/snoozy/backend/src/prompts/templates.js)",
+      "WebFetch(domain:elevenlabs.io)",
+      "WebFetch(domain:help.elevenlabs.io)",
+      "Bash(node scripts/generate-ambient.js)"
+    ],
+    "additionalDirectories": [
+      "/Users/pkats-mac/snoozy/backend"
     ]
   }
 }
