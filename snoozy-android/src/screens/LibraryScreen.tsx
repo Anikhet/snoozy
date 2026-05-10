@@ -81,6 +81,9 @@ function StoryCard({
           {story.title}
         </Text>
         <Text style={[Fonts.caption, { color: colors.inkMute, marginTop: 2 }]}>{date}</Text>
+        {story.voiceName && (
+          <Text style={[Fonts.caption, { color: colors.inkMute }]}>{story.voiceName}</Text>
+        )}
       </View>
 
       {/* Play button */}

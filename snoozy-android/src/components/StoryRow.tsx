@@ -20,6 +20,7 @@ interface StoryRowProps {
   childName: string
   createdAt: string
   status: StoryStatus
+  voiceName?: string
   onPlay: (id: string) => void
   onDelete: (id: string) => void
   onRetry: (id: string) => void
@@ -32,6 +33,7 @@ export const StoryRow = memo(function StoryRow({
   childName,
   createdAt,
   status,
+  voiceName,
   onPlay,
   onDelete,
   onRetry,
@@ -75,6 +77,7 @@ export const StoryRow = memo(function StoryRow({
             status={status}
             childName={childName}
             createdAt={createdAt}
+            voiceName={voiceName}
             colors={colors}
           />
         </View>
@@ -89,11 +92,13 @@ function SubtitleView({
   status,
   childName,
   createdAt,
+  voiceName,
   colors,
 }: {
   status: StoryStatus
   childName: string
   createdAt: string
+  voiceName?: string
   colors: ReturnType<typeof useThemeColors>['colors']
 }) {
   if (status === StoryStatus.Generating) {
@@ -119,6 +124,12 @@ function SubtitleView({
       <Text style={[Fonts.caption, { color: colors.inkSoft }]}>For {childName}</Text>
       <View style={[styles.dot, { backgroundColor: colors.inkMute }]} />
       <Text style={[Fonts.caption, { color: colors.inkSoft }]}>{relativeDate}</Text>
+      {voiceName && (
+        <>
+          <View style={[styles.dot, { backgroundColor: colors.inkMute }]} />
+          <Text style={[Fonts.caption, { color: colors.inkSoft }]}>{voiceName}</Text>
+        </>
+      )}
     </View>
   )
 }

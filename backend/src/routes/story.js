@@ -3,11 +3,11 @@ const crypto = require('crypto')
 const zlib = require('zlib')
 const { z } = require('zod')
 const multer = require('multer')
-const OpenAI = require('openai')
+const { AzureOpenAI } = require('openai')
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
 const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
-const { FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
+const { normalizeLoudness, FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
 const router = express.Router()
 
@@ -122,14 +122,18 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
 
     const config = req.app.locals.config
 
-    log('STORY', `Calling OpenAI (${RECOMMENDED_API_SETTINGS.model})...`)
-    const client = new OpenAI({ apiKey: config.openaiApiKey })
-    const model  = RECOMMENDED_API_SETTINGS.model
+    log('STORY', `Calling Azure OpenAI (${config.azureOpenAIChatDeployment})...`)
+    const client = new AzureOpenAI({
+      apiKey:     config.azureOpenAIApiKey,
+      endpoint:   config.azureOpenAIEndpoint,
+      apiVersion: config.azureOpenAIChatVersion,
+      deployment: config.azureOpenAIChatDeployment,
+    })
 
     const { systemPrompt, userMessage } = result
 
     const completion = await client.chat.completions.create({
-      model,
+      model: config.azureOpenAIChatDeployment,
       temperature:       RECOMMENDED_API_SETTINGS.temperature,
       max_tokens:        RECOMMENDED_API_SETTINGS.max_tokens,
       presence_penalty:  RECOMMENDED_API_SETTINGS.presence_penalty,

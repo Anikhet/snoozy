@@ -103,6 +103,7 @@ export function HomeScreen() {
         childName={item.childName}
         createdAt={item.createdAt}
         status={item.status}
+        voiceName={item.voiceName}
         onPlay={handlePlay}
         onDelete={handleDelete}
         onRetry={handleRetry}

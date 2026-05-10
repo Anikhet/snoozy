@@ -17,6 +17,7 @@ export interface Story {
   status: StoryStatus
   isFavorite?: boolean
   rating?: number
+  voiceName?: string
 }
 
 export type Pronouns = 'he/him' | 'she/her' | 'they/them'

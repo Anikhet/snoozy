@@ -260,8 +260,10 @@ export const useStoryStore = create<StoryStore>((set, get) => {
 
       const details = { ...childDetails }
       const voiceId = details.voiceId
+      const { voiceProfiles } = get()
+      const voiceName = voiceProfiles.find((p) => p.modelId === voiceId)?.name
 
-      runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, getToken, abortController.signal)
+      runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, voiceName, getToken, abortController.signal)
     },
 
     playStory: (story) => {
@@ -476,6 +478,7 @@ async function runGeneration(
   vibeId: string,
   childDetails: ChildDetails,
   voiceId: string,
+  voiceName: string | undefined,
   getToken: () => Promise<string | null>,
   signal: AbortSignal
 ): Promise<void> {
@@ -513,6 +516,7 @@ async function runGeneration(
       createdAt: new Date().toISOString(),
       audioFileName,
       status: StoryStatus.Ready,
+      voiceName,
     }
 
     await storageService.saveStory(finishedStory)

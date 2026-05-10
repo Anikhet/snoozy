@@ -6,14 +6,17 @@ dotenv.config({ override: true })
  * a frozen config object used across the backend.
  */
 function loadConfig() {
-  const required = ['OPENAI_API_KEY']
+  const required = ['AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_CHAT_DEPLOYMENT']
   const missing = required.filter((key) => !process.env[key])
   if (missing.length > 0) {
     throw new Error(`Missing required env vars: ${missing.join(', ')}`)
   }
 
   return Object.freeze({
-    openaiApiKey:      process.env.OPENAI_API_KEY,
+    azureOpenAIApiKey:        process.env.AZURE_OPENAI_API_KEY,
+    azureOpenAIEndpoint:      process.env.AZURE_OPENAI_ENDPOINT,
+    azureOpenAIChatDeployment: process.env.AZURE_OPENAI_CHAT_DEPLOYMENT,
+    azureOpenAIChatVersion:   process.env.AZURE_OPENAI_CHAT_VERSION || '2025-01-01-preview',
     elevenlabsApiKey:  process.env.ELEVENLABS_API_KEY,
     elevenlabsVoiceId: process.env.ELEVENLABS_VOICE_ID,
     fishApiKey:        process.env.FISH_API_KEY,
