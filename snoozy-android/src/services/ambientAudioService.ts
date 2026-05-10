@@ -7,10 +7,18 @@ const FADE_IN_MS  = 1500
 const FADE_OUT_MS = 2000
 const FADE_STEPS  = 30
 
+// Main ambient player — persists across Generating / Player / StoryEnd screens.
 let player: AudioPlayer | null = null
 let currentWorldId: string | null = null
 let targetVolume = DEFAULT_AMBIENT_VOLUME
 let fadeInterval: ReturnType<typeof setInterval> | null = null
+
+// Preview player — short-lived, used only on WorldPicker.
+const PREVIEW_VOLUME    = 0.22
+const PREVIEW_DURATION  = 2000  // ms of audible preview
+const PREVIEW_FADE_MS   = 600   // fade-out after preview ends
+let previewPlayer: AudioPlayer | null = null
+let previewTimeout: ReturnType<typeof setTimeout> | null = null
 
 function clearFade(): void {
   if (fadeInterval) {
@@ -123,6 +131,47 @@ export function getVolume(): number {
 }
 
 /**
+ * Plays a short 2-second preview of the given world's ambient sound.
+ * Designed for the WorldPicker screen — uses an independent ephemeral player
+ * so it never interferes with the main ambient player.
+ * Cancels any previous preview before starting a new one.
+ * Silently no-ops if no asset is mapped for the world yet.
+ */
+export function previewAmbient(worldId: string): void {
+  const source = AMBIENT_AUDIO_MAP[worldId]
+  if (!source) return
+
+  // Cancel any ongoing preview immediately
+  _stopPreview()
+
+  try {
+    const p = createAudioPlayer(source)
+    p.volume = 0
+    p.play()
+    previewPlayer = p
+
+    // Fade in quickly
+    const steps = 10
+    const stepMs = 200 / steps
+    const delta = PREVIEW_VOLUME / steps
+    let step = 0
+    const fadeIn = setInterval(() => {
+      step++
+      p.volume = Math.min(PREVIEW_VOLUME, delta * step)
+      if (step >= steps) clearInterval(fadeIn)
+    }, stepMs)
+
+    // After preview duration, fade out and release
+    previewTimeout = setTimeout(() => {
+      previewTimeout = null
+      _fadeOutPreview(p)
+    }, PREVIEW_DURATION)
+  } catch {
+    previewPlayer = null
+  }
+}
+
+/**
  * Fades ambient volume to zero over the given duration. Used to sync with
  * the sleep timer's narration fade. Does NOT stop the player — call
  * stopAmbient() to fully release it when the narration also stops.
@@ -144,4 +193,35 @@ function _stopPlayer(): void {
     player = null
   }
   currentWorldId = null
+}
+
+function _stopPreview(): void {
+  if (previewTimeout) {
+    clearTimeout(previewTimeout)
+    previewTimeout = null
+  }
+  if (previewPlayer) {
+    try {
+      previewPlayer.pause()
+      previewPlayer.remove()
+    } catch {}
+    previewPlayer = null
+  }
+}
+
+function _fadeOutPreview(p: AudioPlayer): void {
+  const steps  = FADE_STEPS
+  const stepMs = PREVIEW_FADE_MS / steps
+  const start  = p.volume
+  let step = 0
+
+  const id = setInterval(() => {
+    step++
+    p.volume = Math.max(0, start - (start / steps) * step)
+    if (step >= steps) {
+      clearInterval(id)
+      try { p.pause(); p.remove() } catch {}
+      if (previewPlayer === p) previewPlayer = null
+    }
+  }, stepMs)
 }

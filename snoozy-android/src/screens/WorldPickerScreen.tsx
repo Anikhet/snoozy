@@ -23,6 +23,7 @@ import { BackSwipeZone } from '@/components/BackSwipeZone'
 import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { WORLDS } from '@/config/storyOptions'
+import { previewAmbient } from '@/services/ambientAudioService'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const CARD_GAP = 12
@@ -96,6 +97,11 @@ export default function WorldPickerScreen() {
 
   const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null)
 
+  function handleWorldSelect(id: string) {
+    setSelectedWorldId(id)
+    previewAmbient(id)
+  }
+
 
   const displayName = childDetails.name || onboardingDefaults?.name
   const displayAge = childDetails.age || onboardingDefaults?.age
@@ -148,7 +154,7 @@ export default function WorldPickerScreen() {
               key={world.id}
               world={world}
               selected={selectedWorldId === world.id}
-              onSelect={setSelectedWorldId}
+              onSelect={handleWorldSelect}
               colors={colors}
               index={index}
             />
