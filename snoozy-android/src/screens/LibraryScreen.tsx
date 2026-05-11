@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react'
+import { useAuth } from '@clerk/clerk-expo'
 import {
   Dimensions,
   FlatList,
@@ -40,11 +41,13 @@ function StoryCard({
   index,
   onPlay,
   onFavorite,
+  onRetry,
 }: {
   story: Story
   index: number
   onPlay: (story: Story) => void
   onFavorite: (id: string) => void
+  onRetry: (story: Story) => void
 }) {
   const { colors } = useThemeColors()
   const date = new Date(story.createdAt).toLocaleDateString('en', {
@@ -86,7 +89,7 @@ function StoryCard({
         )}
       </View>
 
-      {/* Play button */}
+      {/* Play / status button */}
       {story.status === StoryStatus.Ready ? (
         <Pressable
           style={[styles.playBtn, { backgroundColor: colors.primary }]}
@@ -97,13 +100,19 @@ function StoryCard({
         >
           <Ionicons name="play" size={14} color="#FFFFFF" />
         </Pressable>
+      ) : story.status === StoryStatus.Failed ? (
+        <Pressable
+          style={[styles.playBtn, { backgroundColor: '#E05858' }]}
+          onPress={() => onRetry(story)}
+          hitSlop={{ top: 7, right: 7, bottom: 7, left: 7 }}
+          accessibilityRole="button"
+          accessibilityLabel="Retry story generation"
+        >
+          <Ionicons name="refresh" size={14} color="#FFFFFF" />
+        </Pressable>
       ) : (
         <View style={[styles.playBtn, { backgroundColor: colors.hair }]}>
-          <Ionicons
-            name={story.status === StoryStatus.Failed ? 'alert-circle-outline' : 'hourglass-outline'}
-            size={14}
-            color={colors.inkMute as string}
-          />
+          <Ionicons name="hourglass-outline" size={14} color={colors.inkMute as string} />
         </View>
       )}
     </Animated.View>
@@ -114,10 +123,12 @@ export function LibraryScreen() {
   const goHome = useStoryStore((s) => s.goHome)
   useBackHandler(goHome)
 
+  const { getToken } = useAuth()
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const playStory = useStoryStore((s) => s.playStory)
   const toggleFavorite = useStoryStore((s) => s.toggleFavorite)
+  const retryStory = useStoryStore((s) => s.retryStory)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
@@ -156,6 +167,13 @@ export function LibraryScreen() {
     [toggleFavorite],
   )
 
+  const handleRetry = useCallback(
+    (story: Story) => {
+      retryStory(story, getToken)
+    },
+    [retryStory, getToken],
+  )
+
   const renderItem = useCallback(
     ({ item, index }: { item: Story; index: number }) => (
       <StoryCard
@@ -163,9 +181,10 @@ export function LibraryScreen() {
         index={index}
         onPlay={handlePlay}
         onFavorite={handleFavorite}
+        onRetry={handleRetry}
       />
     ),
-    [handlePlay, handleFavorite],
+    [handlePlay, handleFavorite, handleRetry],
   )
 
   const keyExtractor = useCallback((item: Story) => item.id, [])
@@ -201,6 +220,9 @@ export function LibraryScreen() {
         columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        initialNumToRender={20}
+        windowSize={5}
+        maxToRenderPerBatch={10}
         ListHeaderComponent={
           <View>
             {/* Header */}

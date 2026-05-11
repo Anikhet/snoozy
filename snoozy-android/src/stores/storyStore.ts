@@ -66,7 +66,7 @@ interface StoryStore {
   generateStory: (vibeId: string, getToken: () => Promise<string | null>) => void
   playStory: (story: Story) => void
   deleteStory: (story: Story) => Promise<void>
-  retryStory: (story: Story) => void
+  retryStory: (story: Story, getToken: () => Promise<string | null>) => void
   loadSavedStories: () => Promise<void>
   togglePlayPause: () => void
   seek: (seconds: number) => void
@@ -244,7 +244,7 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       if (!selectedWorldId) return
 
       const storyId = generateUUID()
-      const placeholder = createPlaceholderStory(storyId, selectedWorldId, childDetails.name)
+      const placeholder = createPlaceholderStory(storyId, selectedWorldId, vibeId, childDetails.name)
 
       set((s) => ({
         navDir: 'forward' as const,
@@ -299,16 +299,38 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       }))
     },
 
-    retryStory: (story) => {
+    retryStory: (story, getToken) => {
+      const { onboardingDefaults, ambientVolume, voiceProfiles } = get()
+      const worldId = story.templateId
+      const vibeId = story.vibeId ?? 'cozy'
+      const storyId = generateUUID()
+
+      const details: import('@/types/story').ChildDetails = {
+        ...freshChildDetails(onboardingDefaults),
+        name: story.childName,
+      }
+      const voiceId = details.voiceId
+      const voiceName =
+        voiceProfiles.find((p) => p.modelId === voiceId)?.name ??
+        VOICES.find((v) => v.id === voiceId)?.displayName
+
+      const placeholder = createPlaceholderStory(storyId, worldId, vibeId, story.childName)
+
+      ambientAudioService.startAmbient(worldId, ambientVolume)
+
       set((state) => ({
         navDir: 'forward' as const,
-        savedStories: state.savedStories.filter((item) => item.id !== story.id),
-        childDetails: {
-          ...freshChildDetails(state.onboardingDefaults),
-          name: story.childName,
-        },
-        currentScreen: Screen.WorldPicker,
+        savedStories: [placeholder, ...state.savedStories.filter((item) => item.id !== story.id)],
+        currentScreen: Screen.Generating,
+        generatingStoryId: storyId,
+        selectedWorldId: worldId,
+        selectedVibeId: vibeId,
+        currentStory: null,
       }))
+
+      const abortController = new AbortController()
+      generationTasks.set(storyId, abortController)
+      runGeneration(storyId, worldId, vibeId, details, voiceId, voiceName, getToken, abortController.signal)
     },
 
     /**
@@ -515,6 +537,7 @@ async function runGeneration(
       title,
       storyText: displayText,
       templateId: worldId,
+      vibeId,
       childName: childDetails.name,
       createdAt: new Date().toISOString(),
       audioFileName,

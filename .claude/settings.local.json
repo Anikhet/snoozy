@@ -65,7 +65,9 @@
       "Bash(git -C /Users/pkats-mac/snoozy add backend/src/index.js backend/src/routes/story.js backend/package.json backend/package-lock.json)",
       "Bash(git -C /Users/pkats-mac/snoozy add backend/src/routes/story.js)",
       "Bash(node --check src/routes/story.js)",
-      "Bash(git -C /Users/pkats-mac/snoozy ls-files snoozy-android/.env)"
+      "Bash(git -C /Users/pkats-mac/snoozy ls-files snoozy-android/.env)",
+      "Bash(node -e \"const {AzureOpenAI} = require\\('openai'\\); const c = new AzureOpenAI\\({apiKey:'x',endpoint:'https://x.com',apiVersion:'2025-03-01-preview',deployment:'tts-hd'}\\); console.log\\(typeof c.audio?.speech?.create\\)\")",
+      "Bash(git -C /Users/pkats-mac/snoozy add backend/src/config.js backend/src/routes/story.js backend/.env.example snoozy-android/src/types/voice.ts snoozy-android/src/config/voices.ts snoozy-android/src/services/apiService.ts)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend"

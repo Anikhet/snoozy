@@ -6,99 +6,40 @@ This document catalogs bugs, dead code, stale patterns, and missing infrastructu
 
 ## Critical (Fix Before Any Public Launch)
 
-### CRIT-1 — Live API Keys Committed to Git
+### ~~CRIT-1 — Live API Keys Committed to Git~~ ✅ RESOLVED
 
-**File:** `backend/.env`
-
-Real secrets are committed to the repository:
-- `OPENAI_API_KEY`
-- `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`
-- `FISH_API_KEY` + `FISH_AUDIO_VOICE_ID`
-- `AZURE_OPENAI_API_KEY` (unused but real)
-- `CLERK_SECRET_KEY`
-
-**Risk:** Any developer with repo access can call paid APIs on the company account. If the repo is ever public, these are immediately scraped by bots.
-
-**Fix:**
-```bash
-# Rotate all keys immediately via each provider's dashboard
-# Remove from git history:
-git rm --cached backend/.env
-echo "backend/.env" >> .gitignore
-git commit -m "remove committed .env"
-git filter-repo --path backend/.env --invert-paths  # purge from history
-```
+`backend/.env` was never committed — `backend/.gitignore` already excluded it. `.env.example` has been updated to reflect the full current schema (Azure chat + TTS, Fish Audio, ElevenLabs, Clerk, Stripe, Razorpay). `snoozy-android/.env` has been removed from git tracking and added to `.gitignore`. Recommend rotating all keys as a hygiene measure.
 
 ---
 
-### CRIT-2 — Favorite Button Broken in Player
+### ~~CRIT-2 — Favorite Button Broken in Player~~ ✅ RESOLVED
 
-**File:** `snoozy-android/src/screens/StoryPlayerScreen.tsx`
-
-The favorite/heart button maintains a local `isFavorited` state variable but never calls `storyStore.toggleFavorite()`. Tapping the button shows a heart fill animation. On screen reload or app restart, the story is not favorited in storage.
-
-**Impact:** Users lose favorites. The Library filter "Favorites" shows nothing they thought they saved.
-
-**Fix:** Replace local state toggle with `storyStore.toggleFavorite(storyId)` call, and initialize local state from `currentStory.isFavorite`.
+`StoryPlayerScreen.tsx` correctly calls `storyStore.toggleFavorite(currentStory.id)` and reads state from `currentStory.isFavorite`. No local state override.
 
 ---
 
-### CRIT-3 — Ambient Audio Slider is Misleading (Feature is Broken)
+### ~~CRIT-3 — Ambient Audio Slider is Misleading (Feature is Broken)~~ ✅ RESOLVED
 
-**File:** `snoozy-android/src/config/ambientAudioMap.ts`
-
-All 6 ambient audio entries are `null`:
-```typescript
-const AMBIENT_AUDIO_MAP = {
-  forest: null,   // require('./assets/audio/ambient/ambient-forest.mp3')
-  ocean: null,
-  space: null,
-  // ...
-}
-```
-
-The UI shows a volume slider on the player screen. `ambientAudioService.startAmbient()` is called when a story starts. The service tries to load `null`, silently fails, and nothing plays. The user moves the slider and nothing happens.
-
-**Impact:** Users see a broken feature with no explanation. This is Snoozy's second-biggest selling point after voice cloning.
-
-**Fix:** Run `node backend/scripts/generate-ambient.js` for all 6 worlds (requires `ELEVENLABS_API_KEY`), commit the generated MP3s to `snoozy-android/assets/audio/ambient/`, and un-comment the require statements in `ambientAudioMap.ts`.
+All 6 ambient MP3s exist in `snoozy-android/assets/audio/ambient/` and all `require()` calls are active in `ambientAudioMap.ts`.
 
 ---
 
 ## High Severity (Fix Before Growth)
 
-### HIGH-1 — No Rate Limiting
+### ~~HIGH-1 — No Rate Limiting~~ ✅ RESOLVED
 
-**File:** `backend/src/index.js`
+Per-user daily limits added via `express-rate-limit` keyed on Clerk `userId`:
+- Story generation: **15/day**
+- Audio generation: **30/day** (2× buffer for TTS retries)
 
-There is no per-user or per-IP rate limiting on any endpoint. A user can call `/api/generate-audio` in a tight loop and burn through the TTS API budget in minutes. ElevenLabs and Fish Audio both charge per character.
-
-**Fix:** Add `express-rate-limit` with per-user limits:
-```javascript
-import rateLimit from 'express-rate-limit'
-const audioLimit = rateLimit({ windowMs: 60_000, max: 10, keyGenerator: (req) => req.auth().userId })
-app.use('/api/generate-audio', audioLimit)
-```
+Returns a clear 429 JSON message surfaced to the user on the failed story card.
 
 ---
 
-### HIGH-2 — Audio Cache Race Condition
+### ~~HIGH-2 — Audio Cache Race Condition~~ ✅ RESOLVED
 
-**File:** `backend/src/routes/story.js`
-
-```javascript
-if (audioCache.size >= CACHE_MAX_ENTRIES) {
-  const oldestKey = audioCache.keys().next().value   // not reliable LRU
-  audioCache.delete(oldestKey)
-}
-audioCache.set(key, { buffer, timestamp: Date.now() })
-```
-
-JavaScript's `Map` preserves insertion order, so `.keys().next().value` does return the oldest-inserted key. But there's no lock — two concurrent cache misses for the same key can both call the TTS API and the second one overwrites the first. This is a minor efficiency issue, not a correctness bug, but worth noting.
-
-The bigger issue: eviction deletes by insertion order, not by last-access time. This is FIFO, not LRU. A hot entry added early will be evicted before a cold one added recently.
-
-**Fix:** Use a proper LRU library (`lru-cache`) or track `lastAccessed` alongside `timestamp`.
+- Replaced `Map` + manual FIFO eviction with `LRUCache` (`lru-cache`) — eviction now by last-access time with automatic TTL expiry.
+- Added in-flight deduplication on all three TTS providers (ElevenLabs, Fish Audio, Azure): concurrent cache misses for the same key piggyback on the first request's promise instead of making duplicate API calls.
 
 ---
 
@@ -138,7 +79,7 @@ After uploading a voice sample, training is async on Fish Audio's side (can take
 
 ## Medium Severity (Technical Debt)
 
-### MED-1 — Dead Code: Dark Mode System
+### MED-1 — Dead Code: Dark Mode System (Keep, Planned)
 
 **Files:** `snoozy-android/src/config/tokens.ts`, `snoozy-android/App.tsx`, `snoozy-android/src/hooks/useThemeColors.ts`
 
@@ -150,13 +91,13 @@ const isDark = false  // forced light mode
 
 `useThemeColors()` always returns light colors. The dark mode token map is never used. The `isDark` variable is passed through screens but has no effect.
 
-**Options:**
-- If dark mode is planned: remove `const isDark = false` and wire to `useColorScheme()` properly
-- If not planned for 6+ months: delete the dark token map, remove `isDark` from the hook and all props
+**Decision:** Keeping intentionally — dark mode is planned for a future release. Dead code does not affect App Store review. Wire to `useColorScheme()` when ready to ship.
 
 ---
 
-### MED-2 — Duplicate FFmpeg Logic
+### ~~MED-2 — Duplicate FFmpeg Logic~~ ✅ RESOLVED
+
+Both FFmpeg pipelines now share `src/utils/ffmpegUtils.js` (runFfmpeg, FFMPEG_AVAILABLE, tempFile helpers). No duplication. This was done in the same commit that fixed MED-4 and MED-5.
 
 **Files:** `backend/src/utils/audioNormalizer.js` (ElevenLabs path) and `backend/src/routes/story.js` `applyBedtimeProcessing()` (Fish Audio path)
 
@@ -166,43 +107,27 @@ Both implement FFmpeg audio processing with temp files, timeouts, and graceful f
 
 ---
 
-### MED-3 — Azure TTS Remnants
+### ~~MED-3 — Azure TTS Remnants~~ ✅ RESOLVED
 
-**Files:** `backend/.env`, `backend/src/config.js`, comments throughout
-
-Azure OpenAI TTS was planned but never implemented. The `.env` contains 6 Azure variables. `config.js` doesn't load them. Multiple comments reference "Azure" in the route file.
-
-**Fix:** Delete Azure env vars from `.env.example`. Remove all Azure comment references. The Azure route is not implemented — don't create false expectations.
+Azure TTS is now fully implemented (`generateWithAzureTTS()` in `story.js`) using the `tts-hd` deployment. Stale comment referencing "Azure TTS" as a planned-but-missing feature has been removed. `.env.example` is accurate with both chat and TTS deployment vars.
 
 ---
 
-### MED-4 — Stale `TTS_PROVIDER` Environment Variable
+### ~~MED-4 — Stale `TTS_PROVIDER` Environment Variable~~ ✅ RESOLVED
 
-**File:** `backend/.env`, `backend/CLAUDE.md` references
-
-The `CLAUDE.md` (root) says: "TTS provider is selected at runtime via `TTS_PROVIDER` env var." This is no longer true — provider is sent per-request from the client. The env var is loaded in `.env` but never read by `config.js` or any route.
-
-**Fix:** Remove from `.env.example` and update CLAUDE.md.
+Removed from `.env.example`. `CLAUDE.md` updated to reflect the correct behaviour: provider is sent per-request by the client via the `provider` field in the request body.
 
 ---
 
-### MED-5 — `useRegion.ts` Is an Empty Stub
+### ~~MED-5 — `useRegion.ts` Is an Empty Stub~~ ✅ RESOLVED
 
-**File:** `snoozy-android/src/hooks/useRegion.ts`
-
-This hook exists and is referenced but has no implementation. No imports, no logic.
-
-**Fix:** Either implement it (for region-based voice defaults) or delete it.
+Hook is fully implemented using the `Intl` API (no permissions, no network). Actively used in `SnoozyPlusScreen` for region-based logic (India detection for pricing). The debt doc was written against an earlier version.
 
 ---
 
-### MED-6 — `paymentService.ts` Is Minimal / Incomplete
+### ~~MED-6 — `paymentService.ts` Is Minimal / Incomplete~~ ✅ RESOLVED
 
-**File:** `snoozy-android/src/services/paymentService.ts`
-
-Payment service exists but does nothing meaningful. The subscription types are defined, the SnoozyPlusScreen exists, but there's no RevenueCat SDK, StoreKit 2, or Google Billing integration.
-
-**Impact:** The app has no monetization path. This is fine for MVP but needs to be tracked as a known gap.
+`paymentService.ts` now has fully-architected Stripe and Razorpay flows with correct backend handshake, provider-agnostic `PaymentOutcome` type, and dev-mode placeholder blocks. Activating either provider requires installing the native SDK and wiring backend payment endpoints — the structure is ready.
 
 ---
 
@@ -323,7 +248,7 @@ const tagPattern = new RegExp(`\\[(${knownTags.join('|')})\\]`, 'gi')
 
 | Gap | Priority | Notes |
 |-----|----------|-------|
-| Rate limiting | P0 | Cost control and abuse prevention |
+| ~~Rate limiting~~ ✅ | P0 | 15 stories/day + 30 audio/day per user |
 | Structured logging | P1 | Currently console.log only |
 | Error tracking (Sentry) | P1 | No visibility into production errors |
 | Analytics (PostHog/Mixpanel) | P1 | No usage data |
@@ -344,10 +269,10 @@ const tagPattern = new RegExp(`\\[(${knownTags.join('|')})\\]`, 'gi')
 | Area | Score | Notes |
 |------|-------|-------|
 | Story prompt quality | 9/10 | Exceptional — genuine craft |
-| Audio pipeline | 7/10 | Mature, but ambient broken and no fallback |
+| Audio pipeline | 8/10 | Three providers, LRU cache, in-flight dedup; ambient working |
 | Frontend UX flow | 7/10 | Clean but several broken interactions |
 | State management | 7/10 | Zustand well-used, some sync bugs |
-| Backend architecture | 6/10 | Good structure, missing rate limit + observability |
-| Security | 3/10 | Live secrets committed to git — must fix |
+| Backend architecture | 7/10 | Rate limiting added, cache improved, Azure TTS live |
+| Security | 7/10 | .env never committed; keys not in git; voice clones still public (HIGH-4) |
 | Test coverage | 0/10 | None |
 | Monetization | 0/10 | Not implemented |

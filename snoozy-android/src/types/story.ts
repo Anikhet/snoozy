@@ -11,6 +11,7 @@ export interface Story {
   title: string
   storyText: string
   templateId: string
+  vibeId?: string
   childName: string
   createdAt: string
   audioFileName: string
@@ -68,6 +69,7 @@ export const generateAudioRequestSchema = z.object({
 export function createPlaceholderStory(
   id: string,
   templateId: string,
+  vibeId: string,
   childName: string
 ): Story {
   return {
@@ -75,6 +77,7 @@ export function createPlaceholderStory(
     title: `Creating story for ${childName}...`,
     storyText: '',
     templateId,
+    vibeId,
     childName,
     createdAt: new Date().toISOString(),
     audioFileName: '',
