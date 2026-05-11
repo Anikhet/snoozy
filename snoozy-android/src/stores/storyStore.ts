@@ -527,7 +527,8 @@ async function runGeneration(
   } catch (error) {
     if (signal.aborted) return
     console.error('[StoryGen] Failed:', error)
-    markStoryFailed(storyId)
+    const message = error instanceof Error ? error.message : undefined
+    markStoryFailed(storyId, message)
   } finally {
     generationTasks.delete(storyId)
   }
@@ -541,11 +542,11 @@ function updateStoryInStore(story: Story): void {
   }))
 }
 
-function markStoryFailed(storyId: string): void {
+function markStoryFailed(storyId: string, message?: string): void {
   useStoryStore.setState((s) => ({
     savedStories: s.savedStories.map((story) =>
       story.id === storyId
-        ? { ...story, status: StoryStatus.Failed, title: 'Story failed — tap to retry' }
+        ? { ...story, status: StoryStatus.Failed, title: message ?? 'Story failed — tap to retry' }
         : story
     ),
   }))

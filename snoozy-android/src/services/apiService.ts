@@ -41,9 +41,9 @@ export async function generateStory(
   clearTimeout(timeoutId)
 
   if (!response.ok) {
-    const body = await response.text().catch(() => '')
-    console.error('[API] generate-story error body:', body)
-    throw new Error(`Server error: ${response.status}`)
+    const body = await response.json().catch(() => ({})) as { error?: string }
+    console.error('[API] generate-story error:', response.status, body)
+    throw new Error(body.error ?? `Server error: ${response.status}`)
   }
 
   const json = await response.json()
@@ -82,7 +82,9 @@ export async function generateAudio(
   clearTimeout(timeoutId)
 
   if (!response.ok) {
-    throw new Error(`Server error: ${response.status}`)
+    const body = await response.json().catch(() => ({})) as { error?: string }
+    console.error('[API] generate-audio error:', response.status, body)
+    throw new Error(body.error ?? `Server error: ${response.status}`)
   }
 
   const blob = await response.blob()
