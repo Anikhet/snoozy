@@ -3,7 +3,7 @@ const cors = require('cors')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const { loadConfig } = require('./config')
-const { clerkMiddleware, requireAuth } = require('@clerk/express')
+const { clerkMiddleware } = require('@clerk/express')
 const storyRoutes = require('./routes/story')
 
 const config = loadConfig()
@@ -51,7 +51,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/generate-story', storyRateLimit)
 app.use('/api/generate-audio', audioRateLimit)
 
-app.use('/api', requireAuth({ signInUrl: undefined }), (req, res, next) => {
+app.use('/api', (req, res, next) => {
   if (!req.auth?.()?.userId) return res.status(401).json({ success: false, error: 'Unauthorized' })
   next()
 }, storyRoutes)
