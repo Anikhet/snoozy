@@ -71,10 +71,33 @@
       "Bash(git -C /Users/pkats-mac/snoozy diff --name-only HEAD snoozy-android/src/screens/HomeScreen.tsx)",
       "Bash(git -C /Users/pkats-mac/snoozy add snoozy-android/src/screens/StoryPlayerScreen.tsx)",
       "Bash(grep -rn \"#[0-9A-Fa-f]\\\\{3,8\\\\}\\\\|rgba\\(\\\\|rgb\\(\" /Users/pkats-mac/snoozy/snoozy-android/src/screens/ /Users/pkats-mac/snoozy/snoozy-android/src/components/)",
-      "Bash(node --check /Users/pkats-mac/snoozy/backend/src/utils/ttsPreprocessor.js)"
+      "Bash(node --check /Users/pkats-mac/snoozy/backend/src/utils/ttsPreprocessor.js)",
+      "Bash(git -C /Users/pkats-mac/snoozy add snoozy-android/src/config/tokens.ts snoozy-android/src/screens/ snoozy-android/src/components/)",
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)",
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -storepass android)",
+      "Bash(brew --version)",
+      "Bash(brew install *)",
+      "Bash(brew uninstall *)",
+      "Bash(git -C /Users/pkats-mac/snoozy log --oneline -10 -- snoozy-android/src/config/voices.ts)",
+      "Bash(git -C /Users/pkats-mac/snoozy show HEAD:snoozy-android/src/config/voices.ts)",
+      "Bash(git -C /Users/pkats-mac/snoozy show 7095d6f --stat)",
+      "Bash(git -C /Users/pkats-mac/snoozy show 7095d6f -- snoozy-android/src/config/voices.ts)",
+      "Bash(xargs cat *)",
+      "Bash(git -C /Users/pkats-mac/snoozy show cfee49d -- snoozy-android/src/config/voices.ts)",
+      "Bash(git -C /Users/pkats-mac/snoozy log --oneline -15 -- backend/src/routes/story.js backend/src/index.js)",
+      "Bash(git -C /Users/pkats-mac/snoozy show 70c2c96 -- backend/src/routes/story.js)",
+      "Bash(git -C /Users/pkats-mac/snoozy log --oneline --all)",
+      "Bash(git -C /Users/pkats-mac/snoozy show 9bf1401 -- backend/src/routes/story.js)",
+      "Bash(git -C /Users/pkats-mac/snoozy show 9bf1401 -- backend/src/index.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H \"Content-Type: application/json\" -d '{\"test\":true}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST https://snoozy-kmoq.onrender.com/api/generate-story -H \"Content-Type: application/json\" -d '{\"test\":true}')",
+      "Bash(curl -sv -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H \"Content-Type: application/json\" -d '{\"test\":true}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://snoozy-kmoq.onrender.com/)",
+      "Bash(java -version)"
     ],
     "additionalDirectories": [
-      "/Users/pkats-mac/snoozy/backend"
+      "/Users/pkats-mac/snoozy/backend",
+      "/Users/pkats-mac"
     ]
   }
 }

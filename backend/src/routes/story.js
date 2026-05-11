@@ -295,6 +295,7 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
 
     const statusMessages = {
       401: 'ElevenLabs API key is invalid or missing.',
+      404: `ElevenLabs voice "${voiceId}" not found. Add it to your ElevenLabs account at elevenlabs.io/app/voice-lab.`,
       422: `ElevenLabs rejected the voice or text. Check voice ID "${voiceId}" is valid.`,
       429: 'ElevenLabs rate limit reached. Request queued or try again shortly.',
     }
@@ -397,10 +398,13 @@ async function generateWithAzureTTS(text, requestedVoiceId, vibeId, config, res,
     })
   } catch (err) {
     const apiElapsed = Date.now() - startTime
-    log('AUDIO', `Azure TTS ERROR (${apiElapsed}ms):`, err.message)
-    const message = err.status === 429
-      ? 'Azure TTS rate limit reached. Please try again shortly.'
-      : 'Failed to generate audio. Please try again.'
+    log('AUDIO', `Azure TTS ERROR ${err.status ?? '?'} (${apiElapsed}ms):`, err.message)
+    const statusMessages = {
+      404: `Azure TTS deployment "${config.azureOpenAITtsDeployment}" not found. Check AZURE_OPENAI_TTS_DEPLOYMENT matches a deployed model in your Azure resource.`,
+      401: 'Azure OpenAI API key is invalid or missing.',
+      429: 'Azure TTS rate limit reached. Please try again shortly.',
+    }
+    const message = statusMessages[err.status] ?? 'Failed to generate audio. Please try again.'
     rejectDeferred(new Error(message))
     inFlight.delete(cacheKey)
     return res.status(err.status === 429 ? 429 : 502).json({ success: false, error: message })
