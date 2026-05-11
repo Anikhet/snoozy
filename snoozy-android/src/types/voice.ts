@@ -2,7 +2,7 @@ export interface NarrationVoice {
   id: string
   displayName: string
   description: string
-  provider: 'elevenlabs' | 'openai' | 'fishaudio'
+  provider: 'elevenlabs' | 'fishaudio' | 'azure'
 }
 
 export interface VoiceProfile {

@@ -94,9 +94,12 @@ export async function generateAudio(
 
 function buildVoicePayload(voiceId: string | undefined, text: string, vibeId: string | undefined) {
   const voice = VOICES.find((v) => v.id === voiceId)
-  // Built-in ElevenLabs voice → elevenlabs
-  // Built-in Fish Audio voice, cloned voice (not in VOICES), or undefined → fishaudio
-  const provider: 'elevenlabs' | 'fishaudio' = voice?.provider === 'elevenlabs' ? 'elevenlabs' : 'fishaudio'
+  // Azure voice  → azure
+  // ElevenLabs voice → elevenlabs
+  // Fish Audio voice, cloned voice (not in VOICES), or undefined → fishaudio
+  const provider: 'elevenlabs' | 'fishaudio' | 'azure' =
+    voice?.provider === 'azure' ? 'azure' :
+    voice?.provider === 'elevenlabs' ? 'elevenlabs' : 'fishaudio'
   return { text, voiceId, provider, vibeId }
 }
 

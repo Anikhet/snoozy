@@ -80,7 +80,7 @@ const generateStorySchema = z.object({
 const generateAudioSchema = z.object({
   text:     z.string().min(1).max(10000),
   voiceId:  z.string().min(1).max(100).optional(),
-  provider: z.enum(['elevenlabs', 'fishaudio']),
+  provider: z.enum(['elevenlabs', 'fishaudio', 'azure']),
   vibeId:   z.enum(validVibeIds).optional(),
 })
 
@@ -195,6 +195,8 @@ router.post('/generate-audio', validate(generateAudioSchema), async (req, res) =
 
     if (provider === 'elevenlabs') {
       await generateWithElevenLabs(text, voiceId, vibeId, config, res, startTime)
+    } else if (provider === 'azure') {
+      await generateWithAzureTTS(text, voiceId, vibeId, config, res, startTime)
     } else {
       await generateWithFishAudio(text, voiceId, vibeId, config, res, startTime)
     }
@@ -331,6 +333,97 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
 
   const totalElapsed = Date.now() - startTime
   log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms (cached for next request)`)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AZURE OPENAI TTS
+// Uses the Azure OpenAI audio/speech endpoint (same resource as chat).
+// Deployment: tts-hd (configured via AZURE_OPENAI_TTS_DEPLOYMENT).
+// Voices: alloy, echo, fable, nova, onyx, shimmer (OpenAI-compatible names).
+// Applies the same bedtime FFmpeg post-processing as Fish Audio.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const AZURE_TTS_VALID_VOICES = new Set(['alloy', 'echo', 'fable', 'nova', 'onyx', 'shimmer'])
+
+async function generateWithAzureTTS(text, requestedVoiceId, vibeId, config, res, startTime) {
+  const voice = AZURE_TTS_VALID_VOICES.has(requestedVoiceId) ? requestedVoiceId : 'shimmer'
+  log('AUDIO', `Azure TTS voice: ${voice}`)
+
+  const processedText = prepareTextForTTS(text, vibeId)
+  log('AUDIO', `TTS pre-processor: ${text.length} chars → ${processedText.length} chars`)
+
+  const cacheKey    = getCacheKey(processedText, `azure:${voice}`)
+  const cachedAudio = getFromCache(cacheKey)
+  if (cachedAudio) {
+    log('AUDIO', `Cache HIT (${cacheKey.slice(0, 8)}…) — serving ${(cachedAudio.length / 1024).toFixed(1)}KB from cache`)
+    res.setHeader('Content-Type', 'audio/mpeg')
+    res.setHeader('X-Cache', 'HIT')
+    return res.end(cachedAudio)
+  }
+
+  if (inFlight.has(cacheKey)) {
+    log('AUDIO', `Cache MISS but in-flight (${cacheKey.slice(0, 8)}…) — piggybacking`)
+    try {
+      const buffer = await inFlight.get(cacheKey)
+      res.setHeader('Content-Type', 'audio/mpeg')
+      res.setHeader('X-Cache', 'DEDUP')
+      return res.end(buffer)
+    } catch {
+      return res.status(502).json({ success: false, error: 'Failed to generate audio. Please try again.' })
+    }
+  }
+
+  let resolveDeferred, rejectDeferred
+  const deferred = new Promise((resolve, reject) => { resolveDeferred = resolve; rejectDeferred = reject })
+  inFlight.set(cacheKey, deferred)
+
+  log('AUDIO', `Cache MISS — calling Azure OpenAI TTS (deployment: ${config.azureOpenAITtsDeployment})...`)
+
+  const client = new AzureOpenAI({
+    apiKey:     config.azureOpenAIApiKey,
+    endpoint:   config.azureOpenAIEndpoint,
+    apiVersion: config.azureOpenAITtsVersion,
+    deployment: config.azureOpenAITtsDeployment,
+  })
+
+  let ttsResponse
+  try {
+    ttsResponse = await client.audio.speech.create({
+      model: config.azureOpenAITtsDeployment,
+      input: processedText,
+      voice,
+      response_format: 'mp3',
+      speed: 0.88,
+    })
+  } catch (err) {
+    const apiElapsed = Date.now() - startTime
+    log('AUDIO', `Azure TTS ERROR (${apiElapsed}ms):`, err.message)
+    const message = err.status === 429
+      ? 'Azure TTS rate limit reached. Please try again shortly.'
+      : 'Failed to generate audio. Please try again.'
+    rejectDeferred(new Error(message))
+    inFlight.delete(cacheKey)
+    return res.status(err.status === 429 ? 429 : 502).json({ success: false, error: message })
+  }
+
+  const apiElapsed = Date.now() - startTime
+  log('AUDIO', `Azure TTS responded OK in ${apiElapsed}ms — buffering for cache...`)
+
+  const rawBuffer = Buffer.from(await ttsResponse.arrayBuffer())
+
+  const { buffer, processed, reason } = await applyBedtimeProcessing(rawBuffer)
+  log('AUDIO', `Bedtime processing: ${processed ? 'applied' : `skipped (${reason})`}`)
+
+  resolveDeferred(buffer)
+  inFlight.delete(cacheKey)
+  setInCache(cacheKey, buffer)
+
+  const totalElapsed = Date.now() - startTime
+  log('AUDIO', `Done! Sent ${(buffer.length / 1024).toFixed(1)}KB in ${totalElapsed}ms (cached for next request)`)
+
+  res.setHeader('Content-Type', 'audio/mpeg')
+  res.setHeader('X-Cache', 'MISS')
+  res.end(buffer)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

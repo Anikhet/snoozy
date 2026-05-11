@@ -36,15 +36,17 @@ Milo felt the cool air on his nose, the soft ground beneath his paws.
 
 [exhale] And everything was still.`
 export const VOICES: NarrationVoice[] = [
-  { id: '933563129e564b19a115bedd57b7406a', displayName: 'Aria',    description: 'Warm & gentle',    provider: 'fishaudio' },
-  { id: 'qBDvhofpxp92JgXJxDjB',           displayName: 'Lily',    description: 'Soft & warm',      provider: 'elevenlabs' },
-  { id: 'tQ4MEZFJOzsahSEEZtHK',           displayName: 'Ivanna',  description: 'Soft & warm',      provider: 'elevenlabs' },
-  { id: 'flHkNRp1BlvT73UL6gyz',           displayName: 'Jessica', description: 'Soft & warm',      provider: 'elevenlabs' },
-  { id: '6p0P6gezgvY1v6xbLzmU',           displayName: 'Anvi',       description: 'Soft & warm',      provider: 'elevenlabs' },
-  { id: 'bf322df2096a46f18c579d0baa36f41d', displayName: 'Adrian',     description: 'Soft & warm',      provider: 'fishaudio' },
-  { id: '0cd6cf9684dd4cc9882fbc98957c9b1d', displayName: 'Elephant',   description: 'Soft & warm',      provider: 'fishaudio' },
-  { id: 'cad919beaf7c4b02bfe5c7168a92e7cd', displayName: 'Peppa Pig',  description: 'Soft & warm',      provider: 'fishaudio' },
-  { id: '9a9cf47702da476aa4629e2506d4a857',  displayName: 'Hannah',     description: 'Soft & warm',      provider: 'fishaudio' },
+  { id: '933563129e564b19a115bedd57b7406a', displayName: 'Aria',      description: 'Warm & gentle',    provider: 'fishaudio'  },
+  { id: 'qBDvhofpxp92JgXJxDjB',           displayName: 'Lily',      description: 'Soft & warm',      provider: 'elevenlabs' },
+  { id: 'tQ4MEZFJOzsahSEEZtHK',           displayName: 'Ivanna',    description: 'Soft & warm',      provider: 'elevenlabs' },
+  { id: 'flHkNRp1BlvT73UL6gyz',           displayName: 'Jessica',   description: 'Soft & warm',      provider: 'elevenlabs' },
+  { id: '6p0P6gezgvY1v6xbLzmU',           displayName: 'Anvi',      description: 'Soft & warm',      provider: 'elevenlabs' },
+  { id: 'bf322df2096a46f18c579d0baa36f41d', displayName: 'Adrian',   description: 'Soft & warm',      provider: 'fishaudio'  },
+  { id: '0cd6cf9684dd4cc9882fbc98957c9b1d', displayName: 'Elephant', description: 'Soft & warm',      provider: 'fishaudio'  },
+  { id: 'cad919beaf7c4b02bfe5c7168a92e7cd', displayName: 'Peppa Pig', description: 'Soft & warm',     provider: 'fishaudio'  },
+  { id: '9a9cf47702da476aa4629e2506d4a857', displayName: 'Hannah',   description: 'Soft & warm',      provider: 'fishaudio'  },
+  { id: 'shimmer',                          displayName: 'Clara',    description: 'Clear & soothing', provider: 'azure'      },
+  { id: 'onyx',                             displayName: 'Marcus',   description: 'Deep & calm',      provider: 'azure'      },
 ]
 
 export const DEFAULT_VOICE = VOICES[0]
