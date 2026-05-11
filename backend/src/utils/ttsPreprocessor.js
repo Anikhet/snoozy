@@ -396,7 +396,6 @@ function sanitizeFishAudioTags(text) {
   return { sanitized, stripped, warnings }
 }
 
-module.exports = { sanitizeFishAudioTags, APPROVED_TAGS, TAG_ALIASES }
 /**
  * Tag density check — sanity check the LLM didn't go overboard.
  * Returns { count, density } where density is tags per 100 words.

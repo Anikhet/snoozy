@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react'
+import { useAuth } from '@clerk/clerk-expo'
 import {
   BackHandler,
   Dimensions,
@@ -41,6 +42,7 @@ function getGreetingLead(): string {
 export function HomeScreen() {
   useBackHandler(BackHandler.exitApp)
 
+  const { getToken } = useAuth()
   const { colors } = useThemeColors()
   const savedStories = useStoryStore((s) => s.savedStories)
   const navigateToWorldPicker = useStoryStore((s) => s.navigateToWorldPicker)
@@ -81,7 +83,7 @@ export function HomeScreen() {
   const handleRetry = useCallback(
     (id: string) => {
       const story = useStoryStore.getState().savedStories.find((s) => s.id === id)
-      if (story) retryStory(story)
+      if (story) retryStory(story, getToken)
     },
     [retryStory],
   )
