@@ -409,14 +409,6 @@ export function StoryPlayerScreen() {
               color={currentStory.isFavorite ? '#FF6B8A' : '#FFFFFF'}
             />
           </Pressable>
-          <Pressable
-            style={styles.glassBtn}
-            onPress={() => {}}
-            accessibilityRole="button"
-            accessibilityLabel="More options"
-          >
-            <Ionicons name="ellipsis-horizontal" size={18} color="#FFFFFF" />
-          </Pressable>
         </View>
       </Animated.View>
     </View>
