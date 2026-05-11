@@ -24,7 +24,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { useAudioRecorder, AudioModule, RecordingPresets, createAudioPlayer, type AudioStatus } from 'expo-audio'
 import { useAuth } from '@clerk/clerk-expo'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
@@ -626,8 +626,8 @@ export function VoiceSetupScreen() {
                   )}
                   {uploadStatus === 'done' && (
                     <>
-                      <Ionicons name="checkmark-circle" size={15} color="#4CAF7D" />
-                      <Text style={[styles.prevStatusText, { color: '#4CAF7D' }]}>Voice saved</Text>
+                      <Ionicons name="checkmark-circle" size={15} color={Colors.light.success} />
+                      <Text style={[styles.prevStatusText, { color: Colors.light.success }]}>Voice saved</Text>
                     </>
                   )}
                   {uploadStatus === 'error' && (
@@ -719,7 +719,7 @@ export function VoiceSetupScreen() {
               accessibilityRole="button"
               accessibilityLabel="Start recording"
             >
-              <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
+              <LinearGradient colors={['#5B5BD6', Colors.light.primaryMuted]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
                 <Ionicons name="mic" size={20} color="#FFFFFF" />
                 <Text style={styles.ctaLabel}>Start recording</Text>
               </LinearGradient>
@@ -736,7 +736,7 @@ export function VoiceSetupScreen() {
                 accessibilityLabel={uploadStatus === 'error' ? 'Try again' : 'Sounds good'}
               >
                 {uploadStatus === 'done' ? (
-                  <LinearGradient colors={['#5B5BD6', '#9B8EC4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
+                  <LinearGradient colors={['#5B5BD6', Colors.light.primaryMuted]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
                     <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
                     <Text style={styles.ctaLabel}>
                       {voiceName.trim() ? `Save as "${voiceName.trim()}"` : 'Sounds good'}
@@ -927,14 +927,14 @@ const styles = StyleSheet.create({
   doneHero:         { alignItems: 'center', marginBottom: Spacing.xl },
   doneStarsWrap:    { position: 'relative', width: 140, height: 110, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
   doneStar:         { position: 'absolute', fontFamily: 'Nunito_700Bold', color: '#F5C842' },
-  doneCircle:       { width: 88, height: 88, borderRadius: 44, backgroundColor: '#4CAF7D', alignItems: 'center', justifyContent: 'center' },
+  doneCircle:       { width: 88, height: 88, borderRadius: 44, backgroundColor: Colors.light.success, alignItems: 'center', justifyContent: 'center' },
   doneHeading:      { fontSize: 28, fontFamily: 'Nunito_700Bold', letterSpacing: -0.3, textAlign: 'center', marginBottom: Spacing.sm },
   doneSubtitle:     { fontFamily: 'Nunito_500Medium', fontSize: 15, textAlign: 'center', lineHeight: 22 },
   doneCard:         { marginBottom: Spacing.sm },
   doneCardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   doneCardTitle:    { fontFamily: 'Nunito_700Bold', fontSize: 17 },
   doneActiveBadge:  { backgroundColor: 'rgba(76,175,125,0.12)', borderWidth: 1, borderColor: 'rgba(76,175,125,0.3)', paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: 10 },
-  doneActiveBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: '#4CAF7D' },
+  doneActiveBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.light.success },
   doneCardSub:      { fontFamily: 'Nunito_500Medium', fontSize: 14, marginBottom: Spacing.md },
   donePronRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: Radii.small, padding: Spacing.md },
   donePronText:     { flex: 1 },

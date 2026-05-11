@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Pronouns } from '@/types/story'
 import { useBackHandler } from '@/hooks/useBackHandler'
@@ -114,7 +114,7 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
                   { borderColor: nameFocused ? '#5B5BD6' : 'rgba(91,91,214,0.18)' },
                 ]}
               >
-                <Ionicons name="person-outline" size={18} color="#9B8EC4" />
+                <Ionicons name="person-outline" size={18} color={Colors.light.primaryMuted} />
                 <TextInput
                   style={styles.nameInput}
                   value={name}
@@ -214,7 +214,7 @@ export function ChildProfileScreen({ onFinish, onBack }: Props) {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={['#5B5BD6', '#9B8EC4']}
+              colors={['#5B5BD6', Colors.light.primaryMuted]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 29,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     letterSpacing: -0.5,
     textAlign: 'center',
     lineHeight: 36,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   heroSub: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 14,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     marginBottom: Spacing.sm,
   },
   nameRow: {
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_400Regular',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
   divider: {
     height: 1,
@@ -331,14 +331,14 @@ const styles = StyleSheet.create({
   stepAge: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 20,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     minWidth: 36,
     textAlign: 'center',
   },
   ageHint: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 12,
-    color: '#9B8EC4',
+    color: Colors.light.primaryMuted,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
@@ -406,6 +406,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   infoText: { flex: 1, gap: 2 },
-  infoTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#2D1F6E' },
-  infoBody: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: '#7B6B9E', lineHeight: 17 },
+  infoTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.light.purpleDeep },
+  infoBody: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.light.purpleSoft, lineHeight: 17 },
 })

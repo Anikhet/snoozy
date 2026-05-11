@@ -45,6 +45,16 @@ export const Colors = {
     vibeSelected: '#7B5EA7',
     vibeSelectedText: '#FFFFFF',
 
+    // Purple screen family — Auth, Profile, Preferences, Generating, etc.
+    primaryMuted: '#9B8EC4',  // gradient stops, muted icons, soft borders
+    purpleDeep: '#2D1F6E',    // dark heading text on purple-tinted screens
+    purpleMid: '#4B367C',     // body text / back icons on purple screens
+    purpleSoft: '#7B6B9E',    // subdued text on purple screens
+
+    // Semantic
+    success: '#4CAF7D',       // positive state — voice saved, done badges
+    heart: '#FF6B8A',         // favourite / heart icon
+
     // Legacy aliases so existing code still resolves while migrating
     textPrimary: '#2B2130',
     textSecondary: '#6E5F69',
@@ -90,6 +100,13 @@ export const Colors = {
     vibeSelected: '#7B5EA7',
     vibeSelectedText: '#FFFFFF',
 
+    primaryMuted: '#8A7EB8',
+    purpleDeep: '#C8C0E8',
+    purpleMid: '#A898C8',
+    purpleSoft: '#8878A8',
+    success: '#5DBD8B',
+    heart: '#FF8FA0',
+
     textPrimary: '#F2EDE3',
     textSecondary: 'rgba(242,237,227,0.62)',
     secondary: '#E9A97A',
@@ -108,6 +125,7 @@ export const Night = {
   inkMute: 'rgba(242,237,227,0.4)',
   hair: 'rgba(242,237,227,0.14)',
   glass: 'rgba(242,237,227,0.06)',
+  heart: '#FF6B8A',
 } as const
 
 export type ThemeColors = (typeof Colors)['light'] | (typeof Colors)['dark']

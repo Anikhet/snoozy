@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { useUser } from '@clerk/clerk-expo'
-import { Fonts, Radii, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
@@ -68,7 +68,7 @@ export function AccountDetailsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={closeProfilePanel} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={22} color="#4B367C" />
+            <Ionicons name="chevron-back" size={22} color={Colors.light.purpleMid} />
           </Pressable>
           <Text style={styles.headerTitle}>Account Details</Text>
           <View style={styles.headerSpacer} />
@@ -98,7 +98,7 @@ export function AccountDetailsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(220).duration(420)} style={styles.noteCard}>
-            <Ionicons name="information-circle-outline" size={16} color="#9B8EC4" />
+            <Ionicons name="information-circle-outline" size={16} color={Colors.light.primaryMuted} />
             <Text style={[Fonts.caption, styles.noteText]}>
               To update your email address or delete your account, please contact our support team.
             </Text>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
   headerSpacer: { width: 40 },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   heroName: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 22,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     letterSpacing: -0.3,
   },
   badge: {
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 12,
-    color: '#9B8EC4',
+    color: Colors.light.primaryMuted,
     textTransform: 'uppercase',
     letterSpacing: 1,
     paddingHorizontal: Spacing.sm,
@@ -214,11 +214,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   infoText: { flex: 1 },
-  infoLabel: { color: '#9B8EC4', marginBottom: 2 },
+  infoLabel: { color: Colors.light.primaryMuted, marginBottom: 2 },
   infoValue: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
   infoDivider: {
     height: 1,
@@ -235,5 +235,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F0EBFF',
   },
-  noteText: { color: '#9B8EC4', flex: 1, lineHeight: 18 },
+  noteText: { color: Colors.light.primaryMuted, flex: 1, lineHeight: 18 },
 })

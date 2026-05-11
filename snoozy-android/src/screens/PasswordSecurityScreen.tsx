@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { useUser } from '@clerk/clerk-expo'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
@@ -37,7 +37,7 @@ function SecureInput({
     <View>
       <Text style={styles.fieldLabel}>{label}</Text>
       <View style={[styles.inputRow, { borderColor: focused ? '#5B5BD6' : 'rgba(91,91,214,0.18)' }]}>
-        <Ionicons name="lock-closed-outline" size={18} color="#9B8EC4" />
+        <Ionicons name="lock-closed-outline" size={18} color={Colors.light.primaryMuted} />
         <TextInput
           style={styles.input}
           value={value}
@@ -52,7 +52,7 @@ function SecureInput({
           returnKeyType="done"
         />
         <Pressable onPress={() => setVisible((v) => !v)} hitSlop={8}>
-          <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9B8EC4" />
+          <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.light.primaryMuted} />
         </Pressable>
       </View>
     </View>
@@ -114,7 +114,7 @@ export function PasswordSecurityScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={closeProfilePanel} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={22} color="#4B367C" />
+            <Ionicons name="chevron-back" size={22} color={Colors.light.purpleMid} />
           </Pressable>
           <Text style={styles.headerTitle}>Password & Security</Text>
           <View style={styles.headerSpacer} />
@@ -211,12 +211,12 @@ export function PasswordSecurityScreen() {
               accessibilityRole="button"
             >
               <LinearGradient
-                colors={canSubmit && !success ? ['#5B5BD6', '#9B8EC4'] : ['#D4CEDE', '#D4CEDE']}
+                colors={canSubmit && !success ? ['#5B5BD6', Colors.light.primaryMuted] : ['#D4CEDE', '#D4CEDE']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.ctaGradient}
               >
-                <Text style={[styles.ctaLabel, { color: canSubmit && !success ? '#FFFFFF' : '#9B8EC4' }]}>
+                <Text style={[styles.ctaLabel, { color: canSubmit && !success ? '#FFFFFF' : Colors.light.primaryMuted }]}>
                   {saving ? 'Updating…' : success ? 'Done ✓' : 'Update password'}
                 </Text>
               </LinearGradient>
@@ -236,7 +236,7 @@ function HintRow({ met, text }: { met: boolean; text: string }) {
         size={14}
         color={met ? '#4CAF50' : '#B0A5CC'}
       />
-      <Text style={[Fonts.caption, { color: met ? '#4CAF50' : '#9B8EC4' }]}>{text}</Text>
+      <Text style={[Fonts.caption, { color: met ? '#4CAF50' : Colors.light.primaryMuted }]}>{text}</Text>
     </View>
   )
 }
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
   headerSpacer: { width: 40 },
@@ -281,12 +281,12 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 26,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     textAlign: 'center',
     letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
-  heroSubtitle: { color: '#7B6B9E', textAlign: 'center' },
+  heroSubtitle: { color: Colors.light.purpleSoft, textAlign: 'center' },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radii.cardLarge,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 14,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: Spacing.sm,
   },
   inputRow: {
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_400Regular',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
   divider: {
     height: 1,
@@ -377,10 +377,10 @@ const styles = StyleSheet.create({
   oauthTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
-  oauthSubtitle: { color: '#7B6B9E', textAlign: 'center' },
+  oauthSubtitle: { color: Colors.light.purpleSoft, textAlign: 'center' },
   ctaSpacer: { height: Sizing.buttonHeight + Spacing.xxl },
   ctaBar: {
     paddingHorizontal: Spacing.lg,

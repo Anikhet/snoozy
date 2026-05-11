@@ -406,7 +406,7 @@ export function StoryPlayerScreen() {
             <Ionicons
               name={currentStory.isFavorite ? 'heart' : 'heart-outline'}
               size={18}
-              color={currentStory.isFavorite ? '#FF6B8A' : '#FFFFFF'}
+              color={currentStory.isFavorite ? colors.heart : '#FFFFFF'}
             />
           </Pressable>
         </View>

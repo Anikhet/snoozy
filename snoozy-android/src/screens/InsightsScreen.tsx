@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
-import { Fonts, Radii, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 
@@ -115,13 +115,13 @@ const hlStyles = StyleSheet.create({
   value: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 20,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     lineHeight: 24,
   },
   label: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 11,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
     textAlign: 'center',
     lineHeight: 14,
   },
@@ -203,7 +203,7 @@ export function InsightsScreen() {
             </View>
             <View style={styles.weekPill}>
               <Text style={styles.weekPillText}>This Week</Text>
-              <Ionicons name="chevron-down" size={12} color="#7B6B9E" />
+              <Ionicons name="chevron-down" size={12} color={Colors.light.purpleSoft} />
             </View>
           </Animated.View>
 
@@ -218,7 +218,7 @@ export function InsightsScreen() {
 
             {/* Stat + chart card */}
             <LinearGradient
-              colors={['#7B5BD6', '#9B8EC4']}
+              colors={['#7B5BD6', Colors.light.primaryMuted]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   headerName: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 32,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: 4,
   },
   weekPill: {
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   weekPillText: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 12,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
   },
 
   // Hero
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     marginBottom: Spacing.sm,
   },
   sectionHeader: {
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
   streakNumber: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 56,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     lineHeight: 60,
   },
   streakMeta: {
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   streakLabel: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
   },
   starsRow: {
     flexDirection: 'row',
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,
-    color: '#9B8EC4',
+    color: Colors.light.primaryMuted,
     textAlign: 'center',
     lineHeight: 22,
   },

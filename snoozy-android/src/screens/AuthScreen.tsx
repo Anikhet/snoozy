@@ -26,7 +26,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Radii, Sizing, Spacing } from '@/config/tokens'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -49,7 +49,7 @@ function Field({ icon, placeholder, value, onChangeText, secure, keyboardType = 
 
   return (
     <View style={fieldStyles.row}>
-      <Ionicons name={icon} size={18} color="#9B8EC4" style={fieldStyles.icon} />
+      <Ionicons name={icon} size={18} color={Colors.light.primaryMuted} style={fieldStyles.icon} />
       <TextInput
         style={fieldStyles.input}
         placeholder={placeholder}
@@ -63,7 +63,7 @@ function Field({ icon, placeholder, value, onChangeText, secure, keyboardType = 
       />
       {secure ? (
         <Pressable onPress={() => setHidden((h) => !h)} hitSlop={8}>
-          <Ionicons name={hidden ? 'eye-outline' : 'eye-off-outline'} size={18} color="#9B8EC4" />
+          <Ionicons name={hidden ? 'eye-outline' : 'eye-off-outline'} size={18} color={Colors.light.primaryMuted} />
         </Pressable>
       ) : null}
     </View>
@@ -85,7 +85,7 @@ const fieldStyles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_400Regular',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
 })
 
@@ -100,7 +100,7 @@ function PrimaryButton({ label, onPress, loading }: { label: string; onPress: ()
       style={({ pressed }) => ({ opacity: pressed || loading ? 0.82 : 1, borderRadius: Radii.button })}
     >
       <LinearGradient
-        colors={['#5B5BD6', '#9B8EC4']}
+        colors={['#5B5BD6', Colors.light.primaryMuted]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={btnStyles.gradient}
@@ -153,7 +153,7 @@ const socialStyles = StyleSheet.create({
   label: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 14,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
 })
 
@@ -366,7 +366,7 @@ function SignInView({ email, setEmail, password, setPassword, onSignIn, onApple,
 
         <View style={styles.socialRow}>
           <SocialButton
-            icon={<Ionicons name="logo-apple" size={20} color="#2D1F6E" />}
+            icon={<Ionicons name="logo-apple" size={20} color={Colors.light.purpleDeep} />}
             label="Apple"
             onPress={onApple}
           />
@@ -396,7 +396,7 @@ function SignUpView({ firstName, setFirstName, lastName, setLastName, email, set
     <Animated.View entering={FadeIn.duration(400)} style={styles.page}>
       {/* Back */}
       <Pressable onPress={onSignIn} style={styles.backBtn} hitSlop={12}>
-        <Ionicons name="chevron-back" size={22} color="#2D1F6E" />
+        <Ionicons name="chevron-back" size={22} color={Colors.light.purpleDeep} />
       </Pressable>
 
       {/* Card with peeking mascot anchored to its top */}
@@ -460,7 +460,7 @@ function VerifyView({ code, setCode, onVerify, onBack, isLoading, error }: any) 
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.page}>
       <Pressable onPress={onBack} style={styles.backBtn} hitSlop={12}>
-        <Ionicons name="chevron-back" size={22} color="#2D1F6E" />
+        <Ionicons name="chevron-back" size={22} color={Colors.light.purpleDeep} />
       </Pressable>
 
       <Animated.View entering={FadeInUp.delay(100).duration(500)} style={[styles.card, styles.cardTopSpaced]}>
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
 
   // Brand
   brandBlock: { alignItems: 'center', paddingTop: Spacing.sm, gap: 0 },
-  brandTitle: { fontFamily: 'Nunito_700Bold', fontSize: 54, color: '#2D1F6E', letterSpacing: -1 },
-  brandSub: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: '#7B6B9E', marginTop: -8 },
+  brandTitle: { fontFamily: 'Nunito_700Bold', fontSize: 54, color: Colors.light.purpleDeep, letterSpacing: -1 },
+  brandSub: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: Colors.light.purpleSoft, marginTop: -8 },
 
   // Sign-in floating mascot
   signInMascotBlock: { width: SCREEN_WIDTH * 0.8, height: SCREEN_WIDTH * 0.63, alignItems: 'center', justifyContent: 'center', marginBottom: -27 },
@@ -532,10 +532,10 @@ const styles = StyleSheet.create({
 
   // Welcome
   welcomeRow: { flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap', marginTop: Spacing.sm },
-  welcomeText: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: '#2D1F6E' },
+  welcomeText: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: Colors.light.purpleDeep },
   signupTitle: { fontSize: 26, lineHeight: 34 },
   sparkle: { fontFamily: 'Nunito_700Bold', fontSize: 20, color: '#C9A56B' },
-  cardSub: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: '#7B6B9E', marginTop: -Spacing.sm },
+  cardSub: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: Colors.light.purpleSoft, marginTop: -Spacing.sm },
 
   // Fields
   fields: { gap: Spacing.sm },
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   // Divider
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(43,33,48,0.10)' },
-  dividerText: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: '#9B8EC4' },
+  dividerText: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.light.primaryMuted },
 
   // Social
   socialRow: { flexDirection: 'row', gap: Spacing.sm },
@@ -570,12 +570,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   infoText: { flex: 1, gap: 2 },
-  infoTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#2D1F6E' },
-  infoBody: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: '#7B6B9E', lineHeight: 17 },
+  infoTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.light.purpleDeep },
+  infoBody: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.light.purpleSoft, lineHeight: 17 },
 
   // Footer
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  footerText: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: '#7B6B9E' },
+  footerText: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.light.purpleSoft },
   footerLink: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#5B3DA8' },
 
   // Back

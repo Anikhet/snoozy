@@ -25,7 +25,7 @@ import { createAudioPlayer, type AudioStatus } from 'expo-audio'
 import { useAuth } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
-import { Fonts, Radii, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { VOICES, VOICE_PREVIEW_TEXT } from '@/config/voices'
@@ -123,7 +123,7 @@ function VoiceProfileCard({
       accessibilityLabel={`${profile.name}, your voice recording`}
     >
       <View style={styles.voiceCardTop}>
-        <Ionicons name={isActive ? 'mic' : 'mic-outline'} size={18} color={isActive ? '#5B5BD6' : '#9B8EC4'} />
+        <Ionicons name={isActive ? 'mic' : 'mic-outline'} size={18} color={isActive ? '#5B5BD6' : Colors.light.primaryMuted} />
         {isActive && (
           <View style={styles.voiceCheck}>
             <Ionicons name="checkmark" size={10} color="#FFFFFF" />
@@ -147,7 +147,7 @@ function AddVoiceCard({ onPress }: { onPress: () => void }) {
       accessibilityLabel="Record a new narrator voice"
     >
       <View style={styles.voiceCardTop}>
-        <Ionicons name="mic-outline" size={18} color="#9B8EC4" />
+        <Ionicons name="mic-outline" size={18} color={Colors.light.primaryMuted} />
       </View>
       <Text style={styles.voiceName}>Add voice</Text>
       <Text style={styles.voiceDesc}>Tap to record</Text>
@@ -459,7 +459,7 @@ export function ProfileScreen() {
                   ]}
                 >
                   <LinearGradient
-                    colors={[colors.primary, '#9B8EC4']}
+                    colors={[colors.primary, Colors.light.primaryMuted]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFill}
@@ -572,7 +572,7 @@ export function ProfileScreen() {
                           <Ionicons
                             name={selected ? 'volume-high' : 'volume-medium-outline'}
                             size={18}
-                            color={selected ? '#5B5BD6' : '#9B8EC4'}
+                            color={selected ? '#5B5BD6' : Colors.light.primaryMuted}
                           />
                           {selected && (
                             <View style={styles.voiceCheck}>
@@ -611,7 +611,7 @@ export function ProfileScreen() {
                               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
                               hitSlop={8}
                             >
-                              <Ionicons name="refresh" size={13} color="#9B8EC4" />
+                              <Ionicons name="refresh" size={13} color={Colors.light.primaryMuted} />
                             </Pressable>
                           )}
                         </View>
@@ -675,13 +675,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: SCREEN_WIDTH < 380 ? 28 : 32,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: 4,
   },
   headerSubtitle: {
     fontFamily: 'Nunito_500Medium',
     fontSize: SCREEN_WIDTH < 380 ? 13 : 15,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
     lineHeight: SCREEN_WIDTH < 380 ? 18 : 22,
   },
   headerMascot: {
@@ -721,9 +721,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 2,
   },
-  userName: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: '#4B367C' },
-  userMeta: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: '#7B6B9E', marginBottom: 4 },
-  userBio: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: '#7B6B9E', lineHeight: 18 },
+  userName: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: Colors.light.purpleMid },
+  userMeta: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: Colors.light.purpleSoft, marginBottom: 4 },
+  userBio: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.light.purpleSoft, lineHeight: 18 },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -752,14 +752,14 @@ const styles = StyleSheet.create({
   },
   plusContent: { flex: 1, justifyContent: 'center' },
   plusTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  plusTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#4B367C' },
+  plusTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: Colors.light.purpleMid },
   plusBadge: { backgroundColor: '#DCD5F1', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   plusBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 10, color: '#7B5EA7', textTransform: 'uppercase' },
-  plusSubtitle: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: '#7B6B9E' },
+  plusSubtitle: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.light.purpleSoft },
   sectionTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 16,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: Spacing.sm,
     marginTop: Spacing.sm,
     paddingHorizontal: 4,
@@ -814,9 +814,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  voiceName: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: '#4B367C', marginBottom: 2 },
+  voiceName: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.light.purpleMid, marginBottom: 2 },
   voiceNameSelected: { color: '#3730A3' },
-  voiceDesc: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: '#9B8EC4' },
+  voiceDesc: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.light.primaryMuted },
   voiceDescSelected: { color: '#5B5BD6' },
 
   // ── Plus banner variants ───────────────────────────────────────────────────
@@ -850,9 +850,9 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4CAF7D',
+    backgroundColor: Colors.light.success,
   },
-  plusBadgeTextActive: { color: '#4CAF7D' },
+  plusBadgeTextActive: { color: Colors.light.success },
   plusBadgeNew: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1,

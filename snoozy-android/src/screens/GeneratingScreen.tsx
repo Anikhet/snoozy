@@ -23,7 +23,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
-import { Spacing } from '@/config/tokens'
+import { Colors, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { StoryStatus } from '@/types/story'
 
@@ -263,13 +263,13 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 54,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     letterSpacing: -1,
   },
   brandSubtitle: {
     fontFamily: 'Nunito_500Medium',
     fontSize: 14,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
   },
   mascotWrapper: {
     flex: 1,
@@ -318,13 +318,13 @@ const styles = StyleSheet.create({
   loadingText: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     textAlign: 'center',
   },
   subText: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 13,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
     textAlign: 'center',
   },
   retryBtn: {
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   retryLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
   flashOverlay: {
     backgroundColor: '#FFFFFF',
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   cancelLabel: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 13,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
     textAlign: 'center',
   },
 })

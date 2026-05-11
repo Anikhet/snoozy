@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
@@ -43,7 +43,7 @@ function FieldInput({
     <View>
       <Text style={styles.fieldLabel}>{label}</Text>
       <View style={[styles.inputRow, { borderColor: focused ? '#5B5BD6' : 'rgba(91,91,214,0.18)' }]}>
-        <Ionicons name={icon} size={18} color="#9B8EC4" />
+        <Ionicons name={icon} size={18} color={Colors.light.primaryMuted} />
         <TextInput
           style={styles.input}
           value={value}
@@ -110,7 +110,7 @@ export function StoryPreferencesScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={closeProfilePanel} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={22} color="#4B367C" />
+            <Ionicons name="chevron-back" size={22} color={Colors.light.purpleMid} />
           </Pressable>
           <Text style={styles.headerTitle}>Story Preferences</Text>
           <View style={styles.headerSpacer} />
@@ -164,7 +164,7 @@ export function StoryPreferencesScreen() {
             </Animated.View>
 
             <Animated.View entering={FadeInDown.delay(220).duration(420)} style={styles.hintRow}>
-              <Ionicons name="sparkles-outline" size={14} color="#9B8EC4" />
+              <Ionicons name="sparkles-outline" size={14} color={Colors.light.primaryMuted} />
               <Text style={[Fonts.caption, styles.hintText]}>
                 All fields are optional — fill in what fits
               </Text>
@@ -183,7 +183,7 @@ export function StoryPreferencesScreen() {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={['#5B5BD6', '#9B8EC4']}
+              colors={['#5B5BD6', Colors.light.primaryMuted]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
   headerSpacer: { width: 40 },
@@ -237,13 +237,13 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 26,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     textAlign: 'center',
     letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
   heroSubtitle: {
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
     textAlign: 'center',
   },
   card: {
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 14,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: Spacing.sm,
   },
   inputRow: {
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_400Regular',
     fontSize: 15,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
   },
   divider: {
     height: 1,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     marginTop: Spacing.md,
   },
-  hintText: { color: '#9B8EC4' },
+  hintText: { color: Colors.light.primaryMuted },
   ctaSpacer: { height: Sizing.buttonHeight + Spacing.xxl },
   ctaBar: {
     paddingHorizontal: Spacing.lg,

@@ -25,7 +25,7 @@ import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { useRegion } from '@/hooks/useRegion'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
-import { Radii, Spacing } from '@/config/tokens'
+import { Colors, Radii, Spacing } from '@/config/tokens'
 import {
   SUBSCRIPTION_PLANS,
   PLUS_FEATURES,
@@ -54,7 +54,7 @@ const P = {
   primary: '#7C6AF8',
   primaryDeep: '#5B5BD6',
   razorBlue: '#3395FF',
-  success: '#4CAF7D',
+  success: Colors.light.success,
   divider: 'rgba(255,255,255,0.10)',
 }
 

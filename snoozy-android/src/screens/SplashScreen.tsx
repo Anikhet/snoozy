@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Spacing } from '@/config/tokens'
+import { Colors, Spacing } from '@/config/tokens'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const SPLASH_DURATION_MS = 2500
@@ -136,13 +136,13 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 54,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     letterSpacing: -1,
   },
   brandSubtitle: {
     fontFamily: 'Nunito_500Medium',
     fontSize: 14,
-    color: '#7B6B9E',
+    color: Colors.light.purpleSoft,
   },
   mascotWrapper: {
     flex: 1,

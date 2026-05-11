@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { scheduleBedtimeNotification } from '@/services/notificationService'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
@@ -144,7 +144,7 @@ export function BedtimeReminderScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={closeProfilePanel} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={22} color="#4B367C" />
+            <Ionicons name="chevron-back" size={22} color={Colors.light.purpleMid} />
           </Pressable>
           <Text style={styles.headerTitle}>Bedtime Reminder</Text>
           <View style={styles.headerSpacer} />
@@ -201,7 +201,7 @@ export function BedtimeReminderScreen() {
 
             {/* Preview */}
             <View style={styles.previewRow}>
-              <Ionicons name="alarm-outline" size={16} color="#9B8EC4" />
+              <Ionicons name="alarm-outline" size={16} color={Colors.light.primaryMuted} />
               <Text style={[Fonts.caption, styles.previewText]}>
                 Story starts at {formatBedtime(bedtime)}
               </Text>
@@ -209,7 +209,7 @@ export function BedtimeReminderScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(220).duration(420)} style={styles.hintRow}>
-            <Ionicons name="notifications-outline" size={14} color="#9B8EC4" />
+            <Ionicons name="notifications-outline" size={14} color={Colors.light.primaryMuted} />
             <Text style={[Fonts.caption, styles.hintText]}>
               Turn on notifications in Profile to get a reminder
             </Text>
@@ -227,7 +227,7 @@ export function BedtimeReminderScreen() {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={['#5B5BD6', '#9B8EC4']}
+              colors={['#5B5BD6', Colors.light.primaryMuted]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
   headerSpacer: { width: 40 },
@@ -280,12 +280,12 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 26,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     textAlign: 'center',
     letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
-  heroSubtitle: { color: '#7B6B9E', textAlign: 'center' },
+  heroSubtitle: { color: Colors.light.purpleSoft, textAlign: 'center' },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radii.cardLarge,
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   stepperBlock: { alignItems: 'center' },
-  stepperLabel: { color: '#9B8EC4', marginBottom: Spacing.xs },
+  stepperLabel: { color: Colors.light.primaryMuted, marginBottom: Spacing.xs },
   stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -320,14 +320,14 @@ const styles = StyleSheet.create({
   stepValue: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 20,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     minWidth: 32,
     textAlign: 'center',
   },
   colon: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 22,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: Spacing.xs,
     paddingHorizontal: 4,
   },
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   periodOption: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 13,
-    color: '#9B8EC4',
+    color: Colors.light.primaryMuted,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 10,
     textAlign: 'center',
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(91,91,214,0.08)',
   },
-  previewText: { color: '#7B6B9E' },
+  previewText: { color: Colors.light.purpleSoft },
   hintRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     marginTop: Spacing.md,
   },
-  hintText: { color: '#9B8EC4', flex: 1, textAlign: 'center' },
+  hintText: { color: Colors.light.primaryMuted, flex: 1, textAlign: 'center' },
   ctaSpacer: { height: Sizing.buttonHeight + Spacing.xxl },
   ctaBar: {
     paddingHorizontal: Spacing.lg,

@@ -18,6 +18,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import {
+  Colors,
   Fonts,
   Radii,
   Sizing,
@@ -128,7 +129,7 @@ export function HomeScreen() {
       })}
     >
       <LinearGradient
-        colors={[colors.primary, '#9B8EC4']}
+        colors={[colors.primary, Colors.light.primaryMuted]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.ctaGradient}
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     letterSpacing: 0.1,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
   },
   greetingSub: {
     fontFamily: 'Nunito_600SemiBold',
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 44,
     letterSpacing: -1,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
   },
   mascotWrapper: {
     alignItems: 'center',

@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import {
+  Colors,
   Fonts,
   Radii,
   Spacing,
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 32,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     marginBottom: 4,
   },
   sortBtn: {

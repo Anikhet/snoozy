@@ -15,7 +15,7 @@ import { useAuth } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { VIBES, WORLDS } from '@/config/storyOptions'
 
@@ -170,7 +170,7 @@ export default function VibePickerScreen() {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={[colors.primary, '#9B8EC4']}
+              colors={[colors.primary, Colors.light.primaryMuted]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 32,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
   vibeList: {

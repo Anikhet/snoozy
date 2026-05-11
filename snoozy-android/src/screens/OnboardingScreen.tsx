@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 
 export const ONBOARDING_KEY = 'snoozy_onboarding_complete'
@@ -190,7 +190,7 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
               style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}
             >
               <LinearGradient
-                colors={isValid ? [colors.primary, '#9B8EC4'] : [colors.hair, colors.hair]}
+                colors={isValid ? [colors.primary, Colors.light.primaryMuted] : [colors.hair, colors.hair]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={[

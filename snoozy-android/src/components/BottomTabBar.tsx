@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Spacing } from '@/config/tokens'
+import { Colors, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { Screen } from '@/types/navigation'
 
@@ -57,7 +57,7 @@ function TabButton({
     >
       {isActive ? (
         <LinearGradient
-          colors={[colors.primary, '#9B8EC4']}
+          colors={[colors.primary, Colors.light.primaryMuted]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.iconChip}
@@ -155,7 +155,7 @@ export function BottomTabBar() {
           {/* Background-colour ring separates FAB from the pill beneath it */}
           <View style={[styles.fabRing, { backgroundColor: colors.background }]}>
             <LinearGradient
-              colors={[colors.primary, '#9B8EC4']}
+              colors={[colors.primary, Colors.light.primaryMuted]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.fab}

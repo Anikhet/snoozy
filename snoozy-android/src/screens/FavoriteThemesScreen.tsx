@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
+import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
@@ -66,7 +66,7 @@ function WorldCard({
             </View>
           )}
           <Text style={styles.worldEmoji}>{world.emoji}</Text>
-          <Text style={[styles.worldName, { color: selected ? '#5B5BD6' : '#2D1F6E' }]} numberOfLines={2}>
+          <Text style={[styles.worldName, { color: selected ? '#5B5BD6' : Colors.light.purpleDeep }]} numberOfLines={2}>
             {world.name}
           </Text>
           <Text style={[Fonts.caption, styles.worldSubtitle]} numberOfLines={2}>
@@ -134,7 +134,7 @@ export function FavoriteThemesScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={closeProfilePanel} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={22} color="#4B367C" />
+            <Ionicons name="chevron-back" size={22} color={Colors.light.purpleMid} />
           </Pressable>
           <Text style={styles.headerTitle}>Favourite Worlds</Text>
           <View style={styles.headerSpacer} />
@@ -184,12 +184,12 @@ export function FavoriteThemesScreen() {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={count > 0 ? ['#5B5BD6', '#9B8EC4'] : ['#D4CEDE', '#D4CEDE']}
+              colors={count > 0 ? ['#5B5BD6', Colors.light.primaryMuted] : ['#D4CEDE', '#D4CEDE']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
             >
-              <Text style={[styles.ctaLabel, { color: count > 0 ? '#FFFFFF' : '#9B8EC4' }]}>
+              <Text style={[styles.ctaLabel, { color: count > 0 ? '#FFFFFF' : Colors.light.primaryMuted }]}>
                 {saving ? 'Saving…' : count > 0 ? 'Save favourites' : 'Skip for now'}
               </Text>
             </LinearGradient>
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Nunito_700Bold',
     fontSize: 17,
-    color: '#4B367C',
+    color: Colors.light.purpleMid,
     textAlign: 'center',
   },
   headerSpacer: { width: 40 },
@@ -239,12 +239,12 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 26,
-    color: '#2D1F6E',
+    color: Colors.light.purpleDeep,
     textAlign: 'center',
     letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
-  heroSubtitle: { color: '#7B6B9E', textAlign: 'center' },
+  heroSubtitle: { color: Colors.light.purpleSoft, textAlign: 'center' },
   countPill: {
     alignSelf: 'center',
     backgroundColor: '#EDE9FF',
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
     marginBottom: Spacing.xs,
   },
-  worldSubtitle: { color: '#9B8EC4', textAlign: 'center' },
+  worldSubtitle: { color: Colors.light.primaryMuted, textAlign: 'center' },
   ctaSpacer: { height: Sizing.buttonHeight + Spacing.xxl },
   ctaBar: {
     paddingHorizontal: Spacing.lg,
