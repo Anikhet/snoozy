@@ -24,8 +24,8 @@ npm start         # production start
 
 ### Architecture
 - Express + Clerk (`@clerk/express`) — all `/api/*` routes require a valid Clerk JWT via `requireAuth()`.
-- Two routes: `POST /api/generate-story` (OpenAI/Azure chat → story text) and `POST /api/generate-audio` (ElevenLabs / OpenAI TTS / Azure TTS → MP3 buffer).
-- TTS provider is selected at runtime via `TTS_PROVIDER` env var (`elevenlabs` | `openai` | `azure`).
+- Two routes: `POST /api/generate-story` (Azure OpenAI chat → story text) and `POST /api/generate-audio` (ElevenLabs or Fish Audio TTS → MP3 buffer).
+- TTS provider is selected per-request by the client via the `provider` field in the request body (`elevenlabs` | `fishaudio`).
 - In-memory audio cache keyed by SHA-256 of `(processedText + voiceId)`, capped at 200 entries / 2h TTL. Swap for Redis above ~500 stories/day.
 - Story text is pre-processed by `src/utils/ttsPreprocessor.js` before TTS (strips markdown, injects SSML break tags per vibe).
 - Loudness normalization runs on ElevenLabs output via `src/utils/audioNormalizer.js`.

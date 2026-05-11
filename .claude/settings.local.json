@@ -54,7 +54,17 @@
       "Bash(node scripts/generate-ambient.js kingdom)",
       "Bash(node scripts/generate-ambient.js ocean)",
       "Bash(node scripts/generate-ambient.js clouds)",
-      "Bash(node scripts/generate-ambient.js jungle)"
+      "Bash(node scripts/generate-ambient.js jungle)",
+      "WebFetch(domain:www.webfuse.com)",
+      "Bash(git -C /Users/pkats-mac/snoozy status)",
+      "Bash(git -C /Users/pkats-mac/snoozy add backend/.env.example)",
+      "Bash(git -C /Users/pkats-mac/snoozy commit -m ' *)",
+      "Bash(git -C /Users/pkats-mac/snoozy ls-files backend/.env.example)",
+      "Bash(git -C /Users/pkats-mac/snoozy add backend/src/index.js backend/package.json backend/package-lock.json snoozy-android/src/services/apiService.ts snoozy-android/src/stores/storyStore.ts)",
+      "Bash(node -e \"const {LRUCache} = require\\('lru-cache'\\); console.log\\('ok'\\)\")",
+      "Bash(git -C /Users/pkats-mac/snoozy add backend/src/index.js backend/src/routes/story.js backend/package.json backend/package-lock.json)",
+      "Bash(git -C /Users/pkats-mac/snoozy add backend/src/routes/story.js)",
+      "Bash(node --check src/routes/story.js)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend"

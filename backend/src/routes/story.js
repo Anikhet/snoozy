@@ -1,6 +1,10 @@
 const express = require('express')
 const crypto = require('crypto')
 const zlib = require('zlib')
+const { spawn } = require('child_process')
+const { writeFile, readFile, unlink } = require('fs/promises')
+const { tmpdir } = require('os')
+const path = require('path')
 const { z } = require('zod')
 const multer = require('multer')
 const { AzureOpenAI } = require('openai')
@@ -343,36 +347,43 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
  *
  * Falls back to raw buffer on any failure.
  */
+const FFMPEG_BIN  = process.env.FFMPEG_PATH  || 'ffmpeg'
+const FFPROBE_BIN = process.env.FFPROBE_PATH || 'ffprobe'
+const BEDTIME_TIMEOUT_MS = 15_000
+
+async function probeBedtimeDuration(filePath) {
+  return new Promise((resolve, reject) => {
+    const ff = spawn(FFPROBE_BIN, [
+      '-v', 'quiet',
+      '-show_entries', 'format=duration',
+      '-of', 'csv=p=0',
+      filePath,
+    ])
+    let out = ''
+    ff.stdout.on('data', (chunk) => { out += chunk })
+    ff.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`ffprobe exit ${code}`))
+      const d = parseFloat(out.trim())
+      if (isNaN(d) || d <= 0) return reject(new Error('could not parse duration'))
+      resolve(d)
+    })
+    ff.on('error', reject)
+  })
+}
+
 async function applyBedtimeProcessing(inputBuffer) {
   if (!FFMPEG_AVAILABLE) {
     return { buffer: inputBuffer, processed: false, reason: 'ffmpeg not found' }
   }
 
-  const os     = require('os')
-  const fs     = require('fs')
-  const path   = require('path')
-  const { spawn, spawnSync } = require('child_process')
-  const FFMPEG_BIN  = process.env.FFMPEG_PATH  || 'ffmpeg'
-  const FFPROBE_BIN = process.env.FFPROBE_PATH || 'ffprobe'
-
-  const tmpDir     = process.platform === 'linux' ? '/dev/shm' : os.tmpdir()
   const id         = Date.now()
-  const inputPath  = path.join(tmpDir, `snoozy_raw_${id}.mp3`)
-  const outputPath = path.join(tmpDir, `snoozy_out_${id}.mp3`)
-
-  fs.writeFileSync(inputPath, inputBuffer)
+  const inputPath  = path.join(tmpdir(), `snoozy_raw_${id}.mp3`)
+  const outputPath = path.join(tmpdir(), `snoozy_out_${id}.mp3`)
 
   try {
-    const probe = spawnSync(FFPROBE_BIN, [
-      '-i', inputPath,
-      '-show_entries', 'format=duration',
-      '-v', 'quiet',
-      '-of', 'csv=p=0',
-    ])
-    const duration = parseFloat(probe.stdout?.toString().trim())
-    if (!duration || duration <= 0) {
-      return { buffer: inputBuffer, processed: false, reason: 'could not detect duration' }
-    }
+    await writeFile(inputPath, inputBuffer)
+
+    const duration = await probeBedtimeDuration(inputPath)
 
     const splitPoint   = (duration * 0.75).toFixed(3)
     const fadeOutStart = Math.max(0, duration - 4.0).toFixed(3)
@@ -385,16 +396,35 @@ async function applyBedtimeProcessing(inputBuffer) {
     ].join(';')
 
     await new Promise((resolve, reject) => {
+      let timedOut = false
       const ff = spawn(FFMPEG_BIN, [
         '-i', inputPath,
         '-filter_complex', filterComplex,
         '-b:a', '192k',
         '-y', outputPath,
-      ], { stdio: 'ignore' })
-      ff.on('close', (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)))
+      ])
+
+      const timer = setTimeout(() => {
+        timedOut = true
+        ff.kill('SIGKILL')
+        reject(new Error('bedtime processing timeout'))
+      }, BEDTIME_TIMEOUT_MS)
+
+      const stderrChunks = []
+      ff.stderr.on('data', (chunk) => stderrChunks.push(chunk))
+
+      ff.on('close', (code) => {
+        clearTimeout(timer)
+        if (timedOut) return
+        if (code !== 0) {
+          return reject(new Error(`ffmpeg exit ${code}: ${Buffer.concat(stderrChunks).toString().slice(-300)}`))
+        }
+        resolve()
+      })
+      ff.on('error', reject)
     })
 
-    const output = fs.readFileSync(outputPath)
+    const output = await readFile(outputPath)
     if (output.length < inputBuffer.length * 0.3) {
       return { buffer: inputBuffer, processed: false, reason: 'output suspiciously small' }
     }
@@ -403,7 +433,10 @@ async function applyBedtimeProcessing(inputBuffer) {
   } catch (err) {
     return { buffer: inputBuffer, processed: false, reason: err.message }
   } finally {
-    ;[inputPath, outputPath].forEach(f => { try { fs.unlinkSync(f) } catch {} })
+    await Promise.all([
+      unlink(inputPath).catch(() => {}),
+      unlink(outputPath).catch(() => {}),
+    ])
   }
 }
 
