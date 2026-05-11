@@ -175,7 +175,7 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
 /**
  * POST /api/generate-audio
  *
- * Generates TTS audio via the configured provider (OpenAI, ElevenLabs, or Azure).
+ * Generates TTS audio via the configured provider (ElevenLabs or Fish Audio).
  * ElevenLabs path: resolves voice from explicit voiceId → region default → global fallback.
  * Results are cached by content hash to avoid re-generating identical audio.
  */
