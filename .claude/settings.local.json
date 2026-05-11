@@ -93,7 +93,10 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST https://snoozy-kmoq.onrender.com/api/generate-story -H \"Content-Type: application/json\" -d '{\"test\":true}')",
       "Bash(curl -sv -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H \"Content-Type: application/json\" -d '{\"test\":true}')",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://snoozy-kmoq.onrender.com/)",
-      "Bash(java -version)"
+      "Bash(java -version)",
+      "Bash(/usr/libexec/java_home)",
+      "Read(//Library/Java/JavaVirtualMachines/**)",
+      "Read(//opt/homebrew/**)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend",

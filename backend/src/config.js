@@ -6,7 +6,7 @@ dotenv.config({ override: true })
  * a frozen config object used across the backend.
  */
 function loadConfig() {
-  const required = ['AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_CHAT_DEPLOYMENT', 'AZURE_OPENAI_TTS_DEPLOYMENT']
+  const required = ['AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT']
   const missing = required.filter((key) => !process.env[key])
   if (missing.length > 0) {
     throw new Error(`Missing required env vars: ${missing.join(', ')}`)
