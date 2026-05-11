@@ -17,6 +17,7 @@ import * as ambientAudioService from '@/services/ambientAudioService'
 import * as subscriptionService from '@/services/subscriptionService'
 import { generateUUID } from '@/utils/uuid'
 import { DEFAULT_AMBIENT_VOLUME, AMBIENT_VOLUME_KEY } from '@/config/ambientAudioMap'
+import { VOICES } from '@/config/voices'
 
 /**
  * Module-level map tracking in-flight generation tasks by story ID.
@@ -261,7 +262,9 @@ export const useStoryStore = create<StoryStore>((set, get) => {
       const details = { ...childDetails }
       const voiceId = details.voiceId
       const { voiceProfiles } = get()
-      const voiceName = voiceProfiles.find((p) => p.modelId === voiceId)?.name
+      const voiceName =
+        voiceProfiles.find((p) => p.modelId === voiceId)?.name ??
+        VOICES.find((v) => v.id === voiceId)?.displayName
 
       runGeneration(storyId, selectedWorldId, vibeId, details, voiceId, voiceName, getToken, abortController.signal)
     },

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -19,15 +19,18 @@ import { Ionicons } from '@expo/vector-icons'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import * as ImagePicker from 'expo-image-picker'
 import { copyAsync, documentDirectory } from 'expo-file-system/legacy'
+import { File, Paths, Directory } from 'expo-file-system'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { createAudioPlayer, type AudioStatus } from 'expo-audio'
 import { useAuth } from '@clerk/clerk-expo'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
-import { VOICES } from '@/config/voices'
-import { VoiceProfile } from '@/types/voice'
+import { VOICES, VOICE_PREVIEW_TEXT } from '@/config/voices'
+import { NarrationVoice, VoiceProfile } from '@/types/voice'
+import { generateAudio } from '@/services/apiService'
 import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
 import { BEDTIME_KEY, formatBedtime, BedtimeValue } from '@/screens/BedtimeReminderScreen'
 import { FAVORITE_WORLDS_KEY } from '@/screens/FavoriteThemesScreen'
@@ -159,7 +162,7 @@ export function ProfileScreen() {
   useBackHandler(goHome)
 
   const { colors } = useThemeColors()
-  const { signOut } = useAuth()
+  const { signOut, getToken } = useAuth()
 
   const childDetails = useStoryStore((s) => s.childDetails)
   const openProfileEdit = useStoryStore((s) => s.openProfileEdit)
@@ -180,6 +183,10 @@ export function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [bedtime, setBedtime] = useState<BedtimeValue | null>(null)
   const [favoriteWorldCount, setFavoriteWorldCount] = useState(0)
+  const [previewingVoiceId, setPreviewingVoiceId] = useState<string | null>(null)
+  const [loadingVoiceId, setLoadingVoiceId] = useState<string | null>(null)
+  const [cachedPreviewIds, setCachedPreviewIds] = useState<Set<string>>(new Set())
+  const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -253,6 +260,73 @@ export function ProfileScreen() {
   const handleLogout = useCallback(async () => {
     await signOut()
   }, [signOut])
+
+  useEffect(() => {
+    return () => { playerRef.current?.remove() }
+  }, [])
+
+  useEffect(() => {
+    const previewsDir = new Directory(Paths.document, 'previews')
+    if (!previewsDir.exists) return
+    const cached = new Set<string>()
+    for (const voice of VOICES) {
+      if (new File(previewsDir, `${voice.id}.mp3`).exists) cached.add(voice.id)
+    }
+    if (cached.size > 0) setCachedPreviewIds(cached)
+  }, [])
+
+  const handlePreview = useCallback(async (voice: NarrationVoice, forceRefresh = false) => {
+    if (!forceRefresh && previewingVoiceId === voice.id) {
+      playerRef.current?.pause()
+      setPreviewingVoiceId(null)
+      return
+    }
+
+    playerRef.current?.remove()
+    playerRef.current = null
+    setPreviewingVoiceId(null)
+    setLoadingVoiceId(voice.id)
+
+    try {
+      const previewsDir = new Directory(Paths.document, 'previews')
+      if (!previewsDir.exists) previewsDir.create()
+
+      const previewFile = new File(previewsDir, `${voice.id}.mp3`)
+
+      let fileUri: string
+      if (!forceRefresh && previewFile.exists) {
+        fileUri = previewFile.uri
+      } else {
+        if (previewFile.exists) previewFile.delete()
+        const token = await getToken()
+        if (!token) throw new Error('Not authenticated')
+        const base64 = await generateAudio(VOICE_PREVIEW_TEXT, token, voice.id, undefined, 'cozy')
+        const binary = atob(base64)
+        const bytes = new Uint8Array(binary.length)
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+        previewFile.write(bytes)
+        fileUri = previewFile.uri
+        setCachedPreviewIds(prev => new Set([...prev, voice.id]))
+      }
+
+      const player = createAudioPlayer({ uri: fileUri })
+      let wasPlaying = false
+      player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+        if (wasPlaying && !status.playing && status.currentTime >= status.duration - 0.5) {
+          setPreviewingVoiceId(null)
+          playerRef.current = null
+        }
+        wasPlaying = status.playing
+      })
+      playerRef.current = player
+      player.play()
+      setPreviewingVoiceId(voice.id)
+    } catch {
+      Alert.alert('Preview failed', 'Could not load voice preview. Check your connection.')
+    } finally {
+      setLoadingVoiceId(null)
+    }
+  }, [previewingVoiceId, getToken])
 
   const bioParts: string[] = []
   if (childDetails.favoriteColor) bioParts.push(childDetails.favoriteColor)
@@ -478,6 +552,9 @@ export function ProfileScreen() {
                   ))}
                   {VOICES.map((v) => {
                     const selected = childDetails.voiceId === v.id
+                    const isPreviewing = previewingVoiceId === v.id
+                    const isLoading = loadingVoiceId === v.id
+                    const isCached = cachedPreviewIds.has(v.id)
                     return (
                       <Pressable
                         key={v.id}
@@ -509,6 +586,35 @@ export function ProfileScreen() {
                         <Text style={[styles.voiceDesc, selected && styles.voiceDescSelected]}>
                           {v.description}
                         </Text>
+                        <View style={styles.previewRow}>
+                          <Pressable
+                            onPress={() => handlePreview(v)}
+                            style={({ pressed }) => [styles.previewBtn, { opacity: pressed ? 0.6 : 1 }]}
+                            hitSlop={8}
+                          >
+                            {isLoading ? (
+                              <ActivityIndicator size={12} color="#7B5EA7" />
+                            ) : (
+                              <Ionicons
+                                name={isPreviewing ? 'stop-circle' : 'play-circle'}
+                                size={14}
+                                color="#7B5EA7"
+                              />
+                            )}
+                            <Text style={styles.previewBtnText}>
+                              {isPreviewing ? 'Stop' : 'Preview'}
+                            </Text>
+                          </Pressable>
+                          {isCached && !isLoading && (
+                            <Pressable
+                              onPress={() => handlePreview(v, true)}
+                              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                              hitSlop={8}
+                            >
+                              <Ionicons name="refresh" size={13} color="#9B8EC4" />
+                            </Pressable>
+                          )}
+                        </View>
                       </Pressable>
                     )
                   })}
@@ -762,4 +868,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   plusSubtitleDark: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.75)' },
+  previewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  previewBtnText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 11,
+    color: '#7B5EA7',
+  },
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: '#EDE9FF',
+  },
 })

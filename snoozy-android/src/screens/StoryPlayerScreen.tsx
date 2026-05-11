@@ -192,13 +192,22 @@ export function StoryPlayerScreen() {
             </Text>
           </Animated.View>
 
-          {/* Duration */}
-          {duration > 0 ? (
-            <Animated.View entering={FadeInUp.delay(180).duration(400)} style={styles.durationRow}>
-              <Ionicons name="time-outline" size={12} color={colors.inkMute as string} />
-              <Text style={styles.durationText}>{formatDuration(duration)}</Text>
-            </Animated.View>
-          ) : null}
+          {/* Duration + voice name */}
+          <Animated.View entering={FadeInUp.delay(180).duration(400)} style={styles.durationRow}>
+            {duration > 0 ? (
+              <>
+                <Ionicons name="time-outline" size={12} color={colors.inkMute as string} />
+                <Text style={styles.durationText}>{formatDuration(duration)}</Text>
+              </>
+            ) : null}
+            {currentStory.voiceName ? (
+              <>
+                {duration > 0 && <Text style={styles.durationText}> · </Text>}
+                <Ionicons name="mic-outline" size={12} color={colors.inkMute as string} />
+                <Text style={styles.durationText}>{currentStory.voiceName}</Text>
+              </>
+            ) : null}
+          </Animated.View>
 
           {/* Waveform scrubber */}
           <Animated.View entering={FadeInUp.delay(260).duration(400)} style={styles.scrubberBlock}>
