@@ -173,39 +173,70 @@ function prepareTextForFishAudio(text) {
 /**
  * The single source of truth for tags Storybell allows in TTS output.
  * Anything not in this set (or mappable via TAG_ALIASES) gets stripped.
+ *
+ * Aligned with Fish Audio S2's published 33-tag library where possible.
+ * Tags marked "free-form" are not on Fish's curated list but are training-
+ * frequent natural language and reliably interpreted by S2.
  */
 const APPROVED_TAGS = new Set([
-  'pause', 'short pause', 'slow',
-  'soft', 'soft voice', 'low voice', 'whisper',
-  'exhale',
-  'gentle', 'emphasis',  // 'tender' removed
+  // Structural (curated)
+  'pause', 'short pause',
+
+  // Voice register (curated: low voice, whisper, exhale; free-form: soft voice)
+  'soft voice', 'low voice', 'whisper', 'exhale',
+
+  // Pacing (free-form, reliable)
+  'slow',
+
+  // Texture & warmth (curated: low volume; free-form: gentle)
+  'gentle', 'low volume',
+
+  // Lift (curated)
+  'emphasis',
 ])
 
 /**
  * Common LLM hallucinations mapped to their canonical Storybell equivalents.
  * Anything mapped to null is silently stripped (banned content).
+ *
+ * Routing principle:
+ *   - "soft / softly / quiet / quietly / hushed" → low volume (volume control)
+ *   - "calm / peaceful / warm / tender / kind" → gentle (warmth control)
+ *   - "low / deep" → low voice (register control)
+ *   - "sigh / breath" → exhale (breath control)
  */
 const TAG_ALIASES = {
   // Pacing variants
   'slowly': 'slow',
   'long pause': 'pause',
   'pausing': 'pause',
-  'beat': 'pause',
-  
-  // Voice quality variants
-  'softly': 'soft',
-  'quietly': 'soft voice',
-  'quiet': 'soft voice',
-  'hushed': 'soft voice',
+  'beat': 'short pause',
+
+  // Volume variants → low volume
+  'soft': 'low volume',
+  'softly': 'low volume',
+  'quiet': 'low volume',
+  'quietly': 'low volume',
+  'hushed': 'low volume',
+  'low volume voice': 'low volume',
+
+  // Whisper variants
   'whispered': 'whisper',
   'whispering': 'whisper',
   'whisper softly': 'whisper',
+
+  // Register variants → low voice
   'low': 'low voice',
   'deep voice': 'low voice',
-  
-  // Emotion variants
+  'deeper voice': 'low voice',
+
+  // Soft voice variants
+  'gentle voice': 'soft voice',
+  'soft tone': 'soft voice',
+
+  // Warmth variants → gentle
   'gently': 'gentle',
-  'tender': 'gentle',       // newly mapped
+  'tender': 'gentle',
   'tenderly': 'gentle',
   'warm': 'gentle',
   'warmly': 'gentle',
@@ -214,90 +245,158 @@ const TAG_ALIASES = {
   'peaceful': 'gentle',
   'peacefully': 'gentle',
   'kindly': 'gentle',
-  
-  // Breath variants
+
+  // Emphasis variants
+  'emphasized': 'emphasis',
+  'emphasised': 'emphasis',
+  'stress': 'emphasis',
+
+  // Breath variants → exhale
   'sigh': 'exhale',
   'sighs': 'exhale',
   'sighing': 'exhale',
   'breath': 'exhale',
   'breathe': 'exhale',
   'breathe out': 'exhale',
-  
-  // Banned (silently stripped — bedtime-inappropriate)
+  'breathes out': 'exhale',
+
+  // Banned — real S2 tags that would activate and break atmosphere
   'excited': null,
   'laughing': null,
-  'laugh': null,
   'shouting': null,
-  'shout': null,
   'loud': null,
   'angry': null,
   'surprised': null,
   'screaming': null,
   'shocked': null,
   'panting': null,
-  'crying': null,
   'sad': null,
   'moaning': null,
+  'chuckling': null,
+  'singing': null,
+  'volume up': null,
+
+  // Banned — common LLM hallucinations that would be unsafe to pass through
+  'laugh': null,
+  'shout': null,
+  'crying': null,
+  'cry': null,
+  'sobbing': null,
+  'fearful': null,
+  'scared': null,
   'dramatic': null,
   'intense': null,
   'urgent': null,
-  'fearful': null,
-  'scared': null,
+}
+
+/**
+ * Pairs of tags that overlap semantically. When both appear in the same
+ * compound bracket, the second is dropped (the first wins).
+ *
+ * This prevents the "two warmth instructions fighting each other" failure
+ * mode that the prompt warns against — e.g. the LLM writing
+ * [low voice, low volume] which gives the model two competing volume signals.
+ */
+const OVERLAP_GROUPS = [
+  new Set(['low volume', 'soft voice', 'low voice', 'whisper']), // volume/register
+  new Set(['gentle', 'soft voice']),                              // warmth/softness
+]
+
+function findOverlap(existing, candidate) {
+  for (const group of OVERLAP_GROUPS) {
+    if (group.has(candidate) && existing.some(t => group.has(t) && t !== candidate)) {
+      return true
+    }
+  }
+  return false
 }
 
 /**
  * Sanitizes Fish Audio emotion tags in story text.
- * 
+ *
  * - Approved tags pass through unchanged.
  * - Aliased tags are normalized to their canonical form.
  * - Unknown tags are stripped (with a warning logged for review).
  * - Banned tags are silently removed.
- * - Compound tags (e.g., "low voice, slow") are split, validated, and rejoined.
- * 
+ * - Compound tags (e.g., "low voice, slow") are split, validated, deduped,
+ *   and checked for semantic overlap before being rejoined.
+ *
  * @param {string} text - Story text with [tags] embedded by the LLM
  * @returns {{ sanitized: string, stripped: string[], warnings: string[] }}
  */
 function sanitizeFishAudioTags(text) {
   const stripped = []
   const warnings = []
-  
-  const sanitized = text.replace(/\[([^\]]+)\]/g, (match, rawContent) => {
+
+  let sanitized = text.replace(/\[([^\]]+)\]/g, (_match, rawContent) => {
     const tagContent = rawContent.trim().toLowerCase()
-    
-    // Handle compound tags like "low voice, slow"
+
+    // Compound tags like "low voice, slow"
     const parts = tagContent.split(',').map(p => p.trim()).filter(Boolean)
     const normalized = []
-    
+
     for (const part of parts) {
+      let resolved = null
+
       if (APPROVED_TAGS.has(part)) {
-        normalized.push(part)
+        resolved = part
       } else if (part in TAG_ALIASES) {
         const aliased = TAG_ALIASES[part]
         if (aliased) {
-          normalized.push(aliased)
+          resolved = aliased
         } else {
+          // Banned — silently strip
           stripped.push(part)
+          continue
         }
       } else {
         // Unknown — strip and warn for review
         stripped.push(part)
         warnings.push(`Unknown tag stripped: [${part}]`)
+        continue
       }
+
+      // Skip exact duplicates within the same bracket
+      if (normalized.includes(resolved)) {
+        warnings.push(`Duplicate tag in compound dropped: [${resolved}]`)
+        continue
+      }
+
+      // Skip semantically overlapping tags (volume vs register, etc.)
+      if (findOverlap(normalized, resolved)) {
+        warnings.push(`Overlapping tag dropped from compound: [${resolved}]`)
+        continue
+      }
+
+      normalized.push(resolved)
     }
-    
+
     if (normalized.length === 0) return ''
+
+    // Cap at 2 tags per bracket per the prompt's combine rule
+    if (normalized.length > 2) {
+      warnings.push(`Compound tag truncated to 2: had ${normalized.length}`)
+      normalized.length = 2
+    }
+
     return `[${normalized.join(', ')}]`
   })
-  
-  // Tidy up double spaces / orphaned blank lines from removals
-  const tidied = sanitized
+
+  // Tidy up artifacts from removals:
+  //   - blank-line-only-bracket-removed cases
+  //   - double spaces
+  //   - excess blank lines
+  sanitized = sanitized
+    .replace(/^[ \t]*\n/gm, m => m) // preserve intentional blank lines
     .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')      // trailing whitespace before newline
     .replace(/\n{3,}/g, '\n\n')
     .trim()
-  
-  return { sanitized: tidied, stripped, warnings }
+
+  return { sanitized, stripped, warnings }
 }
 
+module.exports = { sanitizeFishAudioTags, APPROVED_TAGS, TAG_ALIASES }
 /**
  * Tag density check — sanity check the LLM didn't go overboard.
  * Returns { count, density } where density is tags per 100 words.

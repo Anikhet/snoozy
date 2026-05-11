@@ -420,7 +420,7 @@ async function generateWithFishAudio(text, requestedVoiceId, _vibeId, config, re
     latency: 'normal',
     chunk_length: 300,
     min_chunk_length: 50,
-    prosody: { speed: 0.92, volume: 0 },
+    prosody: { speed: 0.92, volume: 0, normalize_loudness: true },
     temperature: 0.6,
     top_p: 0.7,
     repetition_penalty: 1.2,
