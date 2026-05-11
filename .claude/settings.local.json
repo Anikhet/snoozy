@@ -64,7 +64,8 @@
       "Bash(node -e \"const {LRUCache} = require\\('lru-cache'\\); console.log\\('ok'\\)\")",
       "Bash(git -C /Users/pkats-mac/snoozy add backend/src/index.js backend/src/routes/story.js backend/package.json backend/package-lock.json)",
       "Bash(git -C /Users/pkats-mac/snoozy add backend/src/routes/story.js)",
-      "Bash(node --check src/routes/story.js)"
+      "Bash(node --check src/routes/story.js)",
+      "Bash(git -C /Users/pkats-mac/snoozy ls-files snoozy-android/.env)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend"
