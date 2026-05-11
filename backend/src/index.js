@@ -9,16 +9,30 @@ const storyRoutes = require('./routes/story')
 const config = loadConfig()
 const app = express()
 
-const generationRateLimit = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 10,
+const storyRateLimit = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 15,
   keyGenerator: (req) => req.auth?.()?.userId ?? req.ip,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, res) => {
     res.status(429).json({
       success: false,
-      error: "You've reached your daily limit of 10 stories. Contact the Snoozy team to increase your limit.",
+      error: "You've reached your daily limit of 15 stories. Contact the Snoozy team to increase your limit.",
+    })
+  },
+})
+
+const audioRateLimit = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 30,
+  keyGenerator: (req) => req.auth?.()?.userId ?? req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({
+      success: false,
+      error: "You've reached your daily audio limit. Contact the Snoozy team to increase your limit.",
     })
   },
 })
@@ -34,7 +48,8 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 
-app.use(['/api/generate-story', '/api/generate-audio'], generationRateLimit)
+app.use('/api/generate-story', storyRateLimit)
+app.use('/api/generate-audio', audioRateLimit)
 
 app.use('/api', requireAuth({ signInUrl: undefined }), (req, res, next) => {
   if (!req.auth?.()?.userId) return res.status(401).json({ success: false, error: 'Unauthorized' })

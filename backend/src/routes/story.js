@@ -9,6 +9,8 @@ const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRID
 const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
 const { normalizeLoudness, FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
+const { LRUCache } = require('lru-cache')
+
 const router = express.Router()
 
 // Multer: store uploaded audio in memory (max 20 MB — enough for ~3 min uncompressed)
@@ -33,31 +35,25 @@ const ELEVENLABS_FALLBACK_VOICE = '21m00Tcm4TlvDq8ikWAM' // Rachel — used only
 // In-memory for now. Swap for Redis when you hit scale (>500 stories/day).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const audioCache = new Map()
-const CACHE_MAX_ENTRIES = 200
-const CACHE_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
+const audioCache = new LRUCache({
+  max: 200,
+  ttl: 2 * 60 * 60 * 1000, // 2 hours — entries expire regardless of access
+})
+
+// Deduplicates concurrent requests for the same cache key so only one TTS
+// call goes out even if two requests arrive simultaneously for the same audio.
+const inFlight = new Map() // key -> Promise<Buffer>
 
 function getCacheKey(text, voiceId) {
   return crypto.createHash('sha256').update(`${text}:${voiceId}`).digest('hex')
 }
 
 function getFromCache(key) {
-  const entry = audioCache.get(key)
-  if (!entry) return null
-  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
-    audioCache.delete(key)
-    return null
-  }
-  return entry.buffer
+  return audioCache.get(key) ?? null
 }
 
 function setInCache(key, buffer) {
-  // Evict oldest entry if at capacity to keep memory bounded
-  if (audioCache.size >= CACHE_MAX_ENTRIES) {
-    const oldestKey = audioCache.keys().next().value
-    audioCache.delete(oldestKey)
-  }
-  audioCache.set(key, { buffer, timestamp: Date.now() })
+  audioCache.set(key, buffer)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -241,6 +237,21 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
     res.end(cachedAudio)
     return
   }
+  if (inFlight.has(cacheKey)) {
+    log('AUDIO', `Cache MISS but in-flight (${cacheKey.slice(0, 8)}…) — piggybacking`)
+    try {
+      const buffer = await inFlight.get(cacheKey)
+      res.setHeader('Content-Type', 'audio/mpeg')
+      res.setHeader('X-Cache', 'DEDUP')
+      return res.end(buffer)
+    } catch {
+      return res.status(502).json({ success: false, error: 'Failed to generate audio. Please try again.' })
+    }
+  }
+  let resolveDeferred, rejectDeferred
+  const deferred = new Promise((resolve, reject) => { resolveDeferred = resolve; rejectDeferred = reject })
+  inFlight.set(cacheKey, deferred)
+
   log('AUDIO', `Cache MISS — calling ElevenLabs API...`)
 
   // FIX #3: output_format passed as query param — this is the correct ElevenLabs pattern
@@ -283,6 +294,8 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
     }
     const message = statusMessages[ttsResponse.status] || 'Failed to generate audio. Please try again.'
 
+    rejectDeferred(new Error(message))
+    inFlight.delete(cacheKey)
     if (!res.headersSent) {
       res.status(ttsResponse.status === 429 ? 429 : 502).json({ success: false, error: message })
     }
@@ -304,6 +317,8 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
     log('AUDIO', `Loudness normalization skipped (${reason}) — serving raw audio`)
   }
 
+  resolveDeferred(buffer)
+  inFlight.delete(cacheKey)
   setInCache(cacheKey, buffer)
 
   res.setHeader('Content-Type', 'audio/mpeg')
@@ -410,6 +425,21 @@ async function generateWithFishAudio(text, requestedVoiceId, _vibeId, config, re
     res.end(cachedAudio)
     return
   }
+  if (inFlight.has(cacheKey)) {
+    log('AUDIO', `Cache MISS but in-flight (${cacheKey.slice(0, 8)}…) — piggybacking`)
+    try {
+      const buffer = await inFlight.get(cacheKey)
+      res.setHeader('Content-Type', 'audio/mpeg')
+      res.setHeader('X-Cache', 'DEDUP')
+      return res.end(buffer)
+    } catch {
+      return res.status(502).json({ success: false, error: 'Failed to generate audio. Please try again.' })
+    }
+  }
+  let resolveDeferred, rejectDeferred
+  const deferred = new Promise((resolve, reject) => { resolveDeferred = resolve; rejectDeferred = reject })
+  inFlight.set(cacheKey, deferred)
+
   log('AUDIO', `Cache MISS — calling Fish Audio API (voice: ${referenceId || 'default'})...`)
 
   const body = {
@@ -453,6 +483,8 @@ async function generateWithFishAudio(text, requestedVoiceId, _vibeId, config, re
       422: 'Fish Audio rejected the request. Check voice model ID and text.',
     }
     const message = statusMessages[ttsResponse.status] || 'Failed to generate audio. Please try again.'
+    rejectDeferred(new Error(message))
+    inFlight.delete(cacheKey)
     if (!res.headersSent) {
       res.status(ttsResponse.status === 402 ? 402 : 502).json({ success: false, error: message })
     }
@@ -467,6 +499,8 @@ async function generateWithFishAudio(text, requestedVoiceId, _vibeId, config, re
   const { buffer, processed, reason } = await applyBedtimeProcessing(rawBuffer)
   log('AUDIO', `Bedtime processing: ${processed ? 'applied' : `skipped (${reason})`}`)
 
+  resolveDeferred(buffer)
+  inFlight.delete(cacheKey)
   setInCache(cacheKey, buffer)
 
   const totalElapsed = Date.now() - startTime
