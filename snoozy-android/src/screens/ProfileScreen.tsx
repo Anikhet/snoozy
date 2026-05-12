@@ -29,7 +29,7 @@ import { Colors, Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { VOICES, VOICE_PREVIEW_TEXT } from '@/config/voices'
-import { VOICE_CLONING_ENABLED } from '@/config/features'
+import { VOICE_CLONING_ENABLED, SUBSCRIPTIONS_ENABLED } from '@/config/features'
 import { NarrationVoice, VoiceProfile } from '@/types/voice'
 import { generateAudio } from '@/services/apiService'
 import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
@@ -420,7 +420,7 @@ export function ProfileScreen() {
             </Animated.View>
 
             {/* ── Snoozy Plus Banner ─────────────────────────── */}
-            <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+            {SUBSCRIPTIONS_ENABLED && <Animated.View entering={FadeInDown.delay(200).duration(500)}>
               {isPlusActive ? (
                 <Pressable
                   onPress={() => openProfilePanel('snoozyPlus')}
@@ -480,7 +480,7 @@ export function ProfileScreen() {
                   <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.45)" />
                 </Pressable>
               )}
-            </Animated.View>
+            </Animated.View>}
 
             {/* ── Account Section ────────────────────────────── */}
             <Text style={styles.sectionTitle}>Account</Text>

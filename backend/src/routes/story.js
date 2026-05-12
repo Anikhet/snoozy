@@ -115,7 +115,7 @@ router.post('/generate-story', validate(generateStorySchema), async (req, res) =
   try {
     const { worldId, vibeId, childDetails } = req.validated
     log('STORY', '--- New story request ---')
-    log('STORY', `World: ${worldId}, Vibe: ${vibeId}, Child: ${childDetails.name}, Age: ${childDetails.age}`)
+    log('STORY', `World: ${worldId}, Vibe: ${vibeId}`)
 
     const result = buildPrompt(worldId, vibeId, { name: childDetails.name, age: childDetails.age, pronouns: childDetails.pronouns })
     if (!result) {

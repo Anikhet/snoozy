@@ -1,17 +1,19 @@
 import { NarrationVoice } from '@/types/voice'
 
 export const VOICE_PREVIEW_TEXT =
-`[soft voice] Once there was a small fox named Milo who lived at the edge of a sleepy forest.
+`[softly] Once there was a small fox named Milo who lived at the edge of a sleepy forest.
 
-Every night, before the stars came out, Milo walked the same path — 
-past the old oak, past the quiet stream, all the way to the top of 
-the small hill where the sky felt close. [pause]
+Every night, before the stars came out, Milo walked the same path —
+past the old oak, past the quiet stream, all the way to the top of
+the small hill where the sky felt close.
 
-Tonight, the trees were still. The wind had gone to bed. [pause]
+[pause]
 
-A tiny [low volume] *crinkle* came from the leaves ahead.
+Tonight, the trees were still. The wind had gone to bed.
 
-Milo stopped. [short pause] A small bird sat alone on a low branch, 
+[short pause] A tiny hush came from the leaves ahead.
+
+Milo stopped. [short pause] A small bird sat alone on a low branch,
 head tucked, too tired to fly home.
 
 "Are you lost?" Milo asked.
@@ -20,21 +22,21 @@ The bird looked up. "A little," it said. "Are you?"
 
 "Maybe," said Milo. "But I'm not scared."
 
-[emphasis] "Good."
+"Good."
 
-[gentle] That small word sat between them like a warm stone.
+[softly] That small word sat between them like a warm stone.
 
 [pause]
 
-[soft voice] The hill grew quiet. The first star came out.
+[softly] The hill grew quiet. The first star came out.
 
 Milo felt the cool air on his nose, the soft ground beneath his paws.
 
-[low voice, slow] His eyes grew heavy. The forest breathed around him.
+[whispers, slowly] His eyes grew heavy. The forest breathed around him.
 
-[whisper] The night wrapped them both in its soft dark arms.
+[whispers] The night wrapped them both in its soft dark arms.
 
-[exhale] And everything was still.`
+[sighs heavily] And everything was still.`
 export const VOICES: NarrationVoice[] = [
   // ── ElevenLabs ──────────────────────────────────────────────────────────────
   { id: 'qBDvhofpxp92JgXJxDjB',             displayName: 'Lily',      description: 'Soft & warm',      provider: 'elevenlabs'                  },

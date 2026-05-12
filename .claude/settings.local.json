@@ -104,7 +104,10 @@
       "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\" https://snoozy-kmoq.onrender.com/)",
       "Bash(git -C /Users/pkats-mac/snoozy status --short)",
       "WebFetch(domain:platform.openai.com)",
-      "WebFetch(domain:community.openai.com)"
+      "WebFetch(domain:community.openai.com)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); ios=d['expo'].get\\('ios',{}\\); print\\(json.dumps\\(ios.get\\('infoPlist',{}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/pkats-mac/snoozy/snoozy-android/app.json'\\)\\); ios=d['expo'].get\\('ios',{}\\); print\\(json.dumps\\({k:v for k,v in ios.items\\(\\)}, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/pkats-mac/snoozy/snoozy-android/app.json'\\)\\); print\\(json.dumps\\(d['expo'].get\\('plugins', []\\), indent=2\\)\\)\")"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend",

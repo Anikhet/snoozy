@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,6 +37,7 @@ import {
   initiateRazorpayPayment,
 } from '@/services/paymentService'
 import { isActive, formatExpiry, daysRemaining } from '@/services/subscriptionService'
+import { AppConfig } from '@/config/appConfig'
 import type { SubscriptionPlan } from '@/types/subscription'
 
 const { width: SW } = Dimensions.get('window')
@@ -423,8 +425,14 @@ function PaywallView({ onClose }: { onClose: () => void }) {
         <Text style={styles.legalText}>
           Subscriptions auto-renew. Cancel anytime from your account settings.
           By subscribing you agree to our{' '}
-          <Text style={styles.legalLink}>Terms of Service</Text> and{' '}
-          <Text style={styles.legalLink}>Privacy Policy</Text>.
+          <Text
+            style={styles.legalLink}
+            onPress={() => Linking.openURL(AppConfig.termsOfServiceUrl)}
+          >Terms of Service</Text> and{' '}
+          <Text
+            style={styles.legalLink}
+            onPress={() => Linking.openURL(AppConfig.privacyPolicyUrl)}
+          >Privacy Policy</Text>.
         </Text>
       </Animated.View>
     </ScrollView>
