@@ -107,7 +107,8 @@
       "WebFetch(domain:community.openai.com)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); ios=d['expo'].get\\('ios',{}\\); print\\(json.dumps\\(ios.get\\('infoPlist',{}\\), indent=2\\)\\)\")",
       "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/pkats-mac/snoozy/snoozy-android/app.json'\\)\\); ios=d['expo'].get\\('ios',{}\\); print\\(json.dumps\\({k:v for k,v in ios.items\\(\\)}, indent=2\\)\\)\")",
-      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/pkats-mac/snoozy/snoozy-android/app.json'\\)\\); print\\(json.dumps\\(d['expo'].get\\('plugins', []\\), indent=2\\)\\)\")"
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/pkats-mac/snoozy/snoozy-android/app.json'\\)\\); print\\(json.dumps\\(d['expo'].get\\('plugins', []\\), indent=2\\)\\)\")",
+      "Bash(git -C /Users/pkats-mac/snoozy log --oneline --all -- backend/.env)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend",

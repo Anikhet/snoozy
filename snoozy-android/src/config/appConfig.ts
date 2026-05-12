@@ -1,5 +1,3 @@
-import { Platform } from 'react-native'
-
 /**
  * Backend URL: Android emulator uses 10.0.2.2 to reach host localhost.
  * iOS simulator can use localhost directly.
@@ -13,4 +11,5 @@ export const AppConfig = {
   ageRange: Array.from({ length: 8 }, (_, i) => i + 3),
   privacyPolicyUrl: 'https://snoozyapp.com/privacy',
   termsOfServiceUrl: 'https://snoozyapp.com/terms',
+  supportEmail: 'support@snoozyapp.com',
 } as const

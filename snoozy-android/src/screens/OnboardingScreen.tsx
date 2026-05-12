@@ -3,6 +3,7 @@ import {
   Dimensions,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Colors, Fonts, Radii, Sizing, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
+import { AppConfig } from '@/config/appConfig'
 
 export const ONBOARDING_KEY = 'snoozy_onboarding_complete'
 export const ONBOARDING_NAME_KEY = 'snoozy_onboarding_name'
@@ -161,14 +163,19 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
             </ScrollView>
           </Animated.View>
 
-          {/* Privacy note */}
+          {/* Consent & AI disclosure */}
           <Animated.View
             entering={FadeInDown.delay(500).duration(500)}
             style={[styles.privacyNote, { backgroundColor: colors.primarySoft }]}
           >
             <Text style={{ fontSize: 14, color: colors.primary }}>☽</Text>
             <Text style={[Fonts.caption, { color: colors.primaryInk, flex: 1 }]}>
-              Names make stories magical — they never leave your device.
+              Stories are written and narrated using AI (OpenAI, ElevenLabs). Your child's name stays on your device and is never stored by us.{' '}
+              By continuing you confirm you are a parent or guardian and agree to our{' '}
+              <Text
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL(AppConfig.privacyPolicyUrl)}
+              >Privacy Policy</Text>.
             </Text>
           </Animated.View>
 

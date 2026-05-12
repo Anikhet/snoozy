@@ -1,6 +1,7 @@
 import React from 'react'
 import {
   ImageBackground,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ import { Colors, Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { useBackHandler } from '@/hooks/useBackHandler'
 import { BackSwipeZone } from '@/components/BackSwipeZone'
+import { AppConfig } from '@/config/appConfig'
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: keyof typeof Ionicons.glyphMap }) {
   return (
@@ -100,7 +102,11 @@ export function AccountDetailsScreen() {
           <Animated.View entering={FadeInDown.delay(220).duration(420)} style={styles.noteCard}>
             <Ionicons name="information-circle-outline" size={16} color={Colors.light.primaryMuted} />
             <Text style={[Fonts.caption, styles.noteText]}>
-              To update your email address or delete your account, please contact our support team.
+              To update your email address or request account and data deletion, email us at{' '}
+              <Text
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL(`mailto:${AppConfig.supportEmail}?subject=Account deletion request`)}
+              >{AppConfig.supportEmail}</Text>.
             </Text>
           </Animated.View>
         </ScrollView>
