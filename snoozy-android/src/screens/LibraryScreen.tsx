@@ -84,7 +84,12 @@ function StoryCard({
         <Text style={[Fonts.bodyBold, { color: colors.ink, fontSize: 13 }]} numberOfLines={2}>
           {story.title}
         </Text>
-        <Text style={[Fonts.caption, { color: colors.inkMute, marginTop: 2 }]}>{date}</Text>
+        <View style={styles.cardMeta}>
+          <Text style={[Fonts.caption, { color: colors.inkMute }]}>{date}</Text>
+          <View style={[styles.aiBadge, { backgroundColor: colors.primarySoft }]}>
+            <Text style={[styles.aiBadgeText, { color: colors.primary }]}>✦ AI</Text>
+          </View>
+        </View>
         {story.voiceName && (
           <Text style={[Fonts.caption, { color: colors.inkMute }]}>{story.voiceName}</Text>
         )}
@@ -398,6 +403,21 @@ const styles = StyleSheet.create({
   cardInfo: {
     padding: Spacing.sm,
     paddingBottom: 0,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: 2,
+  },
+  aiBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  aiBadgeText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 10,
   },
   playBtn: {
     width: 30,

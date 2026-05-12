@@ -130,6 +130,10 @@ function SubtitleView({
           <Text style={[Fonts.caption, { color: colors.inkSoft }]}>{voiceName}</Text>
         </>
       )}
+      <View style={[styles.dot, { backgroundColor: colors.inkMute }]} />
+      <View style={[styles.aiBadge, { backgroundColor: colors.primarySoft }]}>
+        <Text style={[styles.aiBadgeText, { color: colors.primary }]}>✦ AI</Text>
+      </View>
     </View>
   )
 }
@@ -186,6 +190,15 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 2,
+  },
+  aiBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  aiBadgeText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 10,
   },
   action: {
     width: 40,
