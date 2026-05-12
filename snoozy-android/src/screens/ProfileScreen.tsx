@@ -29,6 +29,7 @@ import { Colors, Fonts, Radii, Spacing } from '@/config/tokens'
 import { useStoryStore } from '@/stores/storyStore'
 import { TAB_BAR_HEIGHT } from '@/components/BottomTabBar'
 import { VOICES, VOICE_PREVIEW_TEXT } from '@/config/voices'
+import { VOICE_CLONING_ENABLED } from '@/config/features'
 import { NarrationVoice, VoiceProfile } from '@/types/voice'
 import { generateAudio } from '@/services/apiService'
 import { CHILD_PROFILE_KEY } from '@/screens/ChildProfileScreen'
@@ -540,16 +541,20 @@ export function ProfileScreen() {
               <Text style={styles.sectionTitle}>Narrator Voice</Text>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <View style={styles.voiceGrid}>
-                  <AddVoiceCard onPress={() => openProfilePanel('voiceSetup')} />
-                  {voiceProfiles.map((profile) => (
-                    <VoiceProfileCard
-                      key={profile.id}
-                      profile={profile}
-                      isActive={childDetails.voiceId === profile.modelId}
-                      onSelect={() => handleVoiceSelect(profile.modelId)}
-                      onDelete={() => removeVoiceProfile(profile.id)}
-                    />
-                  ))}
+                  {VOICE_CLONING_ENABLED && (
+                    <>
+                      <AddVoiceCard onPress={() => openProfilePanel('voiceSetup')} />
+                      {voiceProfiles.map((profile) => (
+                        <VoiceProfileCard
+                          key={profile.id}
+                          profile={profile}
+                          isActive={childDetails.voiceId === profile.modelId}
+                          onSelect={() => handleVoiceSelect(profile.modelId)}
+                          onDelete={() => removeVoiceProfile(profile.id)}
+                        />
+                      ))}
+                    </>
+                  )}
                   {VOICES.filter((v) => !v.disabled).map((v) => {
                     const selected = childDetails.voiceId === v.id
                     const isPreviewing = previewingVoiceId === v.id

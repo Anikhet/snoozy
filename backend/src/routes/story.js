@@ -17,6 +17,10 @@ const { LRUCache } = require('lru-cache')
 
 const router = express.Router()
 
+// Voice cloning disabled pending App Store compliance (Apple guideline 5.1.2(i)).
+// Re-enable once privacy policy, in-app consent screen, and data deletion flow are in place.
+const VOICE_CLONING_ENABLED = false
+
 // Multer: store uploaded audio in memory (max 20 MB — enough for ~3 min uncompressed)
 const audioUpload = multer({
   storage: multer.memoryStorage(),
@@ -710,6 +714,9 @@ router.post(
   '/create-voice-clone',
   audioUpload.single('audio'),
   (req, res, next) => {
+    if (!VOICE_CLONING_ENABLED) {
+      return res.status(503).json({ success: false, error: 'Voice cloning is currently disabled.' })
+    }
     // Validate text fields via Zod after multer has parsed the multipart body
     const result = createVoiceCloneSchema.safeParse(req.body)
     if (!result.success) {
@@ -796,6 +803,10 @@ router.post(
  * cloned voice or deletes their account.
  */
 router.delete('/voice-clone/:id', async (req, res) => {
+  if (!VOICE_CLONING_ENABLED) {
+    return res.status(503).json({ success: false, error: 'Voice cloning is currently disabled.' })
+  }
+
   const config = req.app.locals.config
 
   if (!config.fishApiKey) {
