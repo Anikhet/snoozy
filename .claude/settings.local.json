@@ -101,7 +101,10 @@
       "Bash(curl -sv -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H 'Content-Type: application/json' -H 'Authorization: Bearer fake-token' -d '{\"text\":\"hello\",\"provider\":\"elevenlabs\",\"voiceId\":\"test\"}')",
       "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\nREDIRECT_URL:%{redirect_url}' -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H 'Content-Type: application/json' -H 'Authorization: Bearer fake-token' -d '{\"text\":\"hello\",\"provider\":\"elevenlabs\",\"voiceId\":\"test\"}')",
       "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}' -X POST https://snoozy-kmoq.onrender.com/api/generate-audio -H 'Content-Type: application/json' -d '{\"text\":\"hello\",\"provider\":\"elevenlabs\",\"voiceId\":\"test\"}' --max-redirs 5)",
-      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\" https://snoozy-kmoq.onrender.com/)"
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\" https://snoozy-kmoq.onrender.com/)",
+      "Bash(git -C /Users/pkats-mac/snoozy status --short)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:community.openai.com)"
     ],
     "additionalDirectories": [
       "/Users/pkats-mac/snoozy/backend",

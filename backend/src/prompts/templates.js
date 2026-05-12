@@ -435,140 +435,135 @@ ENDINGS:
 EMOTION TAGS — direct the voice with inline tags
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This story will be rendered by Fish Audio S2 Pro, a TTS engine that interprets inline bracketed tags as natural-language stage directions. You are placing these tags directly into the story at the exact words and moments where delivery should shift. Tags are interpreted by the voice model when spoken aloud and are stripped from any visible text shown to the reader.
- 
-S2 untagged sounds flat. S2 with well-placed tags is what makes a bedtime story feel like a bedtime story. Tags are not decoration — they are how the voice accesses warmth, softness, and the sleep induction arc. Use them generously and deliberately.
- 
+This story will be rendered by ElevenLabs V3, a TTS engine that interprets inline bracketed tags as natural-language stage directions. You are placing these tags directly into the story at the exact words and moments where delivery should shift. Tags are interpreted by the voice model when spoken aloud and are stripped from any visible text shown to the reader.
+
+V3 untagged sounds flat. V3 with well-placed tags is what makes a bedtime story feel like a bedtime story. Tags are not decoration — they are how the voice accesses warmth, softness, and the sleep induction arc. Use them generously and deliberately.
+
 You are the only author who knows where the emotional shifts belong. A preprocessor cannot place these tags well. You can.
- 
+
 APPROVED TAGS
- 
+
 Use only the tags below. Any tag not on this list will either be stripped or interpreted unpredictably. Do not invent new tags — express feeling through word choice and rhythm instead.
- 
+
 Structural beats:
-  [pause]        longer beat between paragraphs or sections. Place on its own line.
-  [short pause]  brief beat mid-paragraph, before a small shift.
- 
+  [pause]         longer beat between paragraphs or sections. Place on its own line.
+  [short pause]   brief beat mid-paragraph, before a small shift.
+  [long pause]    extended rest. Reserved for the very end of the sleep ending only.
+
 Voice register (the softening ladder):
-  [soft voice]   gentle baseline delivery, warmer than neutral.
-  [low voice]    quieter, deeper register. The middle rung of the sleep ladder.
-  [whisper]      barely audible. Reserved for the sleep ending.
-  [exhale]       a real breath out. Use only where a person would actually exhale: a sigh, a settling moment, the final breath before sleep.
- 
+  [softly]        warm, gentle baseline delivery — the entry rung of the sleep ladder.
+  [whispers]      quiet, intimate register — the middle and final rungs of the sleep ladder.
+
 Pacing:
-  [slow]         deliberate pacing. Usually paired with [low voice].
- 
-Texture and warmth:
-  [gentle]       warm tenderness. The heart of an emotional moment.
-  [low volume]   quiet, hushed delivery. Use to wrap sensory words, onomatopoeia, or small sounds ([low volume] *hummm*, [low volume] a tiny rustle). Works in any section.
- 
-Lift (use carefully):
-  [emphasis]     a single significant word lifts slightly. At most one per scene. Never in the sleep ending.
- 
+  [slowly]        deliberate, unhurried pacing. Pairs naturally with [whispers] in the deep sleep section.
+
+Breath:
+  [sighs]         a real breath out. Use only where a person would actually exhale — a settling moment, a release, the final breath before sleep.
+  [sighs heavily] a deeper, slower exhale. Reserve for the very last line of the story.
+
 BANNED TAGS
- 
-These are real S2 tags that will activate if you write them, and they break bedtime atmosphere. Never use:
- 
-  [excited] [laughing] [shouting] [loud] [angry] [surprised] [screaming]
-  [shocked] [panting] [moaning] [sad] [chuckling] [singing] [volume up]
- 
+
+These are real V3 tags that will activate if you write them, and they break bedtime atmosphere. Never use:
+
+  [laughs] [laugh] [laughs harder] [chuckling] [shouts] [screaming] [crying]
+  [excited] [angry] [surprised] [scared] [mischievously] [sarcastic] [curious]
+  [singing] [clears throat] [snorts] [wheezing] [applause] [coughs]
+
 TAG DENSITY
- 
+
 Aim for roughly one expressive tag every 40 to 60 words, plus structural tags ([pause], [short pause]) wherever a beat genuinely belongs.
- 
-For a typical 500–700 word bedtime story this works out to 12–20 tags total, with the sleep ending alone using 5–7 of them. Longer stories scale up proportionally; shorter stories scale down. Do not try to hit a fixed number — let the story's length and emotional arc determine the count.
- 
+
+For a typical 500–700 word bedtime story this works out to 10–16 tags total, with the sleep ending alone using 4–6 of them. Longer stories scale up proportionally; shorter stories scale down. Do not try to hit a fixed number — let the story's length and emotional arc determine the count.
+
 The wrong question is how many tags. The right questions are the two rules below.
- 
+
 THE TWO RULES THAT GOVERN GOOD TAGGING
- 
+
 Rule 1 — Spacing: No two tags closer than ~8–10 words apart, EXCEPT in the sleep ending where the progressive softening ladder deliberately stacks them. When tags crowd each other outside the sleep ending, the model receives competing signals and the output regresses to a flat average. Spacing prevents tag-fighting, not scarcity.
- 
-Rule 2 — Distinctness: Each tag must do work the previous tag isn't already doing. [gentle] then [soft voice] three sentences later is fine — different jobs at different moments. [gentle] immediately followed by [soft voice] in the next clause is two warmth instructions fighting for the same slot. Pick one.
- 
+
+Rule 2 — Distinctness: Each tag must do work the previous tag isn't already doing. [softly] then [whispers] later in the ladder is fine — they occupy different rungs. [softly] immediately followed by [whispers] in the next clause is two quiet instructions competing for the same slot. Pick one.
+
 PLACEMENT
- 
-Tags go immediately before the word, clause, or sentence they modify — not always at sentence start. S2 was specifically designed for mid-sentence placement; use it when the shift happens on a particular word.
- 
-  Start of sentence:     [gentle] She reached out and helped the little star find its glow.
-  Mid-sentence on word:  The wind made a tiny [low volume] hush through the leaves.
+
+Tags go immediately before the word, clause, or sentence they modify — not always at sentence start. V3 supports mid-sentence placement; use it when the delivery shift happens on a particular word.
+
+  Start of sentence:     [softly] She reached out and helped the little star find its glow.
+  Mid-sentence on word:  The stream made a tiny [slowly] hush around her feet.
   Between sentences:     She set the lantern down. [short pause] Then she looked up.
- 
+
 Do not tag dialogue attribution verbs ("she said", "he whispered"). Tag the spoken line itself, not the verb.
- 
-Combine at most two tags in one bracket: [low voice, slow] is fine. [low voice, slow, gentle, whisper] is too much.
- 
+
+Combine at most two tags in one bracket: [whispers, slowly] is fine. [whispers, slowly, softly] is too much.
+
 [pause] goes on its own line at meaningful paragraph breaks — not every paragraph break, only the ones that carry weight.
- 
+
 SECTION GUIDANCE
- 
+
 1. The Opening
-Light. Optionally one [gentle] or [soft voice] at the very start to establish baseline warmth. Sometimes no tag at all is best — let the voice settle into its register naturally.
- 
+Light. Optionally one [softly] at the very start to establish baseline warmth. Sometimes no tag at all is best — let the voice settle into its register naturally.
+
 2. The Invitation
-Minimal. Optionally one [short pause] before {name} makes their choice, to let the moment land. One [gentle] is permitted if the invitation itself is the emotional beat.
- 
+Minimal. Optionally one [short pause] before {name} makes their choice, to let the moment land. One [softly] is permitted if the invitation itself is the emotional beat.
+
 3. The Journey
-This is where [low volume] does its best work. Wrap any sensory word, sound, or onomatopoeia: [low volume] *plink, plink*, [low volume] a tiny rustle, [low volume] hush. Two or three [short pause] beats are fine across the journey. One [gentle] is permitted if a moment of warmth lands here.
- 
+[sighs] works well at settling moments — where {name} stops, looks around, and takes a breath. Two or three [short pause] beats are fine across the journey. One [softly] is permitted if a clear moment of warmth lands here.
+
 4. The Heart
 One to three well-placed tags carry the emotional payoff. Match the vibe:
- 
-  Kind / Wonder / Friends: [gentle] before the moment line. Optionally a second [gentle] on the warm aftermath line if the moment has two beats.
- 
-  Brave: [emphasis] on the brave word, then [gentle] on the warm aftermath line. The [gentle] is doing the real work — [emphasis] alone feels like bite without warmth.
- 
-  Cozy: [soft voice] as the world settles around {name}. Optionally [low volume] on a sensory detail in the same scene.
- 
-[emphasis] is permitted at most once per scene. Never in the sleep ending.
- 
+
+  Kind / Wonder / Friends: [softly] before the moment line. Optionally a second [softly] on the warm aftermath line if the moment has two distinct beats.
+
+  Brave: Let the brave word land through sentence structure, not a tag — a short, punchy sentence carries more weight than any tag can. Follow with [softly] on the warm aftermath line.
+
+  Cozy: [softly] as the world settles around {name}. Optionally [slowly] on a sensory line in the same scene.
+
 5. The Sleep Ending
 This is where tags do their most important work. Apply progressive softening across the final paragraphs — this is the one place where stacking tags closely is correct, because the ladder IS the effect.
- 
-  First sleep paragraph:   [soft voice] to begin the descent.
-  Middle sleep paragraph:  [low voice, slow] to deepen and slow.
-  Final 2–3 lines:         [whisper] for the barely-audible final beats.
-  Final breath/settling:   [exhale] — only on a line where a real person would actually exhale.
- 
-[low volume] can wrap sensory words inside any of these paragraphs (a soft hum, a tiny breath) without breaking the ladder.
- 
+
+  First sleep paragraph:   [softly] to begin the descent.
+  Middle sleep paragraph:  [whispers, slowly] to deepen and slow.
+  Final 2–3 lines:         [whispers] for the barely-audible final beats.
+  Very last line:          [sighs heavily] — only on the line where a real person would exhale into sleep.
+  After the last line:     [long pause] on its own line, to let the silence land.
+
 CONFLICT RESOLUTION
- 
-When section guidance and global rules conflict, section guidance wins. The sleep ending's tag stacking overrides the spacing rule. The Brave Heart's [emphasis] + [gentle] pairing overrides the distinctness rule (they're doing complementary work, not competing).
- 
+
+When section guidance and global rules conflict, section guidance wins. The sleep ending's tag stacking overrides the spacing rule.
+
 EXAMPLE — a tagged sleep ending
- 
+
   [pause]
-  [soft voice] {Name} curled into the warm grass.
-  The fireflies hummed their [low volume] small song.
-  [low voice, slow] Her eyes grew heavy.
+  [softly] {Name} curled into the warm grass.
+  The fireflies hummed their small song.
+  [whispers, slowly] Her eyes grew heavy.
   The world grew softer.
-  [whisper] Sleep came tiptoeing in.
-  [exhale] And everything was still.
- 
+  [whispers] Sleep came tiptoeing in.
+  [sighs heavily] And everything was still.
+  [long pause]
+
 EXAMPLE — a tagged Brave heart moment
- 
+
   The little firefly blinked once and asked, "Were you brave tonight?"
   {Name} smiled — small, but real.
-  [emphasis] "Yes."
-  [gentle] That word felt round and warm inside her chest.
- 
+  "Yes."
+  [softly] That word felt round and warm inside her chest.
+
 EXAMPLE — a tagged Kind heart moment
- 
-  [gentle] {Name} reached out and helped the little star find its glow.
+
+  [softly] {Name} reached out and helped the little star find its glow.
   The star spun once in quiet thanks.
-  Their lights mixed and spread out around them like [low volume] soft honey.
- 
+  Their lights mixed and spread out around them like soft honey.
+
 EXAMPLE — a tagged Journey passage
- 
+
   {Name} stepped onto the moss path.
-  A tiny [low volume] *plink, plink* came from the stream beside her.
+  A tiny hush came from the stream beside her.
   [short pause] The trees leaned in to listen.
-  She walked on, and the night walked with her.
- 
+  [sighs] She walked on, and the night walked with her.
+
 FINAL REMINDER
- 
-Untagged S2 sounds good. Tagged S2 sounds like a bedtime story. Place tags generously, space them properly, and let each one do distinct work. The sleep ending is where you spend your tag budget most heavily — the softening ladder is what carries a child from story-time into sleep.
+
+Untagged V3 sounds good. Tagged V3 sounds like a bedtime story. Place tags generously, space them properly, and let each one do distinct work. The sleep ending is where you spend your tag budget most heavily — the softening ladder is what carries a child from story-time into sleep.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FORMAT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -525,11 +525,15 @@ async function runGeneration(
     const audioBase64 = await apiService.generateAudio(storyText, audioToken, voiceId, signal, vibeId)
     const audioFileName = await storageService.saveAudioFile(audioBase64)
 
-    // Strip only known Fish Audio emotion tags — not all bracket content.
+    // Strip only known emotion tags — not all bracket content.
     // Broad patterns like /\[[^\]]+\]/g would silently delete legitimate story
     // text if GPT ever places a character name or aside in brackets.
     const KNOWN_TAGS = [
-      'pause', 'short pause',
+      // Structural (all providers)
+      'pause', 'short pause', 'long pause',
+      // ElevenLabs V3
+      'softly', 'whispers', 'slowly', 'sighs', 'sighs heavily',
+      // Fish Audio S2
       'soft voice', 'low voice', 'whisper', 'exhale',
       'slow', 'gentle', 'low volume', 'emphasis',
     ]

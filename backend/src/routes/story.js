@@ -10,7 +10,7 @@ const multer = require('multer')
 const { AzureOpenAI } = require('openai')
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
-const { prepareTextForTTS, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
+const { prepareTextForTTS, prepareTextForElevenLabsV3, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
 const { normalizeLoudness, FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
 const { LRUCache } = require('lru-cache')
@@ -230,10 +230,11 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
   const voiceId = requestedVoiceId || config.elevenlabsVoiceId || ELEVENLABS_FALLBACK_VOICE
   log('AUDIO', `ElevenLabs voice: ${voiceId}`)
 
-  const processedText = prepareTextForTTS(text, vibeId)
-  log('AUDIO', `TTS pre-processor: ${text.length} chars → ${processedText.length} chars`)
+  const { text: processedText, stripped, warnings } = prepareTextForElevenLabsV3(text)
+  log('AUDIO', `ElevenLabs V3 pre-processor: ${text.length} chars → ${processedText.length} chars`)
+  if (warnings.length) log('AUDIO', `Tag warnings: ${warnings.join(' | ')}`)
+  if (stripped.length) log('AUDIO', `Tags stripped: ${stripped.join(', ')}`)
 
-  // Cache key uses processed text so vibe-specific break timings are part of the key
   const cacheKey    = getCacheKey(processedText, voiceId)
   const cachedAudio = getFromCache(cacheKey)
   if (cachedAudio) {
@@ -272,8 +273,7 @@ async function generateWithElevenLabs(text, requestedVoiceId, vibeId, config, re
     },
     body: JSON.stringify({
       text: processedText,
-      model_id: 'eleven_multilingual_v2',
-      enable_ssml_parsing: true,
+      model_id: 'eleven_v3',
       voice_settings: {
         ...{ stability: 0.75, style: 0.12 },
         ...(VIBE_VOICE_OVERRIDES[vibeId] ?? {}),
