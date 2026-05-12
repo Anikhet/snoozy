@@ -467,6 +467,61 @@ function prepareTextForElevenLabsV3(text) {
 }
 
 // ─────────────────────────────────────────────
+// AZURE TTS-HD PIPELINE
+// Azure OpenAI TTS-HD (tts-hd) accepts plain text only.
+// SSML and bracket emotion tags are not interpreted — they are read aloud
+// literally if sent. This pipeline strips all markup and returns clean prose.
+// Tone/delivery is controlled via the `instructions` API parameter instead.
+// ─────────────────────────────────────────────
+
+/**
+ * Per-vibe natural-language delivery instructions for Azure TTS-HD.
+ * Passed as the `instructions` field on the speech.create() call.
+ * Sets the global tone for the whole story — Azure has no mid-sentence control.
+ */
+const AZURE_VIBE_INSTRUCTIONS = {
+  cozy:     'Read this bedtime story in a very soft, slow, and deeply calming voice, as if a parent is gently guiding a sleepy child into dreams. Pace yourself slowly throughout.',
+  brave:    'Read this bedtime story warmly and gently, with quiet reassurance. Keep the pace slow and soothing — the tone is encouraging but never loud or energetic.',
+  kind:     'Read this bedtime story with tender warmth, as if sharing something precious. Speak slowly and gently, full of care and softness.',
+  wonder:   'Read this bedtime story with a soft sense of quiet wonder — hushed and curious, never excited. Keep the pace slow and dreamy.',
+  friends:  'Read this bedtime story warmly and gently, as if describing a treasured friendship. Speak slowly and softly, with quiet affection throughout.',
+  inspired: 'Read this bedtime story with gentle encouragement — soft and slow, like sharing a quiet secret that lights something up inside. Never loud or rushed.',
+}
+const AZURE_DEFAULT_INSTRUCTIONS = AZURE_VIBE_INSTRUCTIONS.cozy
+
+function stripSsmlTags(text) {
+  return text.replace(/<[^>]+>/g, '')
+}
+
+function stripBracketTags(text) {
+  return text.replace(/\[[^\]]+\]/g, '')
+}
+
+/**
+ * Full pre-processing pipeline for Azure TTS-HD.
+ * Returns clean plain text safe to send to the Azure OpenAI audio/speech endpoint.
+ *
+ * @param {string} text   — story body (may contain SSML or bracket tags from prior pipeline)
+ * @param {string} vibeId — cozy | brave | kind | wonder | friends | inspired
+ * @returns {{ text: string, instructions: string }}
+ */
+function prepareTextForAzureTTS(text, vibeId) {
+  let t = text.trim()
+  t = applyBaseTransforms(t)
+  t = stripSsmlTags(t)
+  t = stripBracketTags(t)
+  // Collapse whitespace artifacts left by tag removal
+  t = t
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  const instructions = AZURE_VIBE_INSTRUCTIONS[vibeId] ?? AZURE_DEFAULT_INSTRUCTIONS
+  return { text: t, instructions }
+}
+
+// ─────────────────────────────────────────────
 // SHARED TAG UTILITIES (provider-agnostic)
 // ─────────────────────────────────────────────
 
@@ -499,9 +554,10 @@ function stripTagsForDisplay(text) {
 
 module.exports = {
   // Primary pipelines
-  prepareTextForTTS,          // ElevenLabs V2 / Azure TTS-HD (SSML)
+  prepareTextForTTS,          // ElevenLabs V2 legacy (SSML) — kept for reference
   prepareTextForElevenLabsV3, // ElevenLabs V3 (bracket tags)
   prepareTextForFishAudio,    // Fish Audio S2 Pro (bracket tags)
+  prepareTextForAzureTTS,     // Azure TTS-HD (plain text + instructions param)
 
   // Sanitizers (exposed for testing)
   sanitizeElevenLabsV3Tags,

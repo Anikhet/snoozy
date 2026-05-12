@@ -10,7 +10,7 @@ const multer = require('multer')
 const { AzureOpenAI } = require('openai')
 const { validate } = require('../middleware/validate')
 const { buildPrompt, WORLDS, VIBES, RECOMMENDED_API_SETTINGS, VIBE_VOICE_OVERRIDES } = require('../prompts/templates')
-const { prepareTextForTTS, prepareTextForElevenLabsV3, prepareTextForFishAudio } = require('../utils/ttsPreprocessor')
+const { prepareTextForElevenLabsV3, prepareTextForFishAudio, prepareTextForAzureTTS } = require('../utils/ttsPreprocessor')
 const { normalizeLoudness, FFMPEG_AVAILABLE } = require('../utils/audioNormalizer')
 
 const { LRUCache } = require('lru-cache')
@@ -350,8 +350,8 @@ async function generateWithAzureTTS(text, requestedVoiceId, vibeId, config, res,
   const voice = AZURE_TTS_VALID_VOICES.has(requestedVoiceId) ? requestedVoiceId : 'shimmer'
   log('AUDIO', `Azure TTS voice: ${voice}`)
 
-  const processedText = prepareTextForTTS(text, vibeId)
-  log('AUDIO', `TTS pre-processor: ${text.length} chars → ${processedText.length} chars`)
+  const { text: processedText, instructions } = prepareTextForAzureTTS(text, vibeId)
+  log('AUDIO', `Azure TTS pre-processor: ${text.length} chars → ${processedText.length} chars`)
 
   const cacheKey    = getCacheKey(processedText, `azure:${voice}`)
   const cachedAudio = getFromCache(cacheKey)
@@ -390,9 +390,10 @@ async function generateWithAzureTTS(text, requestedVoiceId, vibeId, config, res,
   let ttsResponse
   try {
     ttsResponse = await client.audio.speech.create({
-      model: config.azureOpenAITtsDeployment,
-      input: processedText,
+      model:        config.azureOpenAITtsDeployment,
+      input:        processedText,
       voice,
+      instructions,
       response_format: 'mp3',
       speed: 0.88,
     })
