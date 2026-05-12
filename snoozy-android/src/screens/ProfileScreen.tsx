@@ -550,7 +550,7 @@ export function ProfileScreen() {
                       onDelete={() => removeVoiceProfile(profile.id)}
                     />
                   ))}
-                  {VOICES.map((v) => {
+                  {VOICES.filter((v) => !v.disabled).map((v) => {
                     const selected = childDetails.voiceId === v.id
                     const isPreviewing = previewingVoiceId === v.id
                     const isLoading = loadingVoiceId === v.id

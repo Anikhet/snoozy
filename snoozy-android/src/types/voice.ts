@@ -3,6 +3,7 @@ export interface NarrationVoice {
   displayName: string
   description: string
   provider: 'elevenlabs' | 'fishaudio' | 'azure'
+  disabled?: boolean
 }
 
 export interface VoiceProfile {
