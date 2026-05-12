@@ -9,7 +9,8 @@ export enum StoryStatus {
 export interface Story {
   id: string
   title: string
-  storyText: string
+  storyText: string    // display text — emotion tags stripped
+  rawText?: string     // tagged text as sent to TTS; present on newly generated stories
   templateId: string
   vibeId?: string
   childName: string

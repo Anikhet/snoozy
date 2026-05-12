@@ -550,6 +550,7 @@ async function runGeneration(
       id: storyId,
       title,
       storyText: displayText,
+      rawText: storyText,
       templateId: worldId,
       vibeId,
       childName: childDetails.name,

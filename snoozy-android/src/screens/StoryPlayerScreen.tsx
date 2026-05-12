@@ -375,7 +375,7 @@ export function StoryPlayerScreen() {
                 nestedScrollEnabled
                 showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.storyTextBody}>{currentStory.storyText}</Text>
+                <Text style={styles.storyTextBody}>{currentStory.rawText ?? currentStory.storyText}</Text>
               </ScrollView>
             </Animated.View>
           ) : null}
